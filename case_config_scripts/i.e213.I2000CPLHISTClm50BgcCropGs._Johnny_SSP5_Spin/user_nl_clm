@@ -1,0 +1,35 @@
+!----------------------------------------------------------------------------------
+! Users should add all user specific namelist changes below in the form of 
+! namelist_var = new_namelist_value 
+!
+! EXCEPTIONS: 
+! Set use_cndv           by the compset you use and the CLM_BLDNML_OPTS -dynamic_vegetation setting
+! Set use_vichydro       by the compset you use and the CLM_BLDNML_OPTS -vichydro           setting
+! Set use_cn             by the compset you use and CLM_BLDNML_OPTS -bgc  setting
+! Set use_crop           by the compset you use and CLM_BLDNML_OPTS -crop setting
+! Set spinup_state       by the CLM_BLDNML_OPTS -bgc_spinup      setting
+! Set irrigate           by the CLM_BLDNML_OPTS -irrig .true.    setting
+! Set co2_ppmv           with CCSM_CO2_PPMV                      option
+! Set dtime              with L_NCPL                             option
+! Set fatmlndfrc         with LND_DOMAIN_PATH/LND_DOMAIN_FILE    options
+! Set finidat            with RUN_REFCASE/RUN_REFDATE/RUN_REFTOD options for hybrid or branch cases
+!                        (includes $inst_string for multi-ensemble cases)
+!                        or with CLM_FORCE_COLDSTART to do a cold start
+!                        or set it with an explicit filename here.
+! Set maxpatch_glcmec    with GLC_NEC                            option
+! Set glc_do_dynglacier  with GLC_TWO_WAY_COUPLING               env variable
+!----------------------------------------------------------------------------------
+
+
+fsurdat = '/home/jguo/research/from_KeerZ/SurfaceData/2015-2100urbanveg/surfdata_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr2015_GaoUrbanveg2015_c230601.nc'
+
+
+finidat ='/home/jguo/projects/cesm/inputdata/cesm2_init/b.e21.BHIST.f09_g17.CMIP6-historical.010_v2/2015-01-01/b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
+
+
+!h0 stream(monthly average, grid-level)
+hist_mfilt(1) = 1
+hist_dov2xy(1) = .true.
+hist_nhtfrq(1) = 0
+hist_fincl1+='APPAR_TEMP','APPAR_TEMP_U','APPAR_TEMP_R','DISCOI_U','DISCOI_R','DISCOIS_U','DISCOIS_R','EFLX_LH_TOT','EFLX_LH_TOT_U','EFLX_LH_TOT_R','EFLXBUILD','EPT','EPT_U','EPT_R','FGR','FGR_R','FGR_U','FIRE','FIRE_U','FIRE_R','FIRA','FIRA_U','FIRA_R','FLDS','FSA','FSA_U','FSA_R','FSDS','FSH','FSH_U','FSH_R','FSM','FSM_U','FSM_R','HEAT_FROM_AC','HIA','HIA_U','HIA_R','HUMIDEX','HUMIDEX_U','HUMIDEX_R','PBOT','Q2M','Q2M_R','Q2M_U','QBOT','QIRRIG','QRUNOFF','QRUNOFF_U','QRUNOFF_R','RAIN','RH2M','RH2M_R','RH2M_U','SNOW','SoilAlpha','SoilAlpha_U','SWBGT','SWBGT_R','SWBGT_U','SWMP65','SWMP65_R','SWMP65_U','SWMP80','SWMP80_R','SWMP80_U','TBOT','TBUILD','TEQ','TEQ_U','TEQ_R','TFLOOR','TG','TG_R','TG_U','THIC','THIC_R','THIC_U','THIP','THIP_R','THIP_U','TREFMNAV','TREFMNAV_R','TREFMNAV_U','TREFMXAV','TREFMXAV_R','TREFMXAV_U','TROOF_INNER','TSA','TSA_R','TSA_U','TSHDW_INNER','TSKIN','TSKIN_R','TSKIN_U','TSUNW_INNER','U10','U10_R','U10_U','URBAN_AC','URBAN_HEAT','VAPOR_PRES','VAPOR_PRES_R','VAPOR_PRES_U','VENTILATION','WASTEHEAT','WBA','WBA_R','WBA_U','WBT','WBT_R','WBT_U'
+
