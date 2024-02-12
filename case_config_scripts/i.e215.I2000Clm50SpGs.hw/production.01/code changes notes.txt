@@ -1,0 +1,28 @@
+code changes notes:
+
+
+git branch
+	  add_Q
+	* add_VP
+	  main
+
+in branch add_VP
+
+jguo@JohnnyThinkStation:~/keer/CLM_cesm2.1.2$ git show --pretty=format: --name-only HEAD
+src/biogeophys/BareGroundFluxesMod.F90
+src/biogeophys/CanopyFluxesMod.F90
+src/biogeophys/HumanIndexMod.F90
+src/biogeophys/UrbanFluxesMod.F90
+
+git checkout add_Q
+	Switched to branch 'add_Q'
+	Your branch is up to date with 'origin/add_Q'.
+jguo@JohnnyThinkStation:~/keer/CLM_cesm2.1.2$ git branch
+	* add_Q
+	  add_VP
+	  main
+jguo@JohnnyThinkStation:~/keer/CLM_cesm2.1.2$ git show --pretty=format: --name-only HEAD
+src/biogeophys/BareGroundFluxesMod.F90
+src/biogeophys/CanopyFluxesMod.F90
+src/biogeophys/UrbanFluxesMod.F90
+src/biogeophys/WaterStateType.F90

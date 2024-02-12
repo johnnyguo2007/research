@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Log file
-LOGFILE="/home/jguo/research/case_config_scripts/i.e215.I2000Clm50SpGs.hw/production.test1/command_log.txt"
+CONFIG_ROOT="/home/jguo/research/case_config_scripts/i.e215.I2000Clm50SpGs.hw/production.01"
+LOGFILE="$CONFIG_ROOT/command_log.txt"
 
 # Function to log and execute commands
 log_and_execute() {
@@ -11,12 +12,14 @@ log_and_execute() {
 
 # Defining variables
 export CTSM_ROOT="/home/jguo/my_cesm_sandbox"
-export CASE_NAME="i.e215.I2000Clm50SpGs.hw_production.test01"
+export CASE_NAME="i.e215.I2000Clm50SpGs.hw_production.01"
 export PROJECT_DIR="/home/jguo/projects/cesm/scratch"
 export DIR_CASE="$PROJECT_DIR/$CASE_NAME"
 export COMPSET="I2000Clm50SpGs"
 export RESOLUTION="f09_g17"
-export USER_NL_CLM_FILE="/home/jguo/research/case_config_scripts/i.e215.I2000Clm50SpGs.hw/production.test1/user_nl_clm"
+
+export USER_NL_CLM_FILE="$CONFIG_ROOT/user_nl_clm"
+export MY_SourceMods="$CONFIG_ROOT/SourceMods"
 
 export FORCE_RM="T"
 
@@ -46,6 +49,8 @@ log_and_execute cd "$DIR_CASE"
 # Changing XML configurations
 log_and_execute ./xmlchange RUN_STARTDATE=1985-01-01,STOP_OPTION=nyears,STOP_N=1,RESUBMIT=29
 log_and_execute ./xmlchange DATM_CLMNCEP_YR_ALIGN=1985,DATM_CLMNCEP_YR_START=1985,DATM_CLMNCEP_YR_END=2014
+log_and_execute ./xmlchange DOUT_S_ROOT="/media/jguo/external_data/simulation_output/archive/case"
+
 
 # Setting up the case
 log_and_execute ./case.setup
@@ -55,6 +60,9 @@ log_and_execute ./xmlquery RUN_REFCASE,RUN_REFDIR,RUN_REFDATE,RUN_TYPE,RUN_START
 
 # Copying the user_nl_clm file
 log_and_execute cp "$USER_NL_CLM_FILE" "$DIR_CASE/"
+
+# Copying the SourceMods dir
+log_and_execute cp -r "$MY_SourceMods" "$DIR_CASE/"
 
 # Note: The case build and submit commands are commented out. Uncomment and use log_and_execute if needed.
 log_and_execute ./case.build --clean-all &&  log_and_execute ./case.build && log_and_execute ./case.submit
