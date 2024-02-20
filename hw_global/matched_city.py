@@ -30,14 +30,21 @@ top_10_indices = np.argpartition(flat_diff, -10)[-10:]
 # Convert these 1D indices back to 2D grid coordinates
 top_10_coords = np.unravel_index(top_10_indices, diff.shape)
 
+density_type_name = ["tall building district (TBD)", "high density (HD)" , "medium density (MD)"]
 # Print out the top 10 differences, their corresponding grid coordinates, and the values for all 3 slices
 for i, index in enumerate(zip(*top_10_coords)):
     lat_index, lon_index = index
     # Access the PCT_URBAN values for all urban density types at the specific grid point
     urban_values = pct_urban.isel(lsmlat=lat_index, lsmlon=lon_index).values
     print(f"Rank {i+1}: Grid Point ({lat_index}, {lon_index}) - Difference: {flat_diff[top_10_indices[i]]}")
+    # https://bb.cgd.ucar.edu/cesm/threads/proportion-of-cities-in-surface-data.8046/
+    # PCT_URBAN is the percent of each urban density type. The density types in order are
+    # tall building district (TBD), high density (HD), and medium density (MD).
+    # If you change those percentages, e.g, increase them, then you'll need to decrease
+    # some other surface type (e.g., PCT_NATVEG, PCT_CROP, PCT_LAKE, etc.).
+    # The sum of PCT_URBAN, PCT_NATVEG, PCT_CROP, PCT_LAKE, PCT_GLACIER, PCT_WETLAND needs to be 100%.
     for density_type, value in enumerate(urban_values):
-        print(f"  Density Type {density_type}: {value}")
+        print(f"  Density Type {density_type_name[density_type]}: {value}")
 
 #
 # # Access the required variables from the netCDF file
