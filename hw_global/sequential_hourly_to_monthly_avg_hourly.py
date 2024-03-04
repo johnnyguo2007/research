@@ -3,6 +3,32 @@ import pandas as pd
 import os
 import glob
 
+import cftime
+import numpy as np
+def round_to_nearest_hour(time_values):
+    # Function to round cftime.DatetimeNoLeap objects to the nearest hour
+    rounded_times = []
+    for time_value in time_values:
+        # Extract year, month, day, and hour
+        year, month, day, hour = time_value.year, time_value.month, time_value.day, time_value.hour
+        # Extract minute to decide whether to round up or down
+        minute = time_value.minute
+
+        # If minute >= 30, round up to the next hour
+        if minute >= 30 and hour < 23:
+            hour += 1
+        elif minute >= 30 and hour == 23:
+            # Special case for end of the day, create a new datetime for the next day
+            new_day = cftime.DatetimeNoLeap(year, month, day) + cftime.timedelta(days=1)
+            year, month, day = new_day.year, new_day.month, new_day.day
+            hour = 0
+
+        # Construct new cftime.DatetimeNoLeap object with rounded hour
+        rounded_time = cftime.DatetimeNoLeap(year, month, day, hour)
+        rounded_times.append(rounded_time)
+
+    return np.array(rounded_times)
+
 # Ensure the output directory exists
 output_dir = '/tmpdata/summerized_data/i.e215.I2000Clm50SpGs.hw_production.02/seq_monthly_avg_for_each_year'
 os.makedirs(output_dir, exist_ok=True)
@@ -31,6 +57,9 @@ def process_month(year, month):
     # Open the datasets and concatenate them along the time dimension
     ds = xr.open_mfdataset(file_paths, combine='nested', concat_dim='time')
 
+    # Round your 'time' coordinate to the nearest hour
+    ds['time'] = round_to_nearest_hour(ds['time'].values)
+
     # Group by hour of the day and compute the mean
     monthly_hourly_avg = ds.groupby('time.hour').mean('time')
 
@@ -40,14 +69,14 @@ def process_year(year):
     # List to store monthly averages for the year
     monthly_averages = []
 
-    for month in range(1, 13):
+    for month in range(1, 3):
         monthly_avg = process_month(year, month)
         if monthly_avg is not None:
             monthly_averages.append(monthly_avg)
 
     # Concatenate the monthly averages into a single dataset for the year
     if monthly_averages:
-        yearly_avg = xr.concat(monthly_averages, pd.Index(range(1, 13), name='month'))
+        yearly_avg = xr.concat(monthly_averages, pd.Index(range(1, 3), name='month'))
         # Define the output file path for the year
         output_file = os.path.join(output_dir, f'yearly_avg_{year}.nc')
         yearly_avg.to_netcdf(output_file)

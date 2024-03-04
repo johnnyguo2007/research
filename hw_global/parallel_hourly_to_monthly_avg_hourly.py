@@ -4,6 +4,33 @@ import os
 import glob
 from concurrent.futures import ProcessPoolExecutor
 
+import cftime
+import numpy as np
+def round_to_nearest_hour(time_values):
+    # Function to round cftime.DatetimeNoLeap objects to the nearest hour
+    rounded_times = []
+    for time_value in time_values:
+        # Extract year, month, day, and hour
+        year, month, day, hour = time_value.year, time_value.month, time_value.day, time_value.hour
+        # Extract minute to decide whether to round up or down
+        minute = time_value.minute
+
+        # If minute >= 30, round up to the next hour
+        if minute >= 30 and hour < 23:
+            hour += 1
+        elif minute >= 30 and hour == 23:
+            # Special case for end of the day, create a new datetime for the next day
+            new_day = cftime.DatetimeNoLeap(year, month, day) + cftime.timedelta(days=1)
+            year, month, day = new_day.year, new_day.month, new_day.day
+            hour = 0
+
+        # Construct new cftime.DatetimeNoLeap object with rounded hour
+        rounded_time = cftime.DatetimeNoLeap(year, month, day, hour)
+        rounded_times.append(rounded_time)
+
+    return np.array(rounded_times)
+
+
 # Ensure the output directory exists
 output_dir = '/tmpdata/summerized_data/i.e215.I2000Clm50SpGs.hw_production.02/monthly_avg_for_each_year'
 os.makedirs(output_dir, exist_ok=True)
@@ -57,6 +84,10 @@ def process_year(year):
 # Main processing loop with parallelization
 start_year = 1985
 end_year = 2014
+
+# # Sequential processing for each year
+# for year in range(start_year, end_year + 1):
+#     process_year(year)
 
 # Using ProcessPoolExecutor to parallelize processing across years
 with ProcessPoolExecutor(max_workers=36) as executor:
