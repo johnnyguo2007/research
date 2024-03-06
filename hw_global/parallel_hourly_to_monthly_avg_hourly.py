@@ -59,6 +59,9 @@ def process_month(year, month):
     # Open the datasets and concatenate them along the time dimension
     ds = xr.open_mfdataset(file_paths, combine='nested', concat_dim='time')
 
+    # Round your 'time' coordinate to the nearest hour
+    ds['time'] = round_to_nearest_hour(ds['time'].values)
+
     # Group by hour of the day and compute the mean
     monthly_hourly_avg = ds.groupby('time.hour').mean('time')
 
