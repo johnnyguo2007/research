@@ -39,8 +39,18 @@ def preprocess_and_split_dataset(filename, frequent_vars, other_vars):
 
 def append_to_zarr(ds, zarr_group, chunk_shape):
     if ds is not None and ds.variables:
-        encoding = {var: {'chunks': chunk_shape, 'compressor': zarr.Blosc(cname='zstd', clevel=3)} for var in ds.data_vars}
+        try:
+            existing_ds = xr.open_zarr(zarr_group, consolidated=True)
+        except Exception:
+            existing_ds = None
+
+        encoding = {}
+        for var in ds.data_vars:
+            if existing_ds is None or var not in existing_ds.data_vars:
+                encoding[var] = {'chunks': chunk_shape, 'compressor': zarr.Blosc(cname='zstd', clevel=3)}
+
         ds.to_zarr(zarr_group, mode='a', append_dim='time', encoding=encoding, consolidated=True)
+
 
 def process_single_file(filename, zarr_store, frequent_vars, other_vars, chunk_shape):
     print(f'Processing file: {filename}')
@@ -66,10 +76,10 @@ if __name__ == "__main__":
     # Example to fetch other variables, adjust as per your data
     one_hourly_file = '/tmpdata/i.e215.I2000Clm50SpGs.hw_production.02/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.1986-01-01-00000.nc'
     ds_hourly = xr.open_dataset(one_hourly_file)
-    other_vars = [var for var in ds_hourly.data_vars if (var not in core_vars and len(var.dims) == 3)]
+    other_vars = [var for var in ds_hourly.data_vars if (var not in core_vars and len(ds_hourly[var].dims) == 3)]
 
-
-    chunk_shape_3D = (8760, 192, 288)  # (time, lat, lon)
+    monthly_chunk_size = 24 * 30
+    chunk_shape_3D = (monthly_chunk_size, 192, 288)  # (time, lat, lon)
     dims_3D = ['time', 'lat', 'lon']
 
     # Initialize Zarr groups for core and other variables
