@@ -8,8 +8,12 @@ import dask
 # Setup paths and variables
 netcdf_dir = '/tmpdata/i.e215.I2000Clm50SpGs.hw_production.02/'
 zarr_path = '/tmpdata/zarr/i.e215.I2000Clm50SpGs.hw_production.02'
-frequent_vars = ['var1', 'var2', 'var3', 'var4', 'var5', 'var6', 'var7', 'var8']  # Your frequently accessed variables
-other_vars = ['var9', 'var10', ...]  # The rest of your variables
+
+one_hourly_file = '/tmpdata/i.e215.I2000Clm50SpGs.hw_production.02/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.1986-01-01-00000.nc'
+ds_hourly = xr.open_dataset(one_hourly_file)
+ds_hourly_vars = list(ds_hourly.data_vars)
+core_vars = ['TSA', 'TSA_R', 'TSA_U', 'WBA', 'WBA_R', 'WBA_U']  # frequently accessed variables
+other_vars =  [var for var in ds_hourly_vars if var not in core_vars]  # The rest of your variables
 
 # Function to preprocess and split the dataset
 def preprocess_and_split_dataset(filename, frequent_vars, other_vars):
@@ -50,8 +54,8 @@ date_range = pd.date_range(start_date, end_date, freq='D')
 netcdf_filenames = [os.path.join(netcdf_dir, f'data_{date.strftime("%Y-%m-%d")}.nc') for date in date_range]
 
 # Chunk shapes: (time, variables) for frequent, (time, 1) for others, assuming 24 hours per file
-freq_chunk_shape = (24, len(frequent_vars))
+freq_chunk_shape = (24, len(core_vars))
 other_chunk_shape = (24, 1)
 
 # Process the files
-process_files(netcdf_filenames, zarr_path, frequent_vars, other_vars, freq_chunk_shape, other_chunk_shape)
+process_files(netcdf_filenames, zarr_path, core_vars, other_vars, freq_chunk_shape, other_chunk_shape)
