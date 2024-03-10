@@ -2,11 +2,8 @@ import xarray as xr
 import os
 import pandas as pd
 import zarr
-from dask.distributed import Client, LocalCluster
-from dask import delayed, compute
 
 def generate_noleap_date_range(start_date, end_date):
-    """Generate a date range for a 'noleap' calendar."""
     current_date = start_date
     date_list = []
 
@@ -19,13 +16,12 @@ def generate_noleap_date_range(start_date, end_date):
 
     return date_list
 
-def initialize_zarr_group(zarr_store, group_name, chunk_shape, vars):
-    """Initialize Zarr groups before processing to avoid append_dim issues."""
-    group_path = os.path.join(zarr_store, group_name)
-    if not os.path.exists(group_path):
-        ds = xr.Dataset({var: (['time'], []) for var in vars})
-        encoding = {var: {'chunks': chunk_shape, 'compressor': zarr.Blosc(cname='zstd', clevel=3)} for var in vars}
-        ds.to_zarr(group_path, mode='w', encoding=encoding, consolidated=True)
+def ensure_zarr_structure_exists(zarr_store, variable_list, chunk_shape):
+    for var in variable_list:
+        zarr_file = os.path.join(zarr_store, var)
+        if not os.path.exists(zarr_file):
+            arr = zarr.open_array(zarr_file, mode='w', shape=(0,), chunks=(chunk_shape,), dtype='float32', fill_value=0)
+            arr.attrs['_ARRAY_DIMENSIONS'] = ['time']
 
 def preprocess_and_split_dataset(filename, frequent_vars, other_vars):
     try:
@@ -37,28 +33,38 @@ def preprocess_and_split_dataset(filename, frequent_vars, other_vars):
         print(f"Error preprocessing file {filename}: {e}")
         return None, None
 
-def append_to_zarr(ds, zarr_group, chunk_shape):
+def append_to_zarr(ds, zarr_group_path, chunk_shape):
     if ds is not None and ds.variables:
-        encoding = {var: {'chunks': chunk_shape, 'compressor': zarr.Blosc(cname='zstd', clevel=3)} for var in ds.data_vars}
-        ds.to_zarr(zarr_group, mode='a', append_dim='time', encoding=encoding, consolidated=True)
+        zarr_group = zarr.open_group(zarr_group_path, mode='a')
 
-def process_single_file(filename, zarr_store, frequent_vars, other_vars, freq_chunk_shape, other_chunk_shape):
+        for var in ds.data_vars:
+            var_data = ds[var].load()  # Ensure data is loaded into memory
+
+            # Check if the variable already exists in the group
+            if var in zarr_group:
+                # Append data to the existing array within the group
+                zarr_array = zarr_group[var]
+                # Calculate the new shape, extending only along the 'time' dimension
+                new_shape = list(zarr_array.shape)
+                new_shape[0] += var_data.shape[0]  # Assuming 'time' is the first dimension
+                zarr_array.resize(new_shape)
+
+                # Append the new data
+                zarr_array[-var_data.shape[0]:] = var_data.values
+            else:
+                # Create a new array for the variable within the group
+                # The shape and chunks should match the data dimensions
+                zarr_group.create_dataset(var, data=var_data.values, shape=var_data.shape, chunks=chunk_shape, dtype=var_data.dtype)
+
+
+
+def process_file(filename, zarr_store, frequent_vars, other_vars, freq_chunk_shape, other_chunk_shape):
     print(f'Processing file: {filename}')
     freq_ds, other_ds = preprocess_and_split_dataset(filename, frequent_vars, other_vars)
     append_to_zarr(freq_ds, os.path.join(zarr_store, 'frequent_vars'), freq_chunk_shape)
     append_to_zarr(other_ds, os.path.join(zarr_store, 'other_vars'), other_chunk_shape)
 
-def process_files(netcdf_filenames, zarr_store, frequent_vars, other_vars, freq_chunk_shape, other_chunk_shape):
-    tasks = []
-    for filename in netcdf_filenames:
-        task = delayed(process_single_file)(filename, zarr_store, frequent_vars, other_vars, freq_chunk_shape, other_chunk_shape)
-        tasks.append(task)
-    compute(*tasks)
-
 if __name__ == "__main__":
-    cluster = LocalCluster(n_workers=36, threads_per_worker=1, memory_limit='5GB')
-    client = Client(cluster)
-
     netcdf_dir = '/tmpdata/i.e215.I2000Clm50SpGs.hw_production.02/'
     zarr_path = '/tmpdata/zarr/i.e215.I2000Clm50SpGs.hw_production.02'
 
@@ -72,11 +78,8 @@ if __name__ == "__main__":
 
     yearly_chunk_size = 24 * 365  # 8760 hours for a non-leap year
 
-    # Initialize Zarr groups to avoid append_dim issues
-    initialize_zarr_group(zarr_path, 'frequent_vars', (yearly_chunk_size, len(core_vars)), core_vars)
-    initialize_zarr_group(zarr_path, 'other_vars', (yearly_chunk_size, 1), other_vars)
+    ensure_zarr_structure_exists(os.path.join(zarr_path, 'frequent_vars'), core_vars, yearly_chunk_size)
+    ensure_zarr_structure_exists(os.path.join(zarr_path, 'other_vars'), other_vars, yearly_chunk_size)
 
-    process_files(netcdf_filenames, zarr_path, core_vars, other_vars, (yearly_chunk_size, len(core_vars)), (yearly_chunk_size, 1))
-
-    client.close()
-    cluster.close()
+    for filename in netcdf_filenames:
+        process_file(filename, zarr_path, core_vars, other_vars, (yearly_chunk_size, len(core_vars)), (yearly_chunk_size, 1))
