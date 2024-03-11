@@ -121,8 +121,8 @@ if __name__ == "__main__":
     ds_hourly = xr.open_dataset(one_hourly_file)
     vars = [var for var in ds_hourly.data_vars if (len(ds_hourly[var].dims) == 3)]
 
-    start_year = 1985
-    end_year = 1986
+    start_year = 1988
+    end_year = 1999
 
     for year in range(start_year, end_year + 1):
         process_year(netcdf_dir, zarr_path, log_file_path, year, vars)
