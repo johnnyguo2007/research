@@ -29,6 +29,7 @@ def round_to_nearest_hour(time_values):
         rounded_time = cftime.DatetimeNoLeap(year, month, day, hour)
         rounded_times.append(rounded_time)
 
+    #return pd.Series([pd.Timestamp(rt.year, rt.month, rt.day, rt.hour) for rt in rounded_times])
     return np.array(rounded_times)
 
 # Function to set unwanted data to NaN while keeping the dataset structure
@@ -66,21 +67,42 @@ def append_to_zarr(ds, zarr_group):
         ds.to_zarr(zarr_group, mode='w', encoding=encoding, consolidated=True)
 
 
-def process_year(netcdf_dir, zarr_path, log_file_path, year):
-    file_pattern = os.path.join(netcdf_dir,
-                                f'i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.{year}-*-00000.nc')
+def process_year(netcdf_dir, zarr_path, log_file_path, year, var_list):
+    file_pattern = os.path.join(netcdf_dir, f'i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.{year}-*-00000.nc')
     file_paths = sorted(glob.glob(file_pattern))
 
-    print("processing " , file_pattern)
+    print("Processing", file_pattern)
 
     if not file_paths:
         log_file_status(log_file_path, f'No files found for {file_pattern}', "Missing")
         return
 
-    ds = xr.open_mfdataset(file_paths, chunks={'time': 24 * 31})
+    ds = xr.open_mfdataset(file_paths, chunks={'time': 24 * 31})[var_list]
+
+    # Store data types before modification
+    data_types_before = {var: ds[var].dtype for var in ds.data_vars}
+    print("Data types before set_unwanted_to_nan:")
+    for var, dtype in data_types_before.items():
+        print(f'{var}: {dtype}')
+
     ds['time'] = round_to_nearest_hour(ds['time'].values)
-    ds_filtered = set_unwanted_to_nan(ds)
-    append_to_zarr(ds_filtered, os.path.join(zarr_path, '3Dvars'))
+    ds = set_unwanted_to_nan(ds)
+
+    # Store data types after modification
+    data_types_after = {var: ds[var].dtype for var in ds.data_vars}
+    print("Data types after set_unwanted_to_nan:")
+    for var, dtype in data_types_after.items():
+        print(f'{var}: {dtype}')
+
+    # Compare data types before and after
+    print("\nData type changes:")
+    for var in ds.data_vars:
+        if data_types_before[var] != data_types_after[var]:
+            print(f'{var}: {data_types_before[var]} -> {data_types_after[var]}')
+
+    append_to_zarr(ds, os.path.join(zarr_path, '3Dvars'))
+
+
 
 
 # def process_year(netcdf_dir, zarr_path, log_file_path, year):
@@ -95,8 +117,12 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
     log_file_path = os.path.join(output_dir, 'processed_files.log')
 
+    one_hourly_file = '/home/jguo/process_data/i.e215.I2000Clm50SpGs.hw_production.02/hourly_raw/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.1985-07-01-00000.nc'
+    ds_hourly = xr.open_dataset(one_hourly_file)
+    vars = [var for var in ds_hourly.data_vars if (len(ds_hourly[var].dims) == 3)]
+
     start_year = 1985
     end_year = 1986
 
     for year in range(start_year, end_year + 1):
-        process_year(netcdf_dir, zarr_path, log_file_path, year)
+        process_year(netcdf_dir, zarr_path, log_file_path, year, vars)
