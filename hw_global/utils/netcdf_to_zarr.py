@@ -6,6 +6,7 @@ import xarray as xr
 import pandas as pd
 import zarr
 
+
 def round_to_nearest_hour(time_values):
     rounded_times = []
     for time_value in time_values:
@@ -14,9 +15,11 @@ def round_to_nearest_hour(time_values):
         rounded_times.append(time_value.replace(minute=0, second=0, microsecond=0))
     return np.array(rounded_times)
 
+
 def log_file_status(log_file_path, file_path, status):
     with open(log_file_path, 'a') as log_file:
         log_file.write(f'{file_path} - {status}\n')
+
 
 def append_to_zarr(ds, zarr_group):
     chunk_size = {'time': 720, 'lat': 96, 'lon': 144}
@@ -27,8 +30,10 @@ def append_to_zarr(ds, zarr_group):
         encoding = {var: {'compressor': zarr.Blosc(cname='zstd', clevel=3)} for var in ds.data_vars}
         ds.to_zarr(zarr_group, mode='w', encoding=encoding, consolidated=True)
 
+
 def process_month(netcdf_dir, zarr_path, log_file_path, year, month):
-    file_pattern = os.path.join(netcdf_dir, f'i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.{year}-{month:02d}-*-00000.nc')
+    file_pattern = os.path.join(netcdf_dir,
+                                f'i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.{year}-{month:02d}-*-00000.nc')
     file_paths = sorted(glob.glob(file_pattern))
 
     if not file_paths:
@@ -39,9 +44,11 @@ def process_month(netcdf_dir, zarr_path, log_file_path, year, month):
     ds['time'] = round_to_nearest_hour(ds['time'].values)
     append_to_zarr(ds, os.path.join(zarr_path, '3Dvars'))
 
+
 def process_year(netcdf_dir, zarr_path, log_file_path, year):
     for month in range(1, 13):
         process_month(netcdf_dir, zarr_path, log_file_path, year, month)
+
 
 if __name__ == "__main__":
     output_dir = '/tmpdata/summerized_data/i.e215.I2000Clm50SpGs.hw_production.02/monthly_avg_for_each_year'
