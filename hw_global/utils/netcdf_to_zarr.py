@@ -1,89 +1,58 @@
-import xarray as xr
 import os
-import pandas as pd
+import glob
+import cftime
 import numpy as np
+import xarray as xr
+import pandas as pd
 import zarr
 
-def generate_noleap_date_range(start_date, end_date):
-    """Generate a date range for a 'noleap' calendar."""
-    current_date = start_date
-    date_list = []
-    while current_date <= end_date:
-        date_list.append(current_date)
-        next_day = current_date + pd.Timedelta(days=1)
-        if next_day.month == 2 and next_day.day == 29:
-            next_day += pd.Timedelta(days=1)
-        current_date = next_day
-    return date_list
+def round_to_nearest_hour(time_values):
+    rounded_times = []
+    for time_value in time_values:
+        if time_value.minute >= 30:
+            time_value += cftime.timedelta(hours=1)
+        rounded_times.append(time_value.replace(minute=0, second=0, microsecond=0))
+    return np.array(rounded_times)
 
-def initialize_zarr_group(zarr_store, group_name, chunk_shape, vars, dims):
-    """Initialize Zarr groups before processing to avoid append_dim issues."""
-    group_path = os.path.join(zarr_store, group_name)
-    if not os.path.exists(group_path):
-        os.makedirs(group_path, exist_ok=True)
-        ds = xr.Dataset({
-            var: (dims, np.zeros((1, *chunk_shape[1:]), dtype=float)) for var in vars
-        })
-        encoding = {var: {'chunks': chunk_shape, 'compressor': zarr.Blosc(cname='zstd', clevel=3)} for var in vars}
-        ds.to_zarr(group_path, mode='w', encoding=encoding, consolidated=True)
+def log_file_status(log_file_path, file_path, status):
+    with open(log_file_path, 'a') as log_file:
+        log_file.write(f'{file_path} - {status}\n')
 
-def preprocess_and_split_dataset(filename, frequent_vars, other_vars):
-    try:
-        ds = xr.open_dataset(filename)
-        freq_ds = ds[frequent_vars]
-        other_ds = ds.drop_vars(frequent_vars)
-        return freq_ds, other_ds
-    except Exception as e:
-        print(f"Error preprocessing file {filename}: {e}")
-        return None, None
+def append_to_zarr(ds, zarr_group):
+    chunk_size = {'time': 720, 'lat': 96, 'lon': 144}
+    ds = ds.chunk(chunk_size)
+    if os.path.exists(zarr_group):
+        ds.to_zarr(zarr_group, mode='a', append_dim='time', consolidated=True)
+    else:
+        encoding = {var: {'compressor': zarr.Blosc(cname='zstd', clevel=3)} for var in ds.data_vars}
+        ds.to_zarr(zarr_group, mode='w', encoding=encoding, consolidated=True)
 
-def append_to_zarr(ds, zarr_group, chunk_shape):
-    if ds is not None and ds.variables:
-        try:
-            existing_ds = xr.open_zarr(zarr_group, consolidated=True)
-        except Exception:
-            existing_ds = None
+def process_month(netcdf_dir, zarr_path, log_file_path, year, month):
+    file_pattern = os.path.join(netcdf_dir, f'i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.{year}-{month:02d}-*-00000.nc')
+    file_paths = sorted(glob.glob(file_pattern))
 
-        encoding = {}
-        for var in ds.data_vars:
-            if existing_ds is None or var not in existing_ds.data_vars:
-                encoding[var] = {'chunks': chunk_shape, 'compressor': zarr.Blosc(cname='zstd', clevel=3)}
+    if not file_paths:
+        log_file_status(log_file_path, f'No files found for {year}-{month:02d}', "Missing")
+        return
 
-        ds.to_zarr(zarr_group, mode='a', append_dim='time', encoding=encoding, consolidated=True)
+    ds = xr.open_mfdataset(file_paths, chunks={'time': 720})
+    ds['time'] = round_to_nearest_hour(ds['time'].values)
+    append_to_zarr(ds, os.path.join(zarr_path, '3Dvars'))
 
-
-def process_single_file(filename, zarr_store, frequent_vars, other_vars, chunk_shape):
-    print(f'Processing file: {filename}')
-    freq_ds, other_ds = preprocess_and_split_dataset(filename, frequent_vars, other_vars)
-    append_to_zarr(freq_ds, os.path.join(zarr_store, 'frequent_vars'), chunk_shape)
-    if other_ds:
-        append_to_zarr(other_ds, os.path.join(zarr_store, 'other_vars'), chunk_shape)
-
-def process_files(netcdf_filenames, zarr_store, frequent_vars, other_vars, chunk_shape):
-    for filename in netcdf_filenames:
-        process_single_file(filename, zarr_store, frequent_vars, other_vars, chunk_shape)
+def process_year(netcdf_dir, zarr_path, log_file_path, year):
+    for month in range(1, 13):
+        process_month(netcdf_dir, zarr_path, log_file_path, year, month)
 
 if __name__ == "__main__":
+    output_dir = '/tmpdata/summerized_data/i.e215.I2000Clm50SpGs.hw_production.02/monthly_avg_for_each_year'
+    os.makedirs(output_dir, exist_ok=True)
+
     netcdf_dir = '/tmpdata/i.e215.I2000Clm50SpGs.hw_production.02/'
-    zarr_path = '/tmpdata/zarr/i.e215.I2000Clm50SpGs.hw_production.02'
+    zarr_path = '/tmpdata/zarr/test2/'
+    log_file_path = os.path.join(output_dir, 'processed_files.log')
 
-    start_date = pd.to_datetime('1986-01-01')
-    end_date = pd.to_datetime('1986-12-31')
-    date_range = generate_noleap_date_range(start_date, end_date)
-    netcdf_filenames = [os.path.join(netcdf_dir, f"i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.{date.strftime('%Y-%m-%d')}-00000.nc") for date in date_range]
+    start_year = 1985
+    end_year = 1986
 
-    core_vars = ['TSA', 'TSA_R', 'TSA_U', 'WBA', 'WBA_R', 'WBA_U']
-    # Example to fetch other variables, adjust as per your data
-    one_hourly_file = '/tmpdata/i.e215.I2000Clm50SpGs.hw_production.02/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.1986-01-01-00000.nc'
-    ds_hourly = xr.open_dataset(one_hourly_file)
-    other_vars = [var for var in ds_hourly.data_vars if (var not in core_vars and len(ds_hourly[var].dims) == 3)]
-
-    monthly_chunk_size = 24 * 30
-    chunk_shape_3D = (monthly_chunk_size, 192, 288)  # (time, lat, lon)
-    dims_3D = ['time', 'lat', 'lon']
-
-    # Initialize Zarr groups for core and other variables
-    initialize_zarr_group(zarr_path, 'frequent_vars', chunk_shape_3D, core_vars, dims_3D)
-    initialize_zarr_group(zarr_path, 'other_vars', chunk_shape_3D, other_vars, dims_3D)
-
-    process_files(netcdf_filenames, zarr_path, core_vars, other_vars, chunk_shape_3D)
+    for year in range(start_year, end_year + 1):
+        process_year(netcdf_dir, zarr_path, log_file_path, year)
