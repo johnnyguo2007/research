@@ -31,6 +31,25 @@ def round_to_nearest_hour(time_values):
 
     return np.array(rounded_times)
 
+# Function to set unwanted data to NaN while keeping the dataset structure
+def set_unwanted_to_nan(ds):
+    # Condition for JJA in the Northern Hemisphere
+    condition_jja_nh = (ds['time.season'] == 'JJA') & (ds['lat'] >= 0)
+
+    # Condition for DJF in the Southern Hemisphere
+    condition_djf_sh = (ds['time.season'] == 'DJF') & (ds['lat'] < 0)
+
+    # Set grid cells to NaN where TSA_U is null
+    condition_tsa_u_not_null = ds['TSA_U'].notnull()
+
+    # Combine conditions for the desired data, set others to NaN
+    condition = (condition_jja_nh | condition_djf_sh) & condition_tsa_u_not_null
+
+    # Apply condition, keeping structure intact
+    ds_filtered = ds.where(condition)
+
+    return ds_filtered
+
 
 def log_file_status(log_file_path, file_path, status):
     with open(log_file_path, 'a') as log_file:
@@ -60,7 +79,8 @@ def process_year(netcdf_dir, zarr_path, log_file_path, year):
 
     ds = xr.open_mfdataset(file_paths, chunks={'time': 24 * 31})
     ds['time'] = round_to_nearest_hour(ds['time'].values)
-    append_to_zarr(ds, os.path.join(zarr_path, '3Dvars'))
+    ds_filtered = set_unwanted_to_nan(ds)
+    append_to_zarr(ds_filtered, os.path.join(zarr_path, '3Dvars'))
 
 
 # def process_year(netcdf_dir, zarr_path, log_file_path, year):
@@ -70,7 +90,7 @@ def process_year(netcdf_dir, zarr_path, log_file_path, year):
 
 if __name__ == "__main__":
     netcdf_dir = '/home/jguo/process_data/i.e215.I2000Clm50SpGs.hw_production.02/hourly_raw'
-    zarr_path = '/home/jguo/process_data/zarr/i.e215.I2000Clm50SpGs.hw_production.02'
+    zarr_path = '/home/jguo/process_data/zarr/test02'
     output_dir = zarr_path
     os.makedirs(output_dir, exist_ok=True)
     log_file_path = os.path.join(output_dir, 'processed_files.log')
