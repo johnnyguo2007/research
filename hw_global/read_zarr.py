@@ -25,7 +25,7 @@ def main():
     print("Dask Dashboard:", client.dashboard_link)
 
     # Read the Zarr dataset using Xarray with automatic chunking for Dask
-    ds = xr.open_zarr('/home/jguo/process_data/zarr/test02/3Dvars', chunks='auto')
+    ds = xr.open_zarr('/home/jguo/process_data/zarr/test02/3Dvars') #, chunks='auto')
     core_vars = ['TSA', 'TSA_R', 'TSA_U', 'WBA', 'WBA_R', 'WBA_U']
     ds = ds[core_vars]
 
@@ -65,7 +65,7 @@ def main():
 
         # Compute and save filtered datasets for the current year
         filtered_ds_compute_year = filtered_ds_year.compute()
-        append_to_zarr(filtered_ds_compute_year, f'/home/jguo/process_data/zarr/test02/filtered_ds_year_{year}')
+        append_to_zarr(filtered_ds_compute_year, f'/home/jguo/process_data/zarr/test02/filtered_ds')
         del filtered_ds_compute_year
 
 if __name__ == "__main__":
