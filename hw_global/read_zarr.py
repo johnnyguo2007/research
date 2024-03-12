@@ -63,7 +63,7 @@ def main():
 
         # Compute and save filtered datasets for the current year
         filtered_ds_compute_year = filtered_ds_year.compute()
-        append_to_zarr(filtered_ds_compute_year, f'/home/jguo/process_data/zarr/test02/filtered_ds')
+        append_to_zarr(filtered_ds_compute_year, f'/home/jguo/process_data/zarr/test02/hw_uhi')
         del filtered_ds_compute_year
 
         # Invert the hourly mask to target hours where the condition doesn't hold for the current year
@@ -72,7 +72,7 @@ def main():
         # Apply the inverted mask to ds_year to get unmasked data for the current year
         unmasked_ds_year = ds_year.where(inverted_hourly_mask_year)
         unmasked_ds_compute_year = unmasked_ds_year.compute()
-        append_to_zarr(unmasked_ds_compute_year, f'/home/jguo/process_data/zarr/test02/unmasked_ds_year')
+        append_to_zarr(unmasked_ds_compute_year, f'/home/jguo/process_data/zarr/test02/nohw_uhi')
         del unmasked_ds_compute_year
 
 if __name__ == "__main__":
