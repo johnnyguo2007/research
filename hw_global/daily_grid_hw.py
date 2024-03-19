@@ -65,7 +65,7 @@ if not hw_file_exist:
     # Define the threshold temperature in Kelvin
     # Convert 90 degrees Fahrenheit to Kelvin
     fahrenheit_threshold = 90
-    kelvin_threshold = (fahrenheit_threshold - 32) * (5/9) + 273.15
+    kelvin_threshold = (fahrenheit_threshold - 32) * (5/9) + 273.15  # 305.3722 K
 
     # Define a function to apply on each grid cell to detect heatwaves
     def detect_heatwave(tsa_r_np):

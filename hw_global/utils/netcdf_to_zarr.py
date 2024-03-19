@@ -116,6 +116,8 @@ def process_year(netcdf_dir, zarr_path, log_file_path, year, var_list, ds_daily_
     hourly_mask_year = overlapping_mask_year.reindex(time=full_hourly_range_year, method='ffill').compute()
 
     # Apply the hourly mask to ds_year to get filtered data for the current year
+    #todo: HW here is not dependent if we have data in that cell. we could have an empty cell because we filtered out
+    # the non-summer months
     ds_year['HW'] = hourly_mask_year
 
     append_to_zarr(ds_year, os.path.join(zarr_path, '3Dvars'))
