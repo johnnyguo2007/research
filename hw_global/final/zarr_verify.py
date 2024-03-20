@@ -61,11 +61,11 @@ def process_in_chunks(ds, chunk_size, zarr_path):
         ds_hw_chunk = ds_chunk.where(hw_computed).compute()
         ds_no_hw_chunk = ds_chunk.where(~hw_computed).compute()
 
-        # # Append the processed chunk to the list
-        # print(f"Appending HW to Zarr", ds_hw_chunk.time.values[0], ds_hw_chunk.time.values[-1])
-        # append_to_zarr(ds_hw_chunk, os.path.join(zarr_path, 'HW'))
-        # print(f"Appending No HW to Zarr", ds_no_hw_chunk.time.values[0], ds_no_hw_chunk.time.values[-1])
-        # append_to_zarr(ds_no_hw_chunk, os.path.join(zarr_path, 'NO_HW'))
+        # Append the processed chunk to the list
+        print(f"Appending HW to Zarr", ds_hw_chunk.time.values[0], ds_hw_chunk.time.values[-1])
+        append_to_zarr(ds_hw_chunk, os.path.join(zarr_path, 'HW'))
+        print(f"Appending No HW to Zarr", ds_no_hw_chunk.time.values[0], ds_no_hw_chunk.time.values[-1])
+        append_to_zarr(ds_no_hw_chunk, os.path.join(zarr_path, 'NO_HW'))
         
     return 
 #%%
