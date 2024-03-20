@@ -3,10 +3,11 @@ import pandas as pd
 import xarray as xr
 
 # Read the Zarr dataset using Xarray with automatic chunking for Dask
-ds = xr.open_zarr('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/zarr2/HW', chunks='auto')
-
+# ds = xr.open_zarr('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/zarr2/HW', chunks='auto')
+ds = xr.open_zarr('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/zarr2/NO_HW', chunks='auto')
 # Select core variables
-core_vars = ['UHI', 'UBWI', 'HW']
+# core_vars = ['UHI', 'UBWI', 'HW']
+core_vars = ['UHI', 'UBWI']
 ds = ds[core_vars]
 
 # Define start and end year of your dataset
@@ -37,7 +38,7 @@ for start_chunk_year in range(start_year, end_year + 1, years_per_chunk):
     df_chunk = pd.concat(df_list)
 
     # Define the path to the Parquet file for this 10-year chunk
-    parquet_file_path = f'/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/parquet/HW_{start_chunk_year}_{end_chunk_year}.parquet'
+    parquet_file_path = f'/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/parquet/NO_HW_{start_chunk_year}_{end_chunk_year}.parquet'
 
     # Write the 10-year chunk DataFrame to a Parquet file
     df_chunk.to_parquet(parquet_file_path, engine='pyarrow', index=True)
