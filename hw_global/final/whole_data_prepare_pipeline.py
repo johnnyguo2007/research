@@ -288,9 +288,9 @@ def main():
         #              'TSKIN_R', 'TSKIN_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U', 'WBA_R', 'WBA_U']
         core_vars = ['UHI', 'UBWI', 'WIND', 'RAIN', 'SNOW', 'HW', 'Q2M_R', 'Q2M_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U']
         zarr_to_dataframe(research_results_zarr_dir, start_year, end_year, 1,
-                          research_results_zarr_dir, 'HW', core_vars)
+                          research_results_parquet_dir, 'HW', core_vars)
         zarr_to_dataframe(research_results_zarr_dir, start_year, end_year, 1,
-                          research_results_zarr_dir, 'NO_HW', core_vars)
+                          research_results_parquet_dir, 'NO_HW', core_vars)
 
 
 if __name__ == "__main__":
