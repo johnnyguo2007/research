@@ -168,7 +168,7 @@ def zarr_to_dataframe(zarr_path, start_year, end_year, years_per_chunk, output_p
             df_list.append(df_year)
 
         df_chunk = pd.concat(df_list)
-        parquet_file_path = os.path.join(output_path, f'{hw_flag}_{chunk_start_year}_{chunk_end_year}.parquet')
+        parquet_file_path = os.path.join(output_path, f'ALL_{hw_flag}_{chunk_start_year}_{chunk_end_year}.parquet')
         df_chunk.to_parquet(parquet_file_path, engine='pyarrow', index=True)
 
         print(f'Saved {chunk_start_year}-{chunk_end_year} data to {parquet_file_path}')
@@ -191,10 +191,14 @@ def main():
 
     research_results_summary_dir = os.path.join(case_results_dir, case_name, 'research_results/summary')
     os.makedirs(research_results_summary_dir, exist_ok=True)
+
+    research_results_parquet_dir = os.path.join(case_results_dir, case_name, 'research_results/parquet')
+    os.makedirs(research_results_parquet_dir, exist_ok=True)
+
     log_file_path = os.path.join(research_results_summary_dir, 'processed_files.log')
     # process_data_dir = '/home/jguo/process_data'
     start_year = 1985
-    end_year = 2014
+    end_year = 2013
 
     run_all = False
     run_extract_variables = False
