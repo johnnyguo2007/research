@@ -278,15 +278,19 @@ def main():
         # ds = ds.sel(time=slice('1985-01-02', '1985-12-31'))
         ds['UHI'] = ds.TSA_U - ds.TSA_R
         ds['UWBI'] = ds.WBA_U - ds.WBA_R
-        core_vars = ['TSA', 'TSA_R', 'TSA_U', 'WBA', 'WBA_R', 'WBA_U', 'HW']
         separate_hw_no_hw_process_in_chunks(ds=ds, chunk_size=24 * 3, zarr_path=research_results_zarr_dir)
 
     # Convert Zarr to Parquet
     if run_all or run_zarr_to_parquet:
-        zarr_to_dataframe(research_results_zarr_dir, start_year, end_year, 10,
-                          research_results_zarr_dir, 'HW')
-        zarr_to_dataframe(research_results_zarr_dir, start_year, end_year, 10,
-                          research_results_zarr_dir, 'NO_HW')
+        # core_vars = ['UHI', 'UBWI', 'WIND', 'HW', 'APPAR_TEMP_R', 'APPAR_TEMP_U', 'EFLX_LH_TOT_R', 'EFLX_LH_TOT_U',
+        #              'FGR_R', 'FGR_U', 'FIRA_R', 'FIRA_U', 'FIRE_R', 'FIRE_U', 'FSA_R', 'FSA_U',
+        #              'FSH_R', 'FSH_U', 'HIA_R', 'HIA_U', 'Q2M_R', 'Q2M_U', 'TSA_R', 'TSA_U',
+        #              'TSKIN_R', 'TSKIN_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U', 'WBA_R', 'WBA_U']
+        core_vars = ['UHI', 'UBWI', 'WIND', 'RAIN', 'SNOW', 'HW', 'Q2M_R', 'Q2M_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U']
+        zarr_to_dataframe(research_results_zarr_dir, start_year, end_year, 1,
+                          research_results_zarr_dir, 'HW', core_vars)
+        zarr_to_dataframe(research_results_zarr_dir, start_year, end_year, 1,
+                          research_results_zarr_dir, 'NO_HW', core_vars)
 
 
 if __name__ == "__main__":
