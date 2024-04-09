@@ -43,25 +43,9 @@ def extract_variables(input_pattern, variables, output_file):
     ds_var.to_netcdf(output_file)
 
 def main():
-    # parser = argparse.ArgumentParser(description="Extract variables from NetCDF files.")
-    #
-    # # Adding argument for input file pattern
-    # parser.add_argument('input_pattern', type=str, help='Input file pattern to match NetCDF files')
-    #
-    # # Adding argument for variables to extract, expected to be a comma-separated list
-    # parser.add_argument('variables', type=str, help='Comma-separated list of variables to extract')
-    #
-    # # Adding argument for output file name
-    # parser.add_argument('output_file', type=str, help='Output file name for the extracted variables')
-    #
-    # # Parse the command-line arguments
-    # args = parser.parse_args()
-    #
-    # # Convert comma-separated variables string to a list
-    # variables_list = args.variables.split(',')
-
+    # Extract variables from the DAILY h1 so we can detect heatwaves
     #file_pattern = f'/media/jguo/external_data/simulation_output/archive/case/lnd/hist/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h2.{year}-{month:02d}-*-00000.nc'
-    file_pattern = f'/home/jguo/process_data/i.e215.I2000Clm50SpGs.hw_production.02/daily_raw/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h1.*-00000.nc'
+    file_pattern = f'/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/sim_results/hourly/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h1.*-00000.nc'
     variables_list = ['TSA', 'TSA_U', 'TSA_R', 'TREFMXAV_R']
     output_file = f'/home/jguo/process_data/i.e215.I2000Clm50SpGs.hw_production.02/summary/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h1.TSA_UR_TREFMXAV_R.nc'
     # Call the function to extract variables using the provided arguments
