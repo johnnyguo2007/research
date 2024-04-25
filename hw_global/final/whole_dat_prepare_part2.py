@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+import xarray as xr
 import os
+
 
 def load_data(data_dir, start_year, end_year):
     """
@@ -58,7 +60,7 @@ def check_data_overlap(df_hw, df_no_hw):
 
     return keys_hw & keys_no_hw
 
-def calculate_difference(df_hw, df_no_hw_avg):
+def calculate_uhi_diff(df_hw, df_no_hw_avg):
     """
     Calculate the difference between UHI values of HW and average NO_HW on matching columns.
 
@@ -93,6 +95,37 @@ def convert_time_to_local_and_add_hour(df):
     df['local_hour'] = df['local_time'].dt.hour
     return df
 
+def add_event_id(df):
+    """
+    Add event_ID to the DataFrame. This only depends on cell location_id and date.
+    It is only for HW dataset hence a three column dataframe with location_id, date,
+    event_ID can be created independently and merged with any HW dataframe.
+
+    Args:
+        df (pd.DataFrame): DataFrame to process.
+
+    Returns:
+        pd.DataFrame: Modified DataFrame with 'event_ID' and 'global_event_ID' columns.
+    """
+    # Sort by 'location_ID' and 'time'
+    df.sort_values(by=['location_ID', 'time'], inplace=True)
+
+    # Create a new column 'time_diff' to find the difference in hours between consecutive rows
+    df['time_diff'] = df.groupby('location_ID')['time'].diff().dt.total_seconds() / 3600
+
+    # Identify the start of a new event (any gap of more than one hour)
+    df['new_event'] = (df['time_diff'] > 1)
+
+    # Generate cumulative sum to assign unique event IDs within each location
+    df['event_ID'] = df.groupby('location_ID')['new_event'].cumsum()
+
+    # Combine location_ID with event_ID to create a globally unique event identifier
+    df['global_event_ID'] = df['location_ID'].astype(str) + '_' + df['event_ID'].astype(str)
+
+    return df
+
+
+
 # Main script
 data_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/parquet'
 summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
@@ -112,9 +145,26 @@ df_no_hw = add_year_month_hour_cols(df_no_hw)
 #     print("The following keys overlap between df_hw and df_no_hw:", overlap)
 
 df_no_hw_avg = df_no_hw.groupby(['lat', 'lon', 'year', 'hour']).mean()
-merged_df = calculate_difference(df_hw, df_no_hw_avg)
-merged_df = convert_time_to_local_and_add_hour(merged_df)
+local_hour_adjusted_df = calculate_uhi_diff(df_hw, df_no_hw_avg)
+local_hour_adjusted_df = convert_time_to_local_and_add_hour(local_hour_adjusted_df)
+local_hour_adjusted_df.rename(columns=lambda x: x.replace('UBWI', 'UWBI'), inplace=True)
+
+# add location ID
+# location_id is only dependent on lat and lon.
+# Hence a three columns dataframe with lat, lon and location_id can be created independently
+# Load the NetCDF file
+
+loc_id_path = os.path.join(summary_dir, 'location_IDs.nc')
+location_ds = xr.open_dataset(loc_id_path)
+location_df = location_ds.to_dataframe().reset_index()
+
+# Merge the location_df with the local_hour_adjusted_df
+local_hour_adjusted_df = pd.merge(local_hour_adjusted_df, location_df, on=['lat', 'lon'], how='left')
 
 
-merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables.feather')
-merged_df.to_feather(merged_feather_path)
+local_hour_adjusted_df = add_event_id(local_hour_adjusted_df)
+
+# merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables.feather')
+var_with_id_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID.feather')
+local_hour_adjusted_df.to_feather(var_with_id_path)
+
