@@ -1,0 +1,37 @@
+# Case and directory settings
+case_name: i.e215.I2000Clm50SpGs.hw_production.02
+case_results_dir: /Trex/case_results
+
+# Directory paths using variable reuse
+sim_results_hourly_dir: {case_results_dir}/{case_name}/sim_results/hourly
+sim_results_daily_dir: {case_results_dir}/{case_name}/sim_results/daily
+sim_results_monthly_dir: {case_results_dir}/{case_name}/sim_results/monthly
+research_results_zarr_dir: {case_results_dir}/{case_name}/research_results/zarr
+research_results_summary_dir: {case_results_dir}/{case_name}/research_results/summary
+research_results_parquet_dir: {case_results_dir}/{case_name}/research_results/parquet
+
+# File paths using variable reuse
+log_file_path: {research_results_summary_dir}/processed_files.log
+daily_file_pattern: {sim_results_daily_dir}/{case_name}.clm2.h1.*-00000.nc
+daily_output_file: {research_results_summary_dir}/{case_name}.clm2.h1.TSA_UR_TREFMXAV_R.nc
+one_simu_result_monthly_file: {sim_results_monthly_dir}/{case_name}.clm2.h0.1985-01.nc
+one_hourly_file: {sim_results_hourly_dir}/{case_name}.clm2.h2.1985-07-01-00000.nc
+daily_grid_hw_file: {research_results_summary_dir}/daily_grid_hw.nc
+daily_hw_dates_file: {research_results_summary_dir}/daily_hw_dates.nc
+loc_id_path: {research_results_summary_dir}/location_IDs.nc
+var_with_id_path: {research_results_summary_dir}/local_hour_adjusted_variables_with_location_ID.feather
+
+# Data processing options
+run_extract_variables: true
+run_hw_detection: true
+run_convert_to_zarr: true
+run_sep_hw_no_hw: true
+run_zarr_to_parquet: true
+
+# Processing parameters
+start_year: 1985
+end_year: 2013
+fahrenheit_threshold: 90
+kelvin_threshold: 305.372
+daily_variables_list: ['TSA', 'TSA_U', 'TSA_R', 'TREFMXAV_R']
+core_vars: ['UHI', 'UWBI', 'WIND', 'RAIN', 'SNOW', 'HW', 'Q2M_R', 'Q2M_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U']
