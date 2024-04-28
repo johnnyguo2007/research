@@ -9,6 +9,21 @@ import yaml
 
 import psutil
 
+import os
+
+
+def ensure_directory_exists(file_path):
+    # Extract the directory part of the file path
+    directory = os.path.dirname(file_path)
+
+    # Check if the directory exists
+    if not os.path.exists(directory):
+        # If the directory does not exist, create it
+        os.makedirs(directory)
+        print(f"Directory '{directory}' created.")
+    else:
+        print(f"Directory '{directory}' already exists.")
+
 
 def show_memory_usage(message):
     # Get the current process
@@ -41,6 +56,7 @@ def extract_variables(input_pattern, variables, output_file, log_file_path):
 
     ds = xr.open_mfdataset(file_paths, combine='by_coords')
     ds_var = ds[variables]
+    ensure_directory_exists(output_file)
     ds_var.to_netcdf(output_file)
 
 
@@ -314,29 +330,31 @@ def main():
         zarr_to_dataframe(config["research_results_zarr_dir"], config["start_year"], config["end_year"],
                           1, config["research_results_parquet_dir"], 'NO_HW', config["core_vars"])
 
-    # Main script
-    df_hw, df_no_hw = load_data_from_parquet(config["research_results_parquet_dir"],
-                                             config["start_year"], config["end_year"])
+    # todo
+    if config["todo"]:
+        # Main script
+        df_hw, df_no_hw = load_data_from_parquet(config["research_results_parquet_dir"],
+                                                 config["start_year"], config["end_year"])
 
-    # Prepare DataFrame by decomposing datetime
-    df_hw = add_year_month_hour_cols(df_hw)
-    df_no_hw = add_year_month_hour_cols(df_no_hw)
+        # Prepare DataFrame by decomposing datetime
+        df_hw = add_year_month_hour_cols(df_hw)
+        df_no_hw = add_year_month_hour_cols(df_no_hw)
 
-    df_no_hw_avg = df_no_hw.groupby(['lat', 'lon', 'year', 'hour']).mean()
-    local_hour_adjusted_df = calculate_uhi_diff(df_hw, df_no_hw_avg)
-    local_hour_adjusted_df = convert_time_to_local_and_add_hour(local_hour_adjusted_df)
-    local_hour_adjusted_df.rename(columns=lambda x: x.replace('UBWI', 'UWBI'), inplace=True)
+        df_no_hw_avg = df_no_hw.groupby(['lat', 'lon', 'year', 'hour']).mean()
+        local_hour_adjusted_df = calculate_uhi_diff(df_hw, df_no_hw_avg)
+        local_hour_adjusted_df = convert_time_to_local_and_add_hour(local_hour_adjusted_df)
+        local_hour_adjusted_df.rename(columns=lambda x: x.replace('UBWI', 'UWBI'), inplace=True)
 
-    # add location ID
-    location_ds = xr.open_dataset(config["loc_id_path"])
-    location_df = location_ds.to_dataframe().reset_index()
+        # add location ID
+        location_ds = xr.open_dataset(config["loc_id_path"])
+        location_df = location_ds.to_dataframe().reset_index()
 
-    # Merge the location_df with the local_hour_adjusted_df
-    local_hour_adjusted_df = pd.merge(local_hour_adjusted_df, location_df, on=['lat', 'lon'], how='left')
+        # Merge the location_df with the local_hour_adjusted_df
+        local_hour_adjusted_df = pd.merge(local_hour_adjusted_df, location_df, on=['lat', 'lon'], how='left')
 
-    local_hour_adjusted_df = add_event_id(local_hour_adjusted_df)
+        local_hour_adjusted_df = add_event_id(local_hour_adjusted_df)
 
-    local_hour_adjusted_df.to_feather(config["var_with_id_path"])
+        local_hour_adjusted_df.to_feather(config["var_with_id_path"])
 
 
 if __name__ == "__main__":
