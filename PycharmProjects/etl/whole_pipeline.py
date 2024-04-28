@@ -8,8 +8,27 @@ import zarr
 import yaml
 
 import psutil
+import time
 
-import os
+
+def time_func(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+
+        # Calculate hours, minutes, and seconds
+        hours, remainder = divmod(elapsed_time, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        # Format the output string
+        time_str = f"{int(hours):02d}h:{int(minutes):02d}m:{seconds:.2f}s"
+        print(f"{func.__name__} executed in {time_str}")
+
+        return result
+
+    return wrapper
 
 
 def ensure_directory_exists(file_path):
@@ -213,17 +232,20 @@ def zarr_to_dataframe(zarr_path, start_year, end_year, output_path, hw_flag, cor
         show_memory_usage(f"Memory usage after saving {year} data")
 
 
-def load_data_from_parquet(data_dir, start_year, end_year):
+def load_data_from_parquet(data_dir, start_year, end_year, col_list=None):
     """Load HW and NO_HW data from the specified directory for a range of years."""
     df_hw_list = []
     df_no_hw_list = []
 
     for year in range(start_year, end_year + 1):
-        file_name_hw = os.path.join(data_dir, f"ALL_HW_{year}_{year}.parquet")
-        file_name_no_hw = os.path.join(data_dir, f"ALL_NO_HW_{year}_{year}.parquet")
-
-        df_hw_list.append(pd.read_parquet(file_name_hw))
-        df_no_hw_list.append(pd.read_parquet(file_name_no_hw))
+        file_name_hw = os.path.join(data_dir, f"ALL_HW_{year}.parquet")
+        file_name_no_hw = os.path.join(data_dir, f"ALL_NO_HW_{year}.parquet")
+        if not col_list:
+            df_hw_list.append(pd.read_parquet(file_name_hw))
+            df_no_hw_list.append(pd.read_parquet(file_name_no_hw))
+        else:
+            df_hw_list.append(pd.read_parquet(file_name_hw, columns=col_list))
+            df_no_hw_list.append(pd.read_parquet(file_name_no_hw, columns=col_list))
 
     return pd.concat(df_hw_list), pd.concat(df_no_hw_list)
 
@@ -352,21 +374,34 @@ def main():
         zarr_to_dataframe(config["research_results_zarr_dir"], config["start_year"], config["end_year"],
                           config["research_results_parquet_dir"], 'NO_HW', config["core_vars"])
 
-    # todo
-    if config["todo"]:
+    # aggregate merge compute difference and add local hour
+    if config["run_prepare_for_ml"]:
         # Main script
+        ml_col_list = config["parquet_col_list"]
         df_hw, df_no_hw = load_data_from_parquet(config["research_results_parquet_dir"],
-                                                 config["start_year"], config["end_year"])
+                                                 config["start_year"], config["end_year"],
+                                                 ml_col_list)
 
         # Prepare DataFrame by decomposing datetime
         df_hw = add_year_month_hour_cols(df_hw)
         df_no_hw = add_year_month_hour_cols(df_no_hw)
+        show_memory_usage("After add_year_month_hour_cols")
 
         df_no_hw_avg = df_no_hw.groupby(['lat', 'lon', 'year', 'hour']).mean()
-        local_hour_adjusted_df = calculate_uhi_diff(df_hw, df_no_hw_avg)
+        show_memory_usage("After groupby")
+
+        local_hour_adjusted_df: pd.DataFrame = calculate_uhi_diff(df_hw, df_no_hw_avg)
+        show_memory_usage("After calculate_uhi_diff")
+
         local_hour_adjusted_df = convert_time_to_local_and_add_hour(local_hour_adjusted_df)
+        show_memory_usage("After convert_time_to_local_and_add_hour")
+
         local_hour_adjusted_df.rename(columns=lambda x: x.replace('UBWI', 'UWBI'), inplace=True)
 
+        ensure_directory_exists(config["subset_from_parquet_and_merged_file_path"])
+        local_hour_adjusted_df.to_feather(config["subset_from_parquet_and_merged_file_path"])
+
+    if config["run_add_location_id_event_id"]:
         # add location ID
         location_ds = xr.open_dataset(config["loc_id_path"])
         location_df = location_ds.to_dataframe().reset_index()
