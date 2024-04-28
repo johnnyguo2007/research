@@ -7,8 +7,8 @@ test_results_dir: "/Trex/test_case_results"
 sim_results_hourly_dir: "{case_results_dir}/{case_name}/sim_results/hourly"
 sim_results_daily_dir: "{case_results_dir}/{case_name}/sim_results/daily"
 sim_results_monthly_dir: "{case_results_dir}/{case_name}/sim_results/monthly"
-research_results_zarr_dir: "{test_results_dir}/{case_name}/research_results/zarr"
-research_results_summary_dir: "{test_results_dir}/{case_name}/research_results/summary"
+research_results_zarr_dir: "{case_results_dir}/{case_name}/research_results/zarr"
+research_results_summary_dir: "{case_results_dir}/{case_name}/research_results/summary"
 research_results_parquet_dir: "{test_results_dir}/{case_name}/research_results/parquet"
 
 # File paths using variable reuse
@@ -23,16 +23,17 @@ loc_id_path: "{research_results_summary_dir}/location_IDs.nc"
 var_with_id_path: "{research_results_summary_dir}/local_hour_adjusted_variables_with_location_ID.feather"
 
 # Data processing options
-run_extract_variables: true
+run_extract_variables: false
 run_hw_detection: false
 run_convert_to_zarr: false
 run_sep_hw_no_hw: false
-run_zarr_to_parquet: false
+run_zarr_to_parquet: true
 
 # Processing parameters
 start_year: 1985
-end_year: 1987
+end_year: 2013
 fahrenheit_threshold: 90
 kelvin_threshold: 305.372
 daily_variables_list: ['TREFMXAV_R']
-core_vars: ['UHI', 'UWBI', 'WIND', 'RAIN', 'SNOW', 'HW', 'Q2M_R', 'Q2M_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U']
+#core_vars: ['UHI', 'UWBI', 'WIND', 'RAIN', 'SNOW', 'HW', 'Q2M_R', 'Q2M_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U']
+core_vars: []

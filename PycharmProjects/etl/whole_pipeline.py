@@ -14,15 +14,33 @@ import os
 
 def ensure_directory_exists(file_path):
     # Extract the directory part of the file path
-    directory = os.path.dirname(file_path)
+    directory = os.path.dirname(file_path) if os.path.isfile(file_path) else os.path.abspath(file_path)
 
     # Check if the directory exists
     if not os.path.exists(directory):
         # If the directory does not exist, create it
         os.makedirs(directory)
         print(f"Directory '{directory}' created.")
-    else:
-        print(f"Directory '{directory}' already exists.")
+    # else:
+    #     print(f"Directory '{directory}' already exists.")
+
+
+def substitute_variables(data, parent_data=None):
+    if parent_data is None:
+        parent_data = data  # Initial call uses the root of the data
+
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if isinstance(value, str):
+                data[key] = value.format(**parent_data)
+            else:
+                substitute_variables(value, parent_data)
+    elif isinstance(data, list):
+        for i, item in enumerate(data):
+            if isinstance(item, str):
+                data[i] = item.format(**parent_data)
+            else:
+                substitute_variables(item, parent_data)
 
 
 def show_memory_usage(message):
@@ -43,6 +61,9 @@ def load_config(config_file):
     """Loads configuration parameters from a YAML file."""
     with open(config_file, "r") as f:
         config = yaml.safe_load(f)
+
+    # Perform variable substitution
+    substitute_variables(config)
     return config
 
 
@@ -54,6 +75,7 @@ def extract_variables(input_pattern, variables, output_file, log_file_path):
     for file_path in file_paths:
         log_file_status(log_file_path, file_path, "Processed")
 
+    #todo: should add in drop_variables to avoid the cost of joining and potentially reduce memory usage
     ds = xr.open_mfdataset(file_paths, combine='by_coords')
     ds_var = ds[variables]
     ensure_directory_exists(output_file)
@@ -97,6 +119,7 @@ def set_unwanted_to_nan(ds):
 
 
 def log_file_status(log_file_path, file_path, status):
+    ensure_directory_exists(log_file_path)
     """Logs the status of each file."""
     with open(log_file_path, 'a') as log_file:
         log_file.write(f'{file_path} - {status}\n')
@@ -165,31 +188,29 @@ def separate_hw_no_hw_process_in_chunks(ds, chunk_size, zarr_path):
         append_to_zarr(ds_no_hw_chunk, os.path.join(zarr_path, 'NO_HW'))
 
 
-def zarr_to_dataframe(zarr_path, start_year, end_year, years_per_chunk, output_path, hw_flag, core_vars=None):
-    """Converts Zarr data to DataFrame format and saves it as Parquet files."""
+def zarr_to_dataframe(zarr_path, start_year, end_year, output_path, hw_flag, core_vars=None):
+    """Converts Zarr data to DataFrame format, processing monthly but saves it as annual Parquet files."""
     ds = xr.open_zarr(os.path.join(zarr_path, hw_flag), chunks='auto')
     if core_vars:
         ds = ds[core_vars]
 
-    chunk_start_year = start_year
-    while chunk_start_year <= end_year:
+    ensure_directory_exists(output_path)
+    for year in range(start_year, end_year + 1):
         df_list = []
-        chunk_end_year = min(chunk_start_year + years_per_chunk - 1, end_year)
+        for month in range(1, 13):  # Loop through each month
+            month_str = f'{year}-{month:02d}'  # Format as 'YYYY-MM'
+            ds_month = ds.sel(time=month_str)  # Select all days for given month and year
+            df_month = ds_month.to_dataframe().dropna()  # Convert to DataFrame and drop NA values
+            df_list.append(df_month)
 
-        for year in range(chunk_start_year, chunk_end_year + 1):
-            ds_year = ds.sel(time=slice(f'{year}-01-01', f'{year}-12-31'))
-            df_year = ds_year.to_dataframe(['lat', 'lon', 'time']).dropna()
-            df_list.append(df_year)
+        df_year = pd.concat(df_list)
+        df_year.columns = df_year.columns.str.replace('UBWI', 'UWBI')
 
-        df_chunk = pd.concat(df_list)
-        df_chunk.columns = df_chunk.columns.str.replace('UBWI', 'UWBI')
+        parquet_file_path = os.path.join(output_path, f'ALL_{hw_flag}_{year}.parquet')
+        df_year.to_parquet(parquet_file_path, engine='pyarrow', index=True)
 
-        parquet_file_path = os.path.join(output_path, f'ALL_{hw_flag}_{chunk_start_year}_{chunk_end_year}.parquet')
-        df_chunk.to_parquet(parquet_file_path, engine='pyarrow', index=True)
-
-        print(f'Saved {chunk_start_year}-{chunk_end_year} data to {parquet_file_path}')
-
-        chunk_start_year = chunk_end_year + 1
+        print(f'Saved {year} data to {parquet_file_path}')
+        show_memory_usage(f"Memory usage after saving {year} data")
 
 
 def load_data_from_parquet(data_dir, start_year, end_year):
@@ -323,12 +344,13 @@ def main():
         ds['UWBI'] = ds.WBA_U - ds.WBA_R
         separate_hw_no_hw_process_in_chunks(ds=ds, chunk_size=24 * 3, zarr_path=config["research_results_zarr_dir"])
 
+    show_memory_usage("Before run_zarr_to_parquet")
     # Convert Zarr to Parquet
     if config["run_zarr_to_parquet"]:
         zarr_to_dataframe(config["research_results_zarr_dir"], config["start_year"], config["end_year"],
-                          1, config["research_results_parquet_dir"], 'HW', config["core_vars"])
+                          config["research_results_parquet_dir"], 'HW', config["core_vars"])
         zarr_to_dataframe(config["research_results_zarr_dir"], config["start_year"], config["end_year"],
-                          1, config["research_results_parquet_dir"], 'NO_HW', config["core_vars"])
+                          config["research_results_parquet_dir"], 'NO_HW', config["core_vars"])
 
     # todo
     if config["todo"]:
