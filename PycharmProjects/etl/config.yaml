@@ -29,14 +29,14 @@ run_hw_detection: false
 run_convert_to_zarr: false
 run_sep_hw_no_hw: false
 run_zarr_to_parquet: false
-run_prepare_for_ml: true
+run_aggregation_merge_diff: true
+
 
 # Processing parameters
 start_year: 1985
 end_year: 2013
-fahrenheit_threshold: 90
-kelvin_threshold: 305.372
+
 daily_variables_list: ['TREFMXAV_R']
 #core_vars: ['UHI', 'UWBI', 'WIND', 'RAIN', 'SNOW', 'HW', 'Q2M_R', 'Q2M_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U']
 core_vars: []
-parquet_col_list: ['time', 'lat', 'lon', 'TREFMXAV_R', 'location_ID']
+parquet_col_list: []
