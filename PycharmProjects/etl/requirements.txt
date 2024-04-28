@@ -1,0 +1,9 @@
+prefect
+pandas
+numpy
+xarray
+netcdf4
+zarr
+cftime
+psutil
+pyarrow
