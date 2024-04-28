@@ -21,7 +21,8 @@ daily_grid_hw_file: "{research_results_summary_dir}/daily_grid_hw.nc"
 daily_hw_dates_file: "{research_results_summary_dir}/daily_hw_dates.nc"
 loc_id_path: "{research_results_summary_dir}/location_IDs.nc"
 subset_from_parquet_and_merged_file_path: "{research_results_summary_dir}/subset_from_parquet_and_merged.feather"
-var_with_id_path: "{research_results_summary_dir}/local_hour_adjusted_variables_with_location_ID.feather"
+var_with_id_path: "{research_results_summary_dir}/local_hour_adjusted_variables_with_location_ID_event_ID.feather"
+
 
 # Data processing options
 run_extract_variables: false
@@ -29,7 +30,9 @@ run_hw_detection: false
 run_convert_to_zarr: false
 run_sep_hw_no_hw: false
 run_zarr_to_parquet: false
-run_aggregation_merge_diff: true
+run_aggregation_merge_diff: false
+run_create_location_IDs: false
+run_add_location_id_event_id: true
 
 
 # Processing parameters
@@ -40,3 +43,4 @@ daily_variables_list: ['TREFMXAV_R']
 #core_vars: ['UHI', 'UWBI', 'WIND', 'RAIN', 'SNOW', 'HW', 'Q2M_R', 'Q2M_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U']
 core_vars: []
 parquet_col_list: []
+ml_col_list: []

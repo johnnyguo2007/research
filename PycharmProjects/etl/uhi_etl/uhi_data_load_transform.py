@@ -10,7 +10,7 @@ import yaml
 import psutil
 import time
 from datetime import datetime
-from utils import *
+from .utils import *
 
 
 
@@ -208,3 +208,21 @@ def add_event_id(df):
     df['event_ID'] = df.groupby('location_ID')['new_event'].cumsum()
     df['global_event_ID'] = df['location_ID'].astype(str) + '_' + df['event_ID'].astype(str)
     return df
+
+
+@time_func
+def creat_location_id(one_simu_result_monthly_file: str) -> xr.Dataset:
+    # Load the original dataset
+    # one_simu_result_monthly_file = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/sim_results/monthly/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h0.1985-01.nc'
+    ds: xr.Dataset = xr.open_dataset(one_simu_result_monthly_file)
+
+    # Create a unique index for each lat-lon pair
+    location_ID: np.ndarray = np.arange(LAT_LEN * LON_LEN)  # This is a 1D array
+
+    # Create a new dataset with only lon, lat, and location_ID
+    location_ds: xr.Dataset = xr.Dataset({
+        'lon': ds['lon'],
+        'lat': ds['lat'],
+        'location_ID': (('lat', 'lon'), location_ID.reshape(LAT_LEN, LON_LEN))
+    })
+    return location_ds

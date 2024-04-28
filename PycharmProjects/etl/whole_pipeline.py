@@ -24,8 +24,8 @@ def main():
     if config["run_extract_variables"]:
         extract_variables(config["daily_file_pattern"], config["daily_variables_list"],
                           config["daily_extracted_cols_file"], config["log_file_path"])
+        show_memory_usage("After run_extract_variables")
 
-    show_memory_usage("Before run_hw_detection")
     # Determine urban grid and heatwave days
     if config["run_hw_detection"]:
         ds_one_monthly_data = xr.open_dataset(config["one_simu_result_monthly_file"])
@@ -82,16 +82,16 @@ def main():
         ds['UWBI'] = ds.WBA_U - ds.WBA_R
         separate_hw_no_hw_process_in_chunks(ds=ds, chunk_size=24 * 3, zarr_path=config["research_results_zarr_dir"])
 
-    show_memory_usage("Before run_zarr_to_parquet")
     # Convert Zarr to Parquet
     if config["run_zarr_to_parquet"]:
         zarr_to_dataframe(config["research_results_zarr_dir"], config["start_year"], config["end_year"],
                           config["research_results_parquet_dir"], 'HW', config["core_vars"])
         zarr_to_dataframe(config["research_results_zarr_dir"], config["start_year"], config["end_year"],
                           config["research_results_parquet_dir"], 'NO_HW', config["core_vars"])
+        show_memory_usage("After run_zarr_to_parquet")
 
     # aggregate merge compute difference and add local hour
-    if config["run_prepare_for_ml"]:
+    if config["run_aggregation_merge_diff"]:
         # Main script
         ml_col_list = config["parquet_col_list"]
         df_hw, df_no_hw = load_data_from_parquet(config["research_results_parquet_dir"],
@@ -118,11 +118,16 @@ def main():
         ensure_directory_exists(config["subset_from_parquet_and_merged_file_path"])
         local_hour_adjusted_df.to_feather(config["subset_from_parquet_and_merged_file_path"])
 
+    if config["run_create_location_IDs"]:
+        one_simu_result_monthly_file = config["one_simu_result_monthly_file"]
+        location_ds: xr.Dataset = creat_location_id(one_simu_result_monthly_file)
+        location_ds.to_netcdf(config["loc_id_path"])
+
     if config["run_add_location_id_event_id"]:
         # add location ID
         location_ds = xr.open_dataset(config["loc_id_path"])
         location_df = location_ds.to_dataframe().reset_index()
-
+        local_hour_adjusted_df = pd.read_feather(config["subset_from_parquet_and_merged_file_path"])
         # Merge the location_df with the local_hour_adjusted_df
         local_hour_adjusted_df = pd.merge(local_hour_adjusted_df, location_df, on=['lat', 'lon'], how='left')
 
