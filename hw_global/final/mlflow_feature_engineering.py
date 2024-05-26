@@ -177,11 +177,13 @@ plt.clf()
 # SHAP summary plots
 day_shap_values = day_model.get_feature_importance(day_full_pool, type='ShapValues')[:,:-1]
 shap.summary_plot(day_shap_values, X_day, show=False)
+plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
 mlflow.log_figure(plt.gcf(), 'day_shap_summary_plot.png')
 plt.clf()
 
 night_shap_values = night_model.get_feature_importance(night_full_pool, type='ShapValues')[:,:-1]
 shap.summary_plot(night_shap_values, X_night, show=False)
+plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
 mlflow.log_figure(plt.gcf(), 'night_shap_summary_plot.png')
 plt.clf()
 
@@ -190,6 +192,7 @@ day_feature_importances = day_model.get_feature_importance()
 expected_value = day_shap_values[0, -1]
 long_names = get_long_names(day_full_pool.get_feature_names(), df_daily_vars)
 shap.waterfall_plot(shap.Explanation(day_feature_importances, base_values=expected_value, feature_names=long_names), show=False)
+plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
 mlflow.log_figure(plt.gcf(), 'day_shap_waterfall_plot.png')
 plt.clf()
 
@@ -197,36 +200,59 @@ night_feature_importances = night_model.get_feature_importance()
 expected_value_night = night_shap_values[0, -1]
 long_names_night = get_long_names(night_full_pool.get_feature_names(), df_daily_vars)
 shap.waterfall_plot(shap.Explanation(night_feature_importances, base_values=expected_value_night, feature_names=long_names_night), show=False)
+plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
 mlflow.log_figure(plt.gcf(), 'night_shap_waterfall_plot.png')
 plt.clf()
 
 # SHAP dependence plots
-def plot_dependence_grid(shap_values, X, feature_names, plots_per_row=3):
+# Define a function to plot SHAP dependence plots for One feature against other features excluding itself
+def plot_dependence_grid(shap_values, X, feature_names, day_or_night='day', target_feature='U10', plots_per_row=2):
+    """
+    Plots the dependence grid for a given target feature and a list of feature names.
+
+    Parameters:
+    - shap_values (array-like): The SHAP values for the target feature.
+    - X (array-like): The input features.
+    - feature_names (list): The list of feature names.
+    - target_feature (str): The target feature to plot against.
+    - plots_per_row (int): The number of plots to display per row.
+
+    Returns:
+    None
+    """
+    feature_names = [f for f in feature_names if f != target_feature]
     num_features = len(feature_names)
-    num_rows = (num_features + plots_per_row - 1) // plots_per_row
+    num_rows = (num_features + plots_per_row - 1) // plots_per_row  # Calculate the number of rows needed
+
     fig, axes = plt.subplots(num_rows, plots_per_row, figsize=(30, 10 * num_rows))
-    axes = axes.flatten()
+    axes = axes.flatten()  # Flatten the axes array for easy iteration
+
     for i, feature_name in enumerate(feature_names):
-        shap.dependence_plot(ind=feature_name, shap_values=shap_values, features=X, ax=axes[i], show=False)
-        axes[i].set_title(f"Dependence plot for {feature_name}")
+        shap.dependence_plot(ind=target_feature, shap_values=shap_values, features=X, interaction_index=feature_name, ax=axes[i],  show=False)
+        axes[i].set_title(f"Day time {target_feature} vs {feature_name}")
+
+    # Hide any unused subplots
     for j in range(i + 1, len(axes)):
         axes[j].axis('off')
+
     plt.tight_layout()
-    return fig
+    fig.set_size_inches(30, 10 * num_rows)  # Adjust the figure size
+    mlflow.log_figure(plt.gcf(), f'{day_or_night}_dependence_plot_{target_feature}.png')
+    plt.clf()
+
+
 
 top_day_features = day_feature_importance['Feature'].head(3).tolist()
 top_night_features = night_feature_importance['Feature'].head(3).tolist()
 
 # Daytime dependence plots
 for feature in top_day_features:
-    fig = plot_dependence_grid(day_shap_values, X_day, [feature])
-    mlflow.log_figure(fig, f'day_dependence_plot_{feature}.png')
-    plt.clf()
+    plot_dependence_grid(day_shap_values, X_day, feature_names=day_full_pool.get_feature_names(), 
+                         day_or_night='day', target_feature=feature, plots_per_row=2)
 
 # Nighttime dependence plots
 for feature in top_night_features:
-    fig = plot_dependence_grid(night_shap_values, X_night, [feature])
-    mlflow.log_figure(fig, f'night_dependence_plot_{feature}.png')
-    plt.clf()
+    plot_dependence_grid(night_shap_values, X_night, feature_names=night_full_pool.get_feature_names(), 
+                         day_or_night='night', target_feature=feature, plots_per_row=2)
 
 mlflow.end_run()
