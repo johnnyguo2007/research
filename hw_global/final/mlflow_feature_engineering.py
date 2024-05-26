@@ -15,7 +15,7 @@ from scipy.stats import linregress
 
 # Set summary directory and experiment name
 summary_dir = '/Trex/test_case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
-experiment_name = 'UHI_Day_Night_1y_1985_catboost'
+experiment_name = 'UHI_Day_Night_no_filter_catboost'
 
 # Create the MLflow experiment
 mlflow.set_experiment(experiment_name)
@@ -29,8 +29,8 @@ os.makedirs(figure_dir, exist_ok=True)
 merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID.feather')
 local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 
-# Filter data to have year 1985 only
-local_hour_adjusted_df = local_hour_adjusted_df[local_hour_adjusted_df['year'] == 1985]
+# # Filter data to have year 1985 only
+# local_hour_adjusted_df = local_hour_adjusted_df[local_hour_adjusted_df['year'] == 1985]
 
 # Load location ID dataset
 location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
@@ -193,6 +193,7 @@ expected_value = day_shap_values[0, -1]
 long_names = get_long_names(day_full_pool.get_feature_names(), df_daily_vars)
 shap.waterfall_plot(shap.Explanation(day_feature_importances, base_values=expected_value, feature_names=long_names), show=False)
 plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
+plt.gcf().subplots_adjust(left=0.3)  # Increase left margin to make room for y-axis labels
 mlflow.log_figure(plt.gcf(), 'day_shap_waterfall_plot.png')
 plt.clf()
 
@@ -201,6 +202,7 @@ expected_value_night = night_shap_values[0, -1]
 long_names_night = get_long_names(night_full_pool.get_feature_names(), df_daily_vars)
 shap.waterfall_plot(shap.Explanation(night_feature_importances, base_values=expected_value_night, feature_names=long_names_night), show=False)
 plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
+plt.gcf().subplots_adjust(left=0.3)  # Increase left margin to make room for y-axis labels
 mlflow.log_figure(plt.gcf(), 'night_shap_waterfall_plot.png')
 plt.clf()
 
