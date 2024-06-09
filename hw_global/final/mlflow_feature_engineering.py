@@ -36,6 +36,7 @@ local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
 location_ID_ds = xr.open_dataset(location_ID_path, engine='netcdf4')
 
+
 # Load feature list
 df_daily_vars = pd.read_excel('/home/jguo/research/hw_global/Data/hourlyDataSchema.xlsx')
 daily_vars = df_daily_vars.loc[df_daily_vars['X_vars2'] == 'Y', 'Variable']
