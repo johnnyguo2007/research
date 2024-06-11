@@ -4,7 +4,7 @@ import xarray as xr
 import os
 import netCDF4
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from catboost import CatBoostRegressor, Pool
 import matplotlib.pyplot as plt
 import shap
@@ -29,6 +29,9 @@ os.makedirs(figure_dir, exist_ok=True)
 merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID_and_sur.feather')
 local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 
+# Filter data to have year 1985 only
+local_hour_adjusted_df = local_hour_adjusted_df[local_hour_adjusted_df['year'] == 1985]
+
 # Load location ID dataset
 location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
 location_ID_ds = xr.open_dataset(location_ID_path, engine='netcdf4')
@@ -52,7 +55,21 @@ for var in delta_var_lst:
         daily_var_lst.append(delta_var)  # Add delta variable to daily_var_lst
     else:
         print(f"Warning: {var_U} or {var_R} not found in dataframe columns.")
-        
+
+print("daily_var_lst", daily_var_lst)
+
+# Save df_daily_vars to Excel file and log as artifact
+df_daily_vars_path = os.path.join(figure_dir, 'df_daily_vars.xlsx')
+df_daily_vars.to_excel(df_daily_vars_path, index=False)
+mlflow.log_artifact(df_daily_vars_path)
+
+# Save daily_var_lst to text file and log as artifact
+daily_var_lst_path = os.path.join(figure_dir, 'daily_var_lst.txt')
+with open(daily_var_lst_path, 'w') as f:
+    for var in daily_var_lst:
+        f.write(f"{var}\n")
+mlflow.log_artifact(daily_var_lst_path)
+
 # Define helper functions
 def get_long_name(var_name, df_daily_vars):
     if var_name.startswith('delta_'):
@@ -117,9 +134,7 @@ sorted_results_df.to_csv(sorted_results_path)
 mlflow.log_artifact(sorted_results_path)
 
 # Train and evaluate models
-def train_and_evaluate(time_uhi_diff, df_daily_vars, model_name):
-    daily_vars = df_daily_vars.loc[df_daily_vars['X_vars2'] == 'Y', 'Variable']
-    daily_var_lst = daily_vars.tolist()
+def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name):
     X = time_uhi_diff[daily_var_lst]
     y = time_uhi_diff['UHI_diff']
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -148,13 +163,22 @@ def train_and_evaluate(time_uhi_diff, df_daily_vars, model_name):
     y_pred_val = model.predict(X_val)
     train_rmse = mean_squared_error(y_train, y_pred_train, squared=False)
     val_rmse = mean_squared_error(y_val, y_pred_val, squared=False)
+    train_mae = mean_absolute_error(y_train, y_pred_train)
+    val_mae = mean_absolute_error(y_val, y_pred_val)
+    train_r2 = r2_score(y_train, y_pred_train)
+    val_r2 = r2_score(y_val, y_pred_val)
+    
     mlflow.log_metric(f"{model_name}_train_rmse", train_rmse)
     mlflow.log_metric(f"{model_name}_val_rmse", val_rmse)
+    mlflow.log_metric(f"{model_name}_train_mae", train_mae)
+    mlflow.log_metric(f"{model_name}_val_mae", val_mae)
+    mlflow.log_metric(f"{model_name}_train_r2", train_r2)
+    mlflow.log_metric(f"{model_name}_val_r2", val_r2)
     
     return model
 
-night_model = train_and_evaluate(nighttime_uhi_diff, df_daily_vars=df_daily_vars, model_name="night_model")
-day_model = train_and_evaluate(daytime_uhi_diff, df_daily_vars=df_daily_vars, model_name="day_model")
+night_model = train_and_evaluate(nighttime_uhi_diff, daily_var_lst=daily_var_lst, model_name="night_model")
+day_model = train_and_evaluate(daytime_uhi_diff, daily_var_lst=daily_var_lst, model_name="day_model")
 
 # Log models
 mlflow.catboost.log_model(day_model, "day_model")
@@ -215,7 +239,7 @@ plt.clf()
 # SHAP waterfall plots
 day_feature_importances = day_model.get_feature_importance()
 expected_value = day_shap_values[0, -1]
-long_names = get_long_names(day_full_pool.get_feature_names(), df_daily_vars)
+long_names = [get_long_name(f, df_daily_vars) for f in day_full_pool.get_feature_names()]
 shap.waterfall_plot(shap.Explanation(day_feature_importances, base_values=expected_value, feature_names=long_names), show=False)
 plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
 plt.gcf().subplots_adjust(left=0.3)  # Increase left margin to make room for y-axis labels
@@ -224,7 +248,7 @@ plt.clf()
 
 night_feature_importances = night_model.get_feature_importance()
 expected_value_night = night_shap_values[0, -1]
-long_names_night = get_long_names(night_full_pool.get_feature_names(), df_daily_vars)
+long_names_night = [get_long_name(f, df_daily_vars) for f in night_full_pool.get_feature_names()]
 shap.waterfall_plot(shap.Explanation(night_feature_importances, base_values=expected_value_night, feature_names=long_names_night), show=False)
 plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
 plt.gcf().subplots_adjust(left=0.3)  # Increase left margin to make room for y-axis labels
