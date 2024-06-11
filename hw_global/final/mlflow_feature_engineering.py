@@ -26,12 +26,8 @@ figure_dir = os.path.join(summary_dir, 'mlflow', experiment_name)
 os.makedirs(figure_dir, exist_ok=True)
 
 # Load data
-# merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID.feather')
 merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID_and_sur.feather')
 local_hour_adjusted_df = pd.read_feather(merged_feather_path)
-
-# # Filter data to have year 1985 only
-# local_hour_adjusted_df = local_hour_adjusted_df[local_hour_adjusted_df['year'] == 1985]
 
 # Load location ID dataset
 location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
@@ -170,7 +166,16 @@ def get_ordered_feature_importance(model: CatBoostRegressor, pool, type='Feature
         feature_importances = model.get_feature_importance()
     else:
         feature_importances = model.get_feature_importance(pool, type=type)
-    feature_importance_df = pd.DataFrame({'Feature': pool.get_feature_names(), 'Importance': feature_importances})
+    
+    feature_names = pool.get_feature_names()
+    print(f"Length of feature_importances: {len(feature_importances)}")
+    print(f"Length of feature_names: {len(feature_names)}")
+    
+    # Ensure the lengths match
+    if len(feature_importances) != len(feature_names):
+        raise ValueError("Feature importances and feature names lengths do not match")
+    
+    feature_importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': feature_importances})
     feature_importance_df.sort_values(by='Importance', ascending=False, inplace=True)
     feature_importance_df = add_long_name(feature_importance_df, join_column='Feature')
     return feature_importance_df
@@ -227,42 +232,25 @@ mlflow.log_figure(plt.gcf(), 'night_shap_waterfall_plot.png')
 plt.clf()
 
 # SHAP dependence plots
-# Define a function to plot SHAP dependence plots for One feature against other features excluding itself
 def plot_dependence_grid(shap_values, X, feature_names, day_or_night='day', target_feature='U10', plots_per_row=2):
-    """
-    Plots the dependence grid for a given target feature and a list of feature names.
-
-    Parameters:
-    - shap_values (array-like): The SHAP values for the target feature.
-    - X (array-like): The input features.
-    - feature_names (list): The list of feature names.
-    - target_feature (str): The target feature to plot against.
-    - plots_per_row (int): The number of plots to display per row.
-
-    Returns:
-    None
-    """
     feature_names = [f for f in feature_names if f != target_feature]
     num_features = len(feature_names)
-    num_rows = (num_features + plots_per_row - 1) // plots_per_row  # Calculate the number of rows needed
+    num_rows = (num_features + plots_per_row - 1) // plots_per_row
 
     fig, axes = plt.subplots(num_rows, plots_per_row, figsize=(30, 10 * num_rows))
-    axes = axes.flatten()  # Flatten the axes array for easy iteration
+    axes = axes.flatten()
 
     for i, feature_name in enumerate(feature_names):
         shap.dependence_plot(ind=target_feature, shap_values=shap_values, features=X, interaction_index=feature_name, ax=axes[i],  show=False)
-        axes[i].set_title(f"Day time {target_feature} vs {feature_name}")
+        axes[i].set_title(f"{day_or_night.capitalize()} time {target_feature} vs {feature_name}")
 
-    # Hide any unused subplots
     for j in range(i + 1, len(axes)):
         axes[j].axis('off')
 
     plt.tight_layout()
-    fig.set_size_inches(30, 10 * num_rows)  # Adjust the figure size
+    fig.set_size_inches(30, 10 * num_rows)
     mlflow.log_figure(plt.gcf(), f'{day_or_night}_dependence_plot_{target_feature}.png')
     plt.clf()
-
-
 
 top_day_features = day_feature_importance['Feature'].head(3).tolist()
 top_night_features = night_feature_importance['Feature'].head(3).tolist()
