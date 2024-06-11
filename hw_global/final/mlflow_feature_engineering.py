@@ -26,7 +26,8 @@ figure_dir = os.path.join(summary_dir, 'mlflow', experiment_name)
 os.makedirs(figure_dir, exist_ok=True)
 
 # Load data
-merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID.feather')
+# merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID.feather')
+merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID_and_sur.feather')
 local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 
 # # Filter data to have year 1985 only
