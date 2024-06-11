@@ -15,7 +15,7 @@ from scipy.stats import linregress
 
 # Set summary directory and experiment name
 summary_dir = '/Trex/test_case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
-experiment_name = 'UHI_Day_Night_no_filter_catboost'
+experiment_name = 'UHI_Day_Night_add_delta_variables'
 
 # Create the MLflow experiment
 mlflow.set_experiment(experiment_name)
@@ -36,27 +36,45 @@ local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
 location_ID_ds = xr.open_dataset(location_ID_path, engine='netcdf4')
 
-
 # Load feature list
 df_daily_vars = pd.read_excel('/home/jguo/research/hw_global/Data/hourlyDataSchema.xlsx')
 daily_vars = df_daily_vars.loc[df_daily_vars['X_vars2'] == 'Y', 'Variable']
 daily_var_lst = daily_vars.tolist()
 
+# Load delta feature list
+delta_vars = df_daily_vars.loc[df_daily_vars['X_vars_delta'] == 'Y', 'Variable']
+delta_var_lst = delta_vars.tolist()
+
+# Calculate delta variables and add to dataframe
+for var in delta_var_lst:
+    var_U = f"{var}_U"
+    var_R = f"{var}_R"
+    delta_var = f"delta_{var}"
+    if var_U in local_hour_adjusted_df.columns and var_R in local_hour_adjusted_df.columns:
+        local_hour_adjusted_df[delta_var] = local_hour_adjusted_df[var_U] - local_hour_adjusted_df[var_R]
+        daily_var_lst.append(delta_var)  # Add delta variable to daily_var_lst
+    else:
+        print(f"Warning: {var_U} or {var_R} not found in dataframe columns.")
+        
 # Define helper functions
-def get_long_names(variables, df):
-    formatted_names = []
-    for var in variables:
-        long_name = df.loc[df['Variable'] == var, 'Long Name'].values
-        if long_name.size > 0:
-            formatted_names.append(f"{var} ({long_name[0]})")
+def get_long_name(var_name, df_daily_vars):
+    if var_name.startswith('delta_'):
+        original_var_name = var_name.replace('delta_', '')
+        original_long_name = df_daily_vars.loc[df_daily_vars['Variable'] == original_var_name, 'Long Name'].values
+        if original_long_name.size > 0:
+            return f"Difference of {original_long_name[0]}"
         else:
-            formatted_names.append(f"{var} (No long name found)")
-    return formatted_names
+            return f"Difference of {original_var_name} (No long name found)"
+    else:
+        long_name = df_daily_vars.loc[df_daily_vars['Variable'] == var_name, 'Long Name'].values
+        if long_name.size > 0:
+            return long_name[0]
+        else:
+            return f"{var_name} (No long name found)"
 
 def add_long_name(input_df, join_column='Feature', df_daily_vars=df_daily_vars):
-    merged_df = pd.merge(input_df, df_daily_vars[['Variable', 'Long Name']], left_on=join_column, right_on='Variable', how='left')
-    merged_df.drop(columns=['Variable'], inplace=True)
-    return merged_df
+    input_df['Long Name'] = input_df[join_column].apply(lambda x: get_long_name(x, df_daily_vars))
+    return input_df
 
 # Define day and night masks
 daytime_mask = local_hour_adjusted_df['local_hour'].between(8, 16)
