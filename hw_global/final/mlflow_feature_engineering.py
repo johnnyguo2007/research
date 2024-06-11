@@ -15,7 +15,7 @@ from scipy.stats import linregress
 
 # Set summary directory and experiment name
 summary_dir = '/Trex/test_case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
-experiment_name = 'UHI_Day_Night_add_delta_variables'
+experiment_name = 'Proudction_UHI_Day_Night_add_delta_variables'
 
 # Create the MLflow experiment
 mlflow.set_experiment(experiment_name)
@@ -30,7 +30,7 @@ merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_w
 local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 
 # Filter data to have year 1985 only
-local_hour_adjusted_df = local_hour_adjusted_df[local_hour_adjusted_df['year'] == 1985]
+# local_hour_adjusted_df = local_hour_adjusted_df[local_hour_adjusted_df['year'] == 1985]
 
 # Load location ID dataset
 location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
@@ -137,13 +137,13 @@ mlflow.log_artifact(sorted_results_path)
 def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name):
     X = time_uhi_diff[daily_var_lst]
     y = time_uhi_diff['UHI_diff']
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.1, random_state=42)
     train_pool = Pool(X_train, y_train)
     validation_pool = Pool(X_val, y_val)
     model = CatBoostRegressor(
-        iterations=3000,
+        iterations=6000,
         learning_rate=0.03,
-        depth=6,
+        depth=7,
         loss_function='RMSE',
         eval_metric='RMSE',
         random_seed=42,
