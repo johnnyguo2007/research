@@ -21,7 +21,7 @@ args = parser.parse_args()
 
 # Set summary directory and experiment name
 summary_dir = '/Trex/test_case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
-experiment_name = f'test_1985_UHI_{args.time_period.capitalize()}_add_delta_FSA'
+experiment_name = f'Production_UHI_{args.time_period.capitalize()}_add_delta_FSA'
 
 # Create the MLflow experiment
 mlflow.set_experiment(experiment_name)
@@ -35,8 +35,8 @@ os.makedirs(figure_dir, exist_ok=True)
 merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID_and_sur.feather')
 local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 
-# Filter data to have year 1985 only
-local_hour_adjusted_df = local_hour_adjusted_df[local_hour_adjusted_df['year'] == 1985]
+# # Filter data to have year 1985 only
+# local_hour_adjusted_df = local_hour_adjusted_df[local_hour_adjusted_df['year'] == 1985]
 
 
 # Load location ID dataset
@@ -148,9 +148,9 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name):
     train_pool = Pool(X_train, y_train)
     validation_pool = Pool(X_val, y_val)
     model = CatBoostRegressor(
-        iterations=6000,
+        iterations=100000,
         learning_rate=0.03,
-        depth=7,
+        depth=10,
         loss_function='RMSE',
         eval_metric='RMSE',
         random_seed=42,
@@ -188,6 +188,7 @@ model = train_and_evaluate(uhi_diff, daily_var_lst=daily_var_lst, model_name=f"{
 
 # Log model
 mlflow.catboost.log_model(model, f"{args.time_period}_model")
+
 
 # Get feature importance
 def get_ordered_feature_importance(model: CatBoostRegressor, pool, type='FeatureImportance'):
@@ -263,5 +264,6 @@ top_features = feature_importance['Feature'].head(3).tolist()
 # Dependence plots
 for feature in top_features:
     plot_dependence_grid(shap_values, X, feature_names=full_pool.get_feature_names(), time_period=args.time_period, target_feature=feature, plots_per_row=2)
+
 
 mlflow.end_run()
