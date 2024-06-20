@@ -222,6 +222,7 @@ mlflow.log_figure(plt.gcf(), f'{args.time_period}time_feature_importance.png')
 plt.clf()
 
 # SHAP summary plots
+
 shap_values = model.get_feature_importance(full_pool, type='ShapValues')[:,:-1]
 shap.summary_plot(shap_values, X, show=False)
 plt.gcf().set_size_inches(15, 10)  # Adjust the figure size

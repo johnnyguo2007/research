@@ -168,6 +168,9 @@ def zarr_to_dataframe(zarr_path, start_year, end_year, years_per_chunk, output_p
             df_list.append(df_year)
 
         df_chunk = pd.concat(df_list)
+        # correct the typo in the column name in zarr files
+        df_chunk.columns = df_chunk.columns.str.replace('UBWI', 'UWBI')
+
         parquet_file_path = os.path.join(output_path, f'ALL_{hw_flag}_{chunk_start_year}_{chunk_end_year}.parquet')
         df_chunk.to_parquet(parquet_file_path, engine='pyarrow', index=True)
 
@@ -287,6 +290,11 @@ def main():
         #              'FSH_R', 'FSH_U', 'HIA_R', 'HIA_U', 'Q2M_R', 'Q2M_U', 'TSA_R', 'TSA_U',
         #              'TSKIN_R', 'TSKIN_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U', 'WBA_R', 'WBA_U']
         core_vars = ['UHI', 'UBWI', 'WIND', 'RAIN', 'SNOW', 'HW', 'Q2M_R', 'Q2M_U', 'VAPOR_PRES_R', 'VAPOR_PRES_U']
+        core_vars =['TSA','TSA_R','TSA_U','Q2M','Q2M_U','Q2M_R','WBA_U','WBA_R','WBA','VAPOR_PRES','VAPOR_PRES_U',
+                    'VAPOR_PRES_R','WASTEHEAT','HEAT_FROM_AC','URBAN_HEAT','FSDS','FLDS','FIRE','FIRE_U','FIRE_R',
+                    'FIRA','FIRA_U','FIRA_R','FSA','FSA_U','FSA_R','EFLX_LH_TOT','EFLX_LH_TOT_R','EFLX_LH_TOT_U',
+                    'FSH_R','FSH_U','FSH','FGR_R','FGR_U','FGR','RAIN','SNOW','TBOT','QBOT','PBOT','WIND','THBOT',
+                    'TSKIN','TSKIN_U','TSKIN_R','APPAR_TEMP','APPAR_TEMP_U','APPAR_TEMP_R','HIA','HIA_U','HIA_R','U10']
         zarr_to_dataframe(research_results_zarr_dir, start_year, end_year, 1,
                           research_results_parquet_dir, 'HW', core_vars)
         zarr_to_dataframe(research_results_zarr_dir, start_year, end_year, 1,
