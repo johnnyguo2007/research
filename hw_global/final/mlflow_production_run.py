@@ -16,7 +16,7 @@ import argparse
 import sys
 
 # Define filter functions
-def filter_by_year_1985(df, year):
+def filter_by_year(df, year):
     return df[df['year'] == int(year)]
 
 def filter_by_temperature_above_300(df, temperature):
@@ -31,14 +31,14 @@ def filter_by_hw_count(df, threshold):
 
 # Parse arguments
 # sample command looks like:
-# python mlflow_production_run.py --time_period day --iterations 100000 --learning_rate 0.03 --depth 10 --filters filter_by_year_1985=1985,filter_by_temperature_above_300=300,filter_by_hw_count=60
+# python mlflow_production_run.py --time_period day --iterations 100000 --learning_rate 0.03 --depth 10 --filters filter_by_year_1985=1985,filter_by_temperature_above_300=300,filter_by_hw_count=60 --run_type test --exp_name_extra test
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
 parser.add_argument("--time_period", choices=["day", "night"], required=True, help="Specify whether to run for day or night data.")
 parser.add_argument("--iterations", type=int, default=100000, help="Number of iterations for the CatBoost model.")
 parser.add_argument("--learning_rate", type=float, default=0.03, help="Learning rate for the CatBoost model.")
 parser.add_argument("--depth", type=int, default=10, help="Depth of the trees for the CatBoost model.")
 parser.add_argument("--filters", type=str, default="", help="Comma-separated list of filter function names and parameters to apply to the dataframe.")
-parser.add_argument("--run_type", type=str, default="test", help="part of experiment name")
+parser.add_argument("--run_type", type=str, default="test", help="Beginning part of experiment name")
 parser.add_argument("--exp_name_extra", type=str, default="", help="extra info that goes to the end of experiment name ")
 
 args = parser.parse_args()
@@ -46,6 +46,17 @@ args = parser.parse_args()
 # Set summary directory and experiment name
 summary_dir = '/Trex/test_case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
 experiment_name = f'{args.run_type}_{args.time_period.capitalize()}_{args.exp_name_extra}'
+
+
+
+import mlflow
+
+mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+
+# List all experiments
+experiments = mlflow.search_experiments()
+for experiment in experiments:
+    print(f"ID: {experiment.experiment_id}, Name: {experiment.name}")
 
 # Create the MLflow experiment
 mlflow.set_experiment(experiment_name)
@@ -163,6 +174,7 @@ def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'
         slopes_with_intervals = []
         for df, time in [(daytime_df, 'Day'), (nighttime_df, 'Night')]:
             for label in labels:
+                # print(f"Calculating slope for {time}time {label} vs {feature}")
                 slope, margin_of_error, p_value = feature_linear_slope(df, feature, label, confidence_level)
                 slope_with_interval = f"{slope:.6f} (± {margin_of_error:.6f}, P: {p_value:.6f})"
                 slopes_with_intervals.append(slope_with_interval)
@@ -252,6 +264,8 @@ def get_ordered_feature_importance(model: CatBoostRegressor, pool, type='Feature
 full_pool = Pool(X, y)
 
 # Feature importance plots
+
+print("Feature importance plots")
 feature_importance = get_ordered_feature_importance(model, full_pool)
 
 plt.figure(figsize=(10, 6))
@@ -261,6 +275,7 @@ mlflow.log_figure(plt.gcf(), f'{args.time_period}time_feature_importance.png')
 plt.clf()
 
 # SHAP summary plots
+print("SHAP summary plots")
 shap_values = model.get_feature_importance(full_pool, type='ShapValues')[:,:-1]
 shap.summary_plot(shap_values, X, show=False)
 plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
@@ -268,6 +283,7 @@ mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_summary_plot.png')
 plt.clf()
 
 # SHAP waterfall plots
+print("SHAP waterfall plots")
 feature_importances = model.get_feature_importance()
 expected_value = shap_values[0, -1]
 long_names = [get_long_name(f, df_daily_vars) for f in full_pool.get_feature_names()]
@@ -301,7 +317,9 @@ def plot_dependence_grid(shap_values, X, feature_names, time_period, target_feat
 top_features = feature_importance['Feature'].head(3).tolist()
 
 # Dependence plots
+print("Dependence plots")
 for feature in top_features:
     plot_dependence_grid(shap_values, X, feature_names=full_pool.get_feature_names(), time_period=args.time_period, target_feature=feature, plots_per_row=2)
 
+print("Done")
 mlflow.end_run()
