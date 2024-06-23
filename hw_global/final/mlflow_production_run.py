@@ -30,8 +30,6 @@ def filter_by_hw_count(df, threshold):
     return df[df['_merge'] == 'left_only'].drop(columns=['_merge'])
 
 # Parse arguments
-# sample command looks like:
-# python mlflow_production_run.py --time_period day --iterations 100000 --learning_rate 0.03 --depth 10 --filters filter_by_year_1985=1985,filter_by_temperature_above_300=300,filter_by_hw_count=60 --run_type test --exp_name_extra test
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
 parser.add_argument("--time_period", choices=["day", "night"], required=True, help="Specify whether to run for day or night data.")
 parser.add_argument("--iterations", type=int, default=100000, help="Number of iterations for the CatBoost model.")
@@ -47,16 +45,7 @@ args = parser.parse_args()
 summary_dir = '/Trex/test_case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
 experiment_name = f'{args.run_type}_{args.time_period.capitalize()}_{args.exp_name_extra}'
 
-
-
-import mlflow
-
 mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
-
-# List all experiments
-experiments = mlflow.search_experiments()
-for experiment in experiments:
-    print(f"ID: {experiment.experiment_id}, Name: {experiment.name}")
 
 # Create the MLflow experiment
 mlflow.set_experiment(experiment_name)
@@ -161,12 +150,16 @@ else:
 X = uhi_diff[daily_var_lst]
 y = uhi_diff['UHI_diff']
 
-# Define linear slope function
+# Define linear slope function with error handling
 def feature_linear_slope(df, feature_name, label, confidence_level=0.95):
-    slope, _, _, p_value, stderr = linregress(df[feature_name], df[label])
-    t_value = np.abs(np.percentile(np.random.standard_t(df[feature_name].shape[0] - 2, 100000), [(1-confidence_level)/2, 1-(1-confidence_level)/2]))[1]
-    margin_of_error = t_value * stderr
-    return slope, margin_of_error, p_value
+    try:
+        slope, _, _, p_value, stderr = linregress(df[feature_name], df[label])
+        t_value = np.abs(np.percentile(np.random.standard_t(df[feature_name].shape[0] - 2, 100000), [(1-confidence_level)/2, 1-(1-confidence_level)/2]))[1]
+        margin_of_error = t_value * stderr
+        return slope, margin_of_error, p_value
+    except Exception as e:
+        print(f"Error calculating slope for {feature_name}: {e}")
+        return None, None, None
 
 def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'], confidence_level=0.95):
     data = {}
@@ -174,9 +167,12 @@ def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'
         slopes_with_intervals = []
         for df, time in [(daytime_df, 'Day'), (nighttime_df, 'Night')]:
             for label in labels:
-                # print(f"Calculating slope for {time}time {label} vs {feature}")
+                print(f"Calculating slope for {time}time {label} vs {feature}")
                 slope, margin_of_error, p_value = feature_linear_slope(df, feature, label, confidence_level)
-                slope_with_interval = f"{slope:.6f} (± {margin_of_error:.6f}, P: {p_value:.6f})"
+                if slope is not None:
+                    slope_with_interval = f"{slope:.6f} (± {margin_of_error:.6f}, P: {p_value:.6f})"
+                else:
+                    slope_with_interval = "Error in calculation"
                 slopes_with_intervals.append(slope_with_interval)
         data[feature] = slopes_with_intervals
     columns = [f'{time}_{label}_slope' for time in ['Day', 'Night'] for label in labels]
