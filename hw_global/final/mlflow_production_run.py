@@ -16,24 +16,36 @@ import argparse
 import sys
 
 # Define filter functions
-def filter_by_year_1985(df):
-    return df[df['year'] == 1985]
+def filter_by_year_1985(df, year):
+    return df[df['year'] == int(year)]
 
-def filter_by_temperature_above_300(df):
-    return df[df['temperature'] > 300]
+def filter_by_temperature_above_300(df, temperature):
+    return df[df['temperature'] > float(temperature)]
+
+def filter_by_hw_count(df, threshold):
+    threshold = int(threshold)
+    hw_counts = df[['lat', 'lon', 'year']].groupby(['lat', 'lon', 'year']).size().reset_index(name='count')
+    locations_to_exclude = hw_counts[hw_counts['count'] > threshold][['lat', 'lon']].drop_duplicates()
+    df = df.merge(locations_to_exclude, on=['lat', 'lon'], how='left', indicator=True)
+    return df[df['_merge'] == 'left_only'].drop(columns=['_merge'])
 
 # Parse arguments
+# sample command looks like:
+# python mlflow_production_run.py --time_period day --iterations 100000 --learning_rate 0.03 --depth 10 --filters filter_by_year_1985=1985,filter_by_temperature_above_300=300,filter_by_hw_count=60
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
 parser.add_argument("--time_period", choices=["day", "night"], required=True, help="Specify whether to run for day or night data.")
 parser.add_argument("--iterations", type=int, default=100000, help="Number of iterations for the CatBoost model.")
 parser.add_argument("--learning_rate", type=float, default=0.03, help="Learning rate for the CatBoost model.")
 parser.add_argument("--depth", type=int, default=10, help="Depth of the trees for the CatBoost model.")
-parser.add_argument("--filters", type=str, default="", help="Comma-separated list of filter function names to apply to the dataframe.")
+parser.add_argument("--filters", type=str, default="", help="Comma-separated list of filter function names and parameters to apply to the dataframe.")
+parser.add_argument("--run_type", type=str, default="test", help="part of experiment name")
+parser.add_argument("--exp_name_extra", type=str, default="", help="extra info that goes to the end of experiment name ")
+
 args = parser.parse_args()
 
 # Set summary directory and experiment name
 summary_dir = '/Trex/test_case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
-experiment_name = f'Production_UHI_{args.time_period.capitalize()}_add_delta_FSA'
+experiment_name = f'{args.run_type}_{args.time_period.capitalize()}_{args.exp_name_extra}'
 
 # Create the MLflow experiment
 mlflow.set_experiment(experiment_name)
@@ -59,10 +71,11 @@ local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 
 # Apply filters if any
 if args.filters:
-    filter_function_names = args.filters.split(',')
-    for filter_function_name in filter_function_names:
+    filter_function_pairs = args.filters.split(',')
+    for filter_function_pair in filter_function_pairs:
+        filter_function_name, filter_param = filter_function_pair.split('=')
         if filter_function_name in globals():
-            local_hour_adjusted_df = globals()[filter_function_name](local_hour_adjusted_df)
+            local_hour_adjusted_df = globals()[filter_function_name](local_hour_adjusted_df, filter_param)
         else:
             print(f"Warning: Filter function {filter_function_name} not found. Skipping.")
 
