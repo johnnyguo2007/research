@@ -25,8 +25,8 @@ def filter_by_temperature_above_300(df, temperature):
 def filter_by_hw_count(df, threshold):
     threshold = int(threshold)
     hw_counts = df[['lat', 'lon', 'year']].groupby(['lat', 'lon', 'year']).size().reset_index(name='count')
-    locations_to_exclude = hw_counts[hw_counts['count'] > threshold][['lat', 'lon']].drop_duplicates()
-    df = df.merge(locations_to_exclude, on=['lat', 'lon'], how='left', indicator=True)
+    locations_to_include = hw_counts[hw_counts['count'] <= threshold][['lat', 'lon']].drop_duplicates()
+    df = df.merge(locations_to_include, on=['lat', 'lon'], how='left', indicator=True)
     return df[df['_merge'] == 'left_only'].drop(columns=['_merge'])
 
 # Parse arguments
