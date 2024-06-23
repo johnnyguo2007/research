@@ -260,7 +260,6 @@ def get_ordered_feature_importance(model: CatBoostRegressor, pool, type='Feature
 full_pool = Pool(X, y)
 
 # Feature importance plots
-
 print("Feature importance plots")
 feature_importance = get_ordered_feature_importance(model, full_pool)
 
@@ -273,6 +272,26 @@ plt.clf()
 # SHAP summary plots
 print("SHAP summary plots")
 shap_values = model.get_feature_importance(full_pool, type='ShapValues')[:,:-1]
+
+# Save SHAP values and feature names
+shap_values_path = os.path.join(figure_dir, 'shap_values.npy')
+
+# Save SHAP values and feature names
+shap_values_path = os.path.join(figure_dir, 'shap_values.npy')
+np.save(shap_values_path, shap_values)
+mlflow.log_artifact(shap_values_path)
+
+feature_names_path = os.path.join(figure_dir, 'feature_names.txt')
+with open(feature_names_path, 'w') as f:
+    for feature in full_pool.get_feature_names():
+        f.write(f"{feature}\n")
+mlflow.log_artifact(feature_names_path)
+
+# Log X data
+X_path = os.path.join(figure_dir, 'X_data.feather')
+X.to_feather(X_path)
+mlflow.log_artifact(X_path)
+
 shap.summary_plot(shap_values, X, show=False)
 plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
 mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_summary_plot.png')
@@ -319,3 +338,52 @@ for feature in top_features:
 
 print("Done")
 mlflow.end_run()
+
+# Sample code for using saved SHAP data later
+'''
+import mlflow
+import numpy as np
+import pandas as pd
+import shap
+import matplotlib.pyplot as plt
+
+# Set up MLflow
+mlflow.set_tracking_uri("http://127.0.0.1:8080")
+experiment_name = "your_experiment_name"
+mlflow.set_experiment(experiment_name)
+
+# Load the run you want to analyze
+run_id = "your_run_id"
+run = mlflow.get_run(run_id)
+
+# Load SHAP values
+shap_values_path = mlflow.artifacts.download_artifacts(run_id, "shap_values.npy")
+shap_values = np.load(shap_values_path)
+
+# Load feature names
+feature_names_path = mlflow.artifacts.download_artifacts(run_id, "feature_names.txt")
+with open(feature_names_path, 'r') as f:
+    feature_names = [line.strip() for line in f]
+
+# Load X data
+X_path = mlflow.artifacts.download_artifacts(run_id, "X_data.csv")
+X = pd.read_feather(X_path)
+
+# Now you can create SHAP plots
+shap.summary_plot(shap_values, X, feature_names=feature_names)
+plt.title("SHAP Summary Plot")
+plt.tight_layout()
+plt.show()
+
+# Create a SHAP dependence plot
+shap.dependence_plot("feature_name", shap_values, X, feature_names=feature_names)
+plt.title("SHAP Dependence Plot")
+plt.tight_layout()
+plt.show()
+
+# Create a SHAP force plot for a single prediction
+shap.force_plot(shap.expected_value[0], shap_values[0], X.iloc[0], feature_names=feature_names)
+plt.title("SHAP Force Plot")
+plt.tight_layout()
+plt.show()
+'''
