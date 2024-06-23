@@ -13,10 +13,22 @@ import mlflow.catboost
 import mlflow.shap
 from scipy.stats import linregress
 import argparse
+import sys
+
+# Define filter functions
+def filter_by_year_1985(df):
+    return df[df['year'] == 1985]
+
+def filter_by_temperature_above_300(df):
+    return df[df['temperature'] > 300]
 
 # Parse arguments
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
 parser.add_argument("--time_period", choices=["day", "night"], required=True, help="Specify whether to run for day or night data.")
+parser.add_argument("--iterations", type=int, default=100000, help="Number of iterations for the CatBoost model.")
+parser.add_argument("--learning_rate", type=float, default=0.03, help="Learning rate for the CatBoost model.")
+parser.add_argument("--depth", type=int, default=10, help="Depth of the trees for the CatBoost model.")
+parser.add_argument("--filters", type=str, default="", help="Comma-separated list of filter function names to apply to the dataframe.")
 args = parser.parse_args()
 
 # Set summary directory and experiment name
@@ -27,6 +39,16 @@ experiment_name = f'Production_UHI_{args.time_period.capitalize()}_add_delta_FSA
 mlflow.set_experiment(experiment_name)
 mlflow.start_run()
 
+# Log command line arguments to MLflow
+mlflow.log_param("time_period", args.time_period)
+mlflow.log_param("iterations", args.iterations)
+mlflow.log_param("learning_rate", args.learning_rate)
+mlflow.log_param("depth", args.depth)
+
+# Log the full command line
+command_line = f"python {' '.join(sys.argv)}"
+mlflow.log_param("command_line", command_line)
+
 # Create directory for saving figures and artifacts
 figure_dir = os.path.join(summary_dir, 'mlflow', experiment_name)
 os.makedirs(figure_dir, exist_ok=True)
@@ -35,9 +57,14 @@ os.makedirs(figure_dir, exist_ok=True)
 merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID_and_sur.feather')
 local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 
-# # Filter data to have year 1985 only
-# local_hour_adjusted_df = local_hour_adjusted_df[local_hour_adjusted_df['year'] == 1985]
-
+# Apply filters if any
+if args.filters:
+    filter_function_names = args.filters.split(',')
+    for filter_function_name in filter_function_names:
+        if filter_function_name in globals():
+            local_hour_adjusted_df = globals()[filter_function_name](local_hour_adjusted_df)
+        else:
+            print(f"Warning: Filter function {filter_function_name} not found. Skipping.")
 
 # Load location ID dataset
 location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
@@ -141,16 +168,16 @@ sorted_results_df.to_csv(sorted_results_path)
 mlflow.log_artifact(sorted_results_path)
 
 # Train and evaluate models
-def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name):
+def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, learning_rate, depth):
     X = time_uhi_diff[daily_var_lst]
     y = time_uhi_diff['UHI_diff']
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.1, random_state=42)
     train_pool = Pool(X_train, y_train)
     validation_pool = Pool(X_val, y_val)
     model = CatBoostRegressor(
-        iterations=100000,
-        learning_rate=0.03,
-        depth=10,
+        iterations=iterations,
+        learning_rate=learning_rate,
+        depth=depth,
         loss_function='RMSE',
         eval_metric='RMSE',
         random_seed=42,
@@ -184,11 +211,10 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name):
     
     return model
 
-model = train_and_evaluate(uhi_diff, daily_var_lst=daily_var_lst, model_name=f"{args.time_period}_model")
+model = train_and_evaluate(uhi_diff, daily_var_lst=daily_var_lst, model_name=f"{args.time_period}_model", iterations=args.iterations, learning_rate=args.learning_rate, depth=args.depth)
 
 # Log model
 mlflow.catboost.log_model(model, f"{args.time_period}_model")
-
 
 # Get feature importance
 def get_ordered_feature_importance(model: CatBoostRegressor, pool, type='FeatureImportance'):
@@ -222,7 +248,6 @@ mlflow.log_figure(plt.gcf(), f'{args.time_period}time_feature_importance.png')
 plt.clf()
 
 # SHAP summary plots
-
 shap_values = model.get_feature_importance(full_pool, type='ShapValues')[:,:-1]
 shap.summary_plot(shap_values, X, show=False)
 plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
@@ -265,6 +290,5 @@ top_features = feature_importance['Feature'].head(3).tolist()
 # Dependence plots
 for feature in top_features:
     plot_dependence_grid(shap_values, X, feature_names=full_pool.get_feature_names(), time_period=args.time_period, target_feature=feature, plots_per_row=2)
-
 
 mlflow.end_run()
