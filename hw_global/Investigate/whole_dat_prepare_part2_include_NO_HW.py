@@ -13,7 +13,7 @@ def load_data(data_dir, start_year, end_year, columns=None):
         data_dir (str): Directory where `.parquet` files are stored.
         start_year (int): Starting year.
         end_year (int): Ending year.
-        columns (list): List of column names to read. If None, all columns are read.
+        columns (list or dict_keys): List of column names or dict_keys object to read. If None, all columns are read.
 
     Returns:
         tuple of pd.DataFrame: Returns two DataFrames, one for HW events and one for NO_HW events.
@@ -22,13 +22,14 @@ def load_data(data_dir, start_year, end_year, columns=None):
     df_no_hw_list = []
 
     # Ensure 'lon', 'lat', and 'time' are always included in the columns to read
-    if columns is not None:
-        columns = list(set(['lon', 'lat', 'time'] + columns))
+    # those columns are in the index, no need to add them
+    # if columns is not None:
+    #     columns = list(set(['lon', 'lat', 'time'] + list(columns)))
 
     # Iterate through each year and collect data
     for year in range(start_year, end_year + 1):
-        file_name_hw = os.path.join(data_dir, f"ALL_HW_{year}_{year}.parquet")
-        file_name_no_hw = os.path.join(data_dir, f"ALL_NO_HW_{year}_{year}.parquet")
+        file_name_hw = os.path.join(data_dir, f"ALL_HW_{year}.parquet")
+        file_name_no_hw = os.path.join(data_dir, f"ALL_NO_HW_{year}.parquet")
 
         # Read only specified columns
         df_hw_list.append(pd.read_parquet(file_name_hw, columns=columns))
@@ -68,22 +69,7 @@ def check_data_overlap(df_hw, df_no_hw):
 
     return keys_hw & keys_no_hw
 
-def calculate_uhi_diff(df_hw, df_no_hw_avg):
-    """
-    Calculate the difference between UHI values of HW and average NO_HW on matching columns.
 
-    Args:
-        df_hw (pd.DataFrame): DataFrame containing HW data.
-        df_no_hw_avg (pd.DataFrame): DataFrame containing averaged NO_HW data.
-
-    Returns:
-        pd.DataFrame: DataFrame with added 'UHI_diff' and 'UBWI_diff' columns.
-    """
-    merged_df = pd.merge(df_hw, df_no_hw_avg, on=['lat', 'lon', 'year', 'hour'],
-                         suffixes=('', '_avg'))
-    merged_df['UHI_diff'] = merged_df['UHI'] - merged_df['UHI_avg']
-    merged_df['UWBI_diff'] = merged_df['UWBI'] - merged_df['UWBI_avg']
-    return merged_df
 
 def convert_time_to_local_and_add_hour(df):
     """
@@ -138,7 +124,7 @@ def add_event_id(df):
 data_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/parquet'
 summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
 start_year = 1985
-end_year = 1986
+end_year = 2013
 
 
 variables = {
@@ -163,6 +149,8 @@ df_no_hw = add_year_month_hour_cols(df_no_hw)
 
 # df_no_hw_avg = df_no_hw.groupby(['lat', 'lon', 'year', 'hour']).mean()
 # local_hour_adjusted_df = calculate_uhi_diff(df_hw, df_no_hw_avg)
+df_hw.reset_index(inplace=True)
+df_no_hw.reset_index(inplace=True)
 hw_local_hour_adjusted_df = convert_time_to_local_and_add_hour(df_hw)
 no_hw_local_hour_adjusted_df = convert_time_to_local_and_add_hour(df_no_hw)
 # local_hour_adjusted_df.rename(columns=lambda x: x.replace('UBWI', 'UWBI'), inplace=True)

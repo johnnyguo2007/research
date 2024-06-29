@@ -14,7 +14,7 @@ import mlflow.shap
 from scipy.stats import linregress
 
 # Set summary directory and experiment name
-summary_dir = '/Trex/test_case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
+summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
 experiment_name = 'Proudction_UHI_Day_Night_add_delta_variables'
 
 # Create the MLflow experiment

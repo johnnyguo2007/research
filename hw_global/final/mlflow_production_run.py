@@ -43,7 +43,7 @@ parser.add_argument("--shap_calculation", action="store_true", help="If set, SHA
 args = parser.parse_args()
 
 # Set summary directory and experiment name
-summary_dir = '/Trex/test_case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
+summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
 experiment_name = f'{args.run_type}_{args.time_period.capitalize()}_{args.exp_name_extra}'
 
 mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
