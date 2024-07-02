@@ -29,11 +29,21 @@ def filter_by_hw_count(df, threshold):
     df = df.merge(locations_to_include, on=['lat', 'lon'], how='left', indicator=True)
     return df[df['_merge'] == 'left_only'].drop(columns=['_merge'])
 
+def filter_by_uhi_diff_category(df, threshold, category):
+    if category == 'Positive':
+        return df[df['UHI_diff'] > threshold]
+    elif category == 'Insignificant':
+        return df[(df['UHI_diff'] >= -threshold) & (df['UHI_diff'] <= threshold)]
+    elif category == 'Negative':
+        return df[df['UHI_diff'] < -threshold]
+    else:
+        raise ValueError("Invalid category. Choose 'Positive', 'Insignificant', or 'Negative'.")
+
 # Parse arguments
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
 parser.add_argument("--time_period", choices=["day", "night"], required=True, help="Specify whether to run for day or night data.")
 parser.add_argument("--iterations", type=int, default=100000, help="Number of iterations for the CatBoost model.")
-parser.add_argument("--learning_rate", type=float, default=0.03, help="Learning rate for the CatBoost model.")
+parser.add_argument("--learning_rate", type=float, default=0.01, help="Learning rate for the CatBoost model.")
 parser.add_argument("--depth", type=int, default=10, help="Depth of the trees for the CatBoost model.")
 parser.add_argument("--filters", type=str, default="", help="Comma-separated list of filter function names and parameters to apply to the dataframe.")
 parser.add_argument("--run_type", type=str, default="test", help="Beginning part of experiment name")
@@ -72,14 +82,23 @@ local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 
 # Apply filters if any
 if args.filters:
-    filter_function_pairs = args.filters.split(',')
+    filter_function_pairs = args.filters.split(';')
+    applied_filters = []
     for filter_function_pair in filter_function_pairs:
-        filter_function_name, filter_param = filter_function_pair.split('=')
+        filter_parts = filter_function_pair.split(',')
+        filter_function_name = filter_parts[0]
+        filter_params = filter_parts[1:]
         if filter_function_name in globals():
-            local_hour_adjusted_df = globals()[filter_function_name](local_hour_adjusted_df, filter_param)
+            local_hour_adjusted_df = globals()[filter_function_name](local_hour_adjusted_df, *filter_params)
+            applied_filters.append(f"{filter_function_name}({','.join(filter_params)})")
         else:
             print(f"Warning: Filter function {filter_function_name} not found. Skipping.")
-
+    
+    # Log applied filters as a parameter
+    mlflow.log_param("applied_filters", "; ".join(applied_filters))
+else:
+    mlflow.log_param("applied_filters", "None")
+    
 # Load location ID dataset
 location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
 location_ID_ds = xr.open_dataset(location_ID_path, engine='netcdf4')
