@@ -3,7 +3,6 @@ import numpy as np
 import xarray as xr
 import os
 import argparse
-from concurrent.futures import ProcessPoolExecutor, as_completed
 import time
 
 def load_data(file_path):
@@ -73,13 +72,10 @@ def main(args):
     print(f"Loaded HW definition data: {len(hw_def)} rows")
     
     print(f"Processing data for years {args.start_year} to {args.end_year}")
-    with ProcessPoolExecutor() as executor:
-        futures = [executor.submit(process_year, year, args.data_dir, hw_def) 
-                   for year in range(args.start_year, args.end_year + 1)]
-        
-        df_list = []
-        for future in as_completed(futures):
-            df_list.append(future.result())
+    df_list = []
+    for year in range(args.start_year, args.end_year + 1):
+        df_year = process_year(year, args.data_dir, hw_def)
+        df_list.append(df_year)
     
     print("Combining data from all years")
     df_merged = pd.concat(df_list)
@@ -131,4 +127,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     main(args)
-    
