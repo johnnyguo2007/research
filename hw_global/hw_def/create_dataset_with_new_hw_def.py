@@ -131,8 +131,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process HW and non-HW data with new HW definition.")
     parser.add_argument("--data_dir", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/parquet")
-    parser.add_argument("--summary_dir", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw_summary")
-    parser.add_argument("--hw_data_path", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw_summary/hw_data.feather")
+    parser.add_argument("--summary_dir", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary")
+    parser.add_argument("--hw_data_path", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary/hw_data.feather")
     parser.add_argument("--start_year", type=int, default=1985)
     parser.add_argument("--end_year", type=int, default=2013)
     parser.add_argument("--percentile", type=int, choices=[90, 95], default=95, help="Percentile for HW definition (90 or 95)")
