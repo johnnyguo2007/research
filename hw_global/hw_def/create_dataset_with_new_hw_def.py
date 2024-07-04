@@ -52,7 +52,8 @@ def process_year(year, data_dir, hw_def, percentile):
 def add_event_id(df):
     print("Adding event IDs to HW data")
     initial_count = len(df)
-    df.sort_values(by=['location_ID', 'time'], inplace=True)
+    
+    df = df.sort_values(by=['location_ID', 'time'])
     df['time_diff'] = df.groupby('location_ID')['time'].diff().dt.total_seconds() / 3600
     df['new_event'] = (df['time_diff'] > 1)
     df['event_ID'] = df.groupby('location_ID')['new_event'].cumsum()
@@ -91,29 +92,35 @@ def main(args):
     print(f"Separating HW and non-HW data based on {hw_column} definition")
     # Replace NaN values with False in the HW column
     df_merged[hw_column] = df_merged[hw_column].fillna(False)
-    df_hw = df_merged[df_merged[hw_column]]
-    df_no_hw = df_merged[~df_merged[hw_column]]
-    print(f"HW data: {len(df_hw)} rows")
-    print(f"Non-HW data: {len(df_no_hw)} rows")
+    
+    print("Processing and saving HW data")
+    df_hw = df_merged[df_merged[hw_column]].copy()
+    df_hw = add_event_id(df_hw)
+    hw_output_path = os.path.join(args.summary_dir, f'HW{args.percentile}.feather')
+    df_hw.to_feather(hw_output_path)
+    print(f"Saved HW data to {hw_output_path}")
+    hw_rows = len(df_hw)
+    del df_hw  # Free up memory
+    
+    print("Processing and saving non-HW data")
+    df_no_hw = df_merged[~df_merged[hw_column]].copy()
+    no_hw_output_path = os.path.join(args.summary_dir, f'no_hw_HW{args.percentile}.feather')
+    df_no_hw.to_feather(no_hw_output_path)
+    print(f"Saved non-HW data to {no_hw_output_path}")
+    no_hw_rows = len(df_no_hw)
+    del df_no_hw  # Free up memory
+    
+    print(f"HW data: {hw_rows} rows")
+    print(f"Non-HW data: {no_hw_rows} rows")
     
     # Validation check
-    if len(df_hw) + len(df_no_hw) != len(df_merged):
-        raise ValueError(f"Data loss detected during separation. Expected {len(df_merged)} total rows, got {len(df_hw) + len(df_no_hw)}")
-    
-    df_hw = add_event_id(df_hw)
-    
-    hw_output_path = os.path.join(args.summary_dir, f'HW{args.percentile}.feather')
-    no_hw_output_path = os.path.join(args.summary_dir, f'no_hw_HW{args.percentile}.feather')
-    
-    print(f"Saving HW data to {hw_output_path}")
-    df_hw.to_feather(hw_output_path)
-    print(f"Saving non-HW data to {no_hw_output_path}")
-    df_no_hw.to_feather(no_hw_output_path)
+    if hw_rows + no_hw_rows != len(df_merged):
+        raise ValueError(f"Data loss detected during separation. Expected {len(df_merged)} total rows, got {hw_rows + no_hw_rows}")
     
     # Final validation check
     df_hw_check = pd.read_feather(hw_output_path)
     df_no_hw_check = pd.read_feather(no_hw_output_path)
-    if len(df_hw_check) != len(df_hw) or len(df_no_hw_check) != len(df_no_hw):
+    if len(df_hw_check) != hw_rows or len(df_no_hw_check) != no_hw_rows:
         raise ValueError("Data loss detected during saving. Saved data does not match processed data.")
     
     end_time = time.time()
@@ -124,8 +131,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process HW and non-HW data with new HW definition.")
     parser.add_argument("--data_dir", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/parquet")
-    parser.add_argument("--summary_dir", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary")
-    parser.add_argument("--hw_data_path", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary/hw_data.feather")
+    parser.add_argument("--summary_dir", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw_summary")
+    parser.add_argument("--hw_data_path", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw_summary/hw_data.feather")
     parser.add_argument("--start_year", type=int, default=1985)
     parser.add_argument("--end_year", type=int, default=2013)
     parser.add_argument("--percentile", type=int, choices=[90, 95], default=95, help="Percentile for HW definition (90 or 95)")
