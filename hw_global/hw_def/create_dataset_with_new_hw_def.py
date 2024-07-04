@@ -9,7 +9,7 @@ import gc  # For explicit garbage collection
 def load_data(file_path):
     """Load data from a parquet file."""
     print(f"Loading data from {file_path}")
-    return pd.read_parquet(file_path)
+    return pd.read_parquet(file_path).reset_index()
 
 def process_year(year, data_dir, hw_def, percentile):
     """Process data for a single year."""
