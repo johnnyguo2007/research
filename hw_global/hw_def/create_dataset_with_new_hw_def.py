@@ -4,43 +4,54 @@ import xarray as xr
 import os
 import argparse
 import time
+import gc  # For explicit garbage collection
 
 def load_data(file_path):
+    """Load data from a parquet file."""
     print(f"Loading data from {file_path}")
     return pd.read_parquet(file_path)
 
 def process_year(year, data_dir, hw_def, percentile):
+    """Process data for a single year."""
     print(f"Processing data for year {year}")
     hw_file = os.path.join(data_dir, f"ALL_HW_{year}.parquet")
     no_hw_file = os.path.join(data_dir, f"ALL_NO_HW_{year}.parquet")
     
+    # Load data
     df_hw = load_data(hw_file)
     df_no_hw = load_data(no_hw_file)
     print(f"Loaded {len(df_hw)} HW rows and {len(df_no_hw)} non-HW rows for year {year}")
     
+    # Combine data
     initial_count = len(df_hw) + len(df_no_hw)
-    df_all = pd.concat([df_hw, df_no_hw])
-    df_all.reset_index(inplace=True)
+    df_all = pd.concat([df_hw, df_no_hw], ignore_index=True)
+    del df_hw, df_no_hw  # Free up memory
+    gc.collect()  # Force garbage collection
     print(f"Combined data for year {year}: {len(df_all)} total rows")
     
     # Validation check
     if len(df_all) != initial_count:
         raise ValueError(f"Data loss detected in year {year}. Expected {initial_count} rows, got {len(df_all)}")
     
+    # Merge with HW definition data
     print(f"Merging with HW definition data for year {year}")
     hw_column = f'HW{percentile}'
     df_merged = pd.merge(df_all, hw_def[['time', 'lat', 'lon', hw_column, 'location_ID']], 
                          on=['time', 'lat', 'lon'], how='left')
+    del df_all  # Free up memory
+    gc.collect()  # Force garbage collection
     
     # Validation check
-    if len(df_merged) != len(df_all):
-        raise ValueError(f"Data loss detected during merge in year {year}. Expected {len(df_all)} rows, got {len(df_merged)}")
+    if len(df_merged) != initial_count:
+        raise ValueError(f"Data loss detected during merge in year {year}. Expected {initial_count} rows, got {len(df_merged)}")
     
+    # Add time-related columns
     print(f"Adding time-related columns for year {year}")
     df_merged['hour'] = df_merged['time'].dt.hour
     df_merged['month'] = df_merged['time'].dt.month
     df_merged['year'] = df_merged['time'].dt.year
     
+    # Calculate local time
     print(f"Calculating local time for year {year}")
     offsets = np.floor(df_merged['lon'] / 15.0).astype(int)
     df_merged['local_time'] = df_merged['time'] + pd.to_timedelta(offsets, unit='h')
@@ -50,6 +61,7 @@ def process_year(year, data_dir, hw_def, percentile):
     return df_merged
 
 def add_event_id(df):
+    """Add event IDs to HW data."""
     print("Adding event IDs to HW data")
     initial_count = len(df)
     
@@ -69,30 +81,30 @@ def add_event_id(df):
 def main(args):
     start_time = time.time()
     print(f"Starting data processing at {time.ctime()}")
+    
+    # Load HW definition data
     print(f"Loading HW definition data from {args.hw_data_path}")
     hw_def = pd.read_feather(args.hw_data_path)
     print(f"Loaded HW definition data: {len(hw_def)} rows")
     
+    # Process data year by year
     print(f"Processing data for years {args.start_year} to {args.end_year}")
-    df_list = []
+    df_merged = pd.DataFrame()
     for year in range(args.start_year, args.end_year + 1):
         df_year = process_year(year, args.data_dir, hw_def, args.percentile)
-        df_list.append(df_year)
+        df_merged = pd.concat([df_merged, df_year], ignore_index=True)
+        del df_year  # Free up memory
+        gc.collect()  # Force garbage collection
     
-    print("Combining data from all years")
-    df_merged = pd.concat(df_list)
     print(f"Total combined rows: {len(df_merged)}")
-    
-    # Validation check
-    expected_total = sum(len(df) for df in df_list)
-    if len(df_merged) != expected_total:
-        raise ValueError(f"Data loss detected during combination. Expected {expected_total} rows, got {len(df_merged)}")
     
     hw_column = f'HW{args.percentile}'
     print(f"Separating HW and non-HW data based on {hw_column} definition")
+    
     # Replace NaN values with False in the HW column
     df_merged[hw_column] = df_merged[hw_column].fillna(False)
     
+    # Process and save HW data
     print("Processing and saving HW data")
     df_hw = df_merged[df_merged[hw_column]].copy()
     df_hw = add_event_id(df_hw)
@@ -101,21 +113,18 @@ def main(args):
     print(f"Saved HW data to {hw_output_path}")
     hw_rows = len(df_hw)
     del df_hw  # Free up memory
+    gc.collect()  # Force garbage collection
     
+    # Process and save non-HW data
     print("Processing and saving non-HW data")
-    df_no_hw = df_merged[~df_merged[hw_column]].copy()
+    df_merged.drop(df_merged[df_merged[hw_column]].index, inplace=True)
     no_hw_output_path = os.path.join(args.summary_dir, f'no_hw_HW{args.percentile}.feather')
-    df_no_hw.to_feather(no_hw_output_path)
+    df_merged.to_feather(no_hw_output_path)
     print(f"Saved non-HW data to {no_hw_output_path}")
-    no_hw_rows = len(df_no_hw)
-    del df_no_hw  # Free up memory
+    no_hw_rows = len(df_merged)
     
     print(f"HW data: {hw_rows} rows")
     print(f"Non-HW data: {no_hw_rows} rows")
-    
-    # Validation check
-    if hw_rows + no_hw_rows != len(df_merged):
-        raise ValueError(f"Data loss detected during separation. Expected {len(df_merged)} total rows, got {hw_rows + no_hw_rows}")
     
     # Final validation check
     df_hw_check = pd.read_feather(hw_output_path)
