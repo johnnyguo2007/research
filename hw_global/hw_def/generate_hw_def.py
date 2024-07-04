@@ -4,6 +4,8 @@ import numpy as np
 import os
 import duckdb
 
+import cftime
+
 # Set paths for input and output files
 netcdf_file = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h1.hwdaysOnly.nc'
 output_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary'
@@ -30,13 +32,17 @@ def load_and_process_netcdf(file_path, variables):
     # Remove rows with missing data for key variables
     df = df.dropna(subset=['TSA_U', 'TREFMXAV_R'])
     
-    # Convert time to pandas datetime
-    df['time'] = pd.to_datetime(df['time'].astype(int).astype(str), format='%Y%m%d')
+    # Convert cftime to pandas datetime
+    def convert_cftime_to_datetime(ct):
+        return pd.Timestamp(ct.year, ct.month, ct.day)
+    
+    df['time'] = df['time'].apply(convert_cftime_to_datetime)
     
     # Convert HW column to boolean
     df['HW'] = df['HW'].notna() & (df['HW'] != 0)
     
     return df
+
 
 def load_location_data(file_path):
     """
