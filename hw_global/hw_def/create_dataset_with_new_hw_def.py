@@ -9,7 +9,7 @@ def load_data(file_path):
     print(f"Loading data from {file_path}")
     return pd.read_parquet(file_path)
 
-def process_year(year, data_dir, hw_def):
+def process_year(year, data_dir, hw_def, percentile):
     print(f"Processing data for year {year}")
     hw_file = os.path.join(data_dir, f"ALL_HW_{year}.parquet")
     no_hw_file = os.path.join(data_dir, f"ALL_NO_HW_{year}.parquet")
@@ -28,7 +28,8 @@ def process_year(year, data_dir, hw_def):
         raise ValueError(f"Data loss detected in year {year}. Expected {initial_count} rows, got {len(df_all)}")
     
     print(f"Merging with HW definition data for year {year}")
-    df_merged = pd.merge(df_all, hw_def[['time', 'lat', 'lon', 'HW95', 'location_ID']], 
+    hw_column = f'HW{percentile}'
+    df_merged = pd.merge(df_all, hw_def[['time', 'lat', 'lon', hw_column, 'location_ID']], 
                          on=['time', 'lat', 'lon'], how='left')
     
     # Validation check
@@ -74,7 +75,7 @@ def main(args):
     print(f"Processing data for years {args.start_year} to {args.end_year}")
     df_list = []
     for year in range(args.start_year, args.end_year + 1):
-        df_year = process_year(year, args.data_dir, hw_def)
+        df_year = process_year(year, args.data_dir, hw_def, args.percentile)
         df_list.append(df_year)
     
     print("Combining data from all years")
@@ -86,9 +87,12 @@ def main(args):
     if len(df_merged) != expected_total:
         raise ValueError(f"Data loss detected during combination. Expected {expected_total} rows, got {len(df_merged)}")
     
-    print("Separating HW and non-HW data based on HW95 definition")
-    df_hw = df_merged[df_merged['HW95']]
-    df_no_hw = df_merged[~df_merged['HW95']]
+    hw_column = f'HW{args.percentile}'
+    print(f"Separating HW and non-HW data based on {hw_column} definition")
+    # Replace NaN values with False in the HW column
+    df_merged[hw_column] = df_merged[hw_column].fillna(False)
+    df_hw = df_merged[df_merged[hw_column]]
+    df_no_hw = df_merged[~df_merged[hw_column]]
     print(f"HW data: {len(df_hw)} rows")
     print(f"Non-HW data: {len(df_no_hw)} rows")
     
@@ -98,8 +102,8 @@ def main(args):
     
     df_hw = add_event_id(df_hw)
     
-    hw_output_path = os.path.join(args.summary_dir, 'HW95.feather')
-    no_hw_output_path = os.path.join(args.summary_dir, 'no_hw_HW95.feather')
+    hw_output_path = os.path.join(args.summary_dir, f'HW{args.percentile}.feather')
+    no_hw_output_path = os.path.join(args.summary_dir, f'no_hw_HW{args.percentile}.feather')
     
     print(f"Saving HW data to {hw_output_path}")
     df_hw.to_feather(hw_output_path)
@@ -124,6 +128,7 @@ if __name__ == "__main__":
     parser.add_argument("--hw_data_path", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary/hw_data.feather")
     parser.add_argument("--start_year", type=int, default=1985)
     parser.add_argument("--end_year", type=int, default=2013)
+    parser.add_argument("--percentile", type=int, choices=[90, 95], default=95, help="Percentile for HW definition (90 or 95)")
     args = parser.parse_args()
     
     main(args)
