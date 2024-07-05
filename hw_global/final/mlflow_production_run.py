@@ -24,7 +24,7 @@ Usage:
 python script_name.py --time_period [day/night] --summary_dir [path] --merged_feather_file [STR] 
                       [--iterations INT] [--learning_rate FLOAT] [--depth INT] 
                       [--filters STR] [--run_type STR] [--exp_name_extra STR] 
-                      [--shap_calculation]
+                      [--shap_calculation] [--feature_column STR] [--include_delta]
 """
 
 # Define filter functions
@@ -67,6 +67,8 @@ parser.add_argument("--filters", type=str, default="", help="Comma-separated lis
 parser.add_argument("--run_type", type=str, default="test", help="Beginning part of experiment name")
 parser.add_argument("--exp_name_extra", type=str, default="", help="Extra info that goes to the end of experiment name")
 parser.add_argument("--shap_calculation", action="store_true", help="If set, SHAP-related calculations and graphs will be performed.")
+parser.add_argument("--feature_column", type=str, default="X_vars2", help="Column name in df_daily_vars to select features")
+parser.add_argument("--include_delta", action="store_true", help="Include delta variables in the feature list")
 
 args = parser.parse_args()
 
@@ -88,6 +90,8 @@ mlflow.log_param("time_period", args.time_period)
 mlflow.log_param("iterations", args.iterations)
 mlflow.log_param("learning_rate", args.learning_rate)
 mlflow.log_param("depth", args.depth)
+mlflow.log_param("feature_selection_column", args.feature_column)
+mlflow.log_param("include_delta_variables", args.include_delta)
 
 # Log the full command line
 command_line = f"python {' '.join(sys.argv)}"
@@ -135,24 +139,27 @@ location_ID_ds = xr.open_dataset(location_ID_path, engine='netcdf4')
 # Load feature list
 print("Loading feature list...")
 df_daily_vars = pd.read_excel('/home/jguo/research/hw_global/Data/hourlyDataSchema.xlsx')
-daily_vars = df_daily_vars.loc[df_daily_vars['X_vars2'] == 'Y', 'Variable']
+daily_vars = df_daily_vars.loc[df_daily_vars[args.feature_column] == 'Y', 'Variable']
 daily_var_lst = daily_vars.tolist()
 
 # Load delta feature list
 delta_vars = df_daily_vars.loc[df_daily_vars['X_vars_delta'] == 'Y', 'Variable']
 delta_var_lst = delta_vars.tolist()
 
-# Calculate delta variables and add to dataframe
-print("Calculating delta variables...")
-for var in delta_var_lst:
-    var_U = f"{var}_U"
-    var_R = f"{var}_R"
-    delta_var = f"delta_{var}"
-    if var_U in local_hour_adjusted_df.columns and var_R in local_hour_adjusted_df.columns:
-        local_hour_adjusted_df[delta_var] = local_hour_adjusted_df[var_U] - local_hour_adjusted_df[var_R]
-        daily_var_lst.append(delta_var)  # Add delta variable to daily_var_lst
-    else:
-        print(f"Warning: {var_U} or {var_R} not found in dataframe columns.")
+# Calculate delta variables and add to dataframe if include_delta is True
+if args.include_delta:
+    print("Calculating delta variables...")
+    for var in delta_var_lst:
+        var_U = f"{var}_U"
+        var_R = f"{var}_R"
+        delta_var = f"delta_{var}"
+        if var_U in local_hour_adjusted_df.columns and var_R in local_hour_adjusted_df.columns:
+            local_hour_adjusted_df[delta_var] = local_hour_adjusted_df[var_U] - local_hour_adjusted_df[var_R]
+            daily_var_lst.append(delta_var)  # Add delta variable to daily_var_lst
+        else:
+            print(f"Warning: {var_U} or {var_R} not found in dataframe columns.")
+else:
+    print("Skipping delta variable calculation.")
 
 print(f"Final feature list: {daily_var_lst}")
 
@@ -414,8 +421,6 @@ if args.shap_calculation:
 
 print("Script execution completed.")
 mlflow.end_run()
-
-
 
 # Sample code for using saved SHAP data later
 '''
