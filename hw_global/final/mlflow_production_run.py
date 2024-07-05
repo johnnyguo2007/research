@@ -157,7 +157,7 @@ for var in delta_var_lst:
 print(f"Final feature list: {daily_var_lst}")
 
 # Save df_daily_vars to Excel file and log as artifact
-df_daily_vars_path = os.path.join(figure_dir, 'df_daily_vars.xlsx')
+df_daily_vars_path = os.path.join(figure_dir, 'hourlyDataSchema.xlsx')
 df_daily_vars.to_excel(df_daily_vars_path, index=False)
 mlflow.log_artifact(df_daily_vars_path)
 print(f"Saved df_daily_vars to {df_daily_vars_path}")
