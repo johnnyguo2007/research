@@ -68,7 +68,8 @@ parser.add_argument("--run_type", type=str, default="test", help="Beginning part
 parser.add_argument("--exp_name_extra", type=str, default="", help="Extra info that goes to the end of experiment name")
 parser.add_argument("--shap_calculation", action="store_true", help="If set, SHAP-related calculations and graphs will be performed.")
 parser.add_argument("--feature_column", type=str, default="X_vars2", help="Column name in df_daily_vars to select features")
-parser.add_argument("--include_delta", action="store_true", help="Include delta variables in the feature list")
+parser.add_argument("--delta_mode", choices=["none", "include", "only"], default="include", 
+                    help="'none': don't use delta variables, 'include': use both original and delta variables, 'only': use only delta variables")
 
 args = parser.parse_args()
 
@@ -91,7 +92,7 @@ mlflow.log_param("iterations", args.iterations)
 mlflow.log_param("learning_rate", args.learning_rate)
 mlflow.log_param("depth", args.depth)
 mlflow.log_param("feature_selection_column", args.feature_column)
-mlflow.log_param("include_delta_variables", args.include_delta)
+mlflow.log_param("include_delta_variables", args.delta_mode)    
 
 # Log the full command line
 command_line = f"python {' '.join(sys.argv)}"
@@ -139,15 +140,19 @@ location_ID_ds = xr.open_dataset(location_ID_path, engine='netcdf4')
 # Load feature list
 print("Loading feature list...")
 df_daily_vars = pd.read_excel('/home/jguo/research/hw_global/Data/hourlyDataSchema.xlsx')
+
 daily_vars = df_daily_vars.loc[df_daily_vars[args.feature_column] == 'Y', 'Variable']
 daily_var_lst = daily_vars.tolist()
 
-# Load delta feature list
 delta_vars = df_daily_vars.loc[df_daily_vars['X_vars_delta'] == 'Y', 'Variable']
 delta_var_lst = delta_vars.tolist()
 
-# Calculate delta variables and add to dataframe if include_delta is True
-if args.include_delta:
+# Log the feature selection column and delta mode
+mlflow.log_param("feature_selection_column", args.feature_column)
+mlflow.log_param("delta_mode", args.delta_mode)
+
+# Calculate delta variables and modify daily_var_lst based on delta_mode
+if args.delta_mode in ["include", "only"]:
     print("Calculating delta variables...")
     for var in delta_var_lst:
         var_U = f"{var}_U"
@@ -155,11 +160,17 @@ if args.include_delta:
         delta_var = f"delta_{var}"
         if var_U in local_hour_adjusted_df.columns and var_R in local_hour_adjusted_df.columns:
             local_hour_adjusted_df[delta_var] = local_hour_adjusted_df[var_U] - local_hour_adjusted_df[var_R]
-            daily_var_lst.append(delta_var)  # Add delta variable to daily_var_lst
         else:
             print(f"Warning: {var_U} or {var_R} not found in dataframe columns.")
+
+    if args.delta_mode == "only":
+        print("Using only delta variables...")
+        daily_var_lst = [f"delta_{var}" for var in delta_var_lst]
+    else:  # "include"
+        print("Including delta variables...")
+        daily_var_lst += [f"delta_{var}" for var in delta_var_lst]
 else:
-    print("Skipping delta variable calculation.")
+    print("Using original variables only...")
 
 print(f"Final feature list: {daily_var_lst}")
 
