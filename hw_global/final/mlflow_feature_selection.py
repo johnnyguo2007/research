@@ -15,18 +15,16 @@ import mlflow.shap
 from scipy.stats import linregress
 import argparse
 import sys
+import torch
 
 # Define filter functions
 def filter_by_year(df, year):
-    """Filter dataframe by specific year."""
     return df[df['year'] == int(year)]
 
 def filter_by_temperature_above_300(df, temperature):
-    """Filter dataframe by temperature above a threshold."""
     return df[df['temperature'] > float(temperature)]
 
 def filter_by_hw_count(df, threshold):
-    """Filter dataframe by heatwave count below a threshold."""
     threshold = int(threshold)
     hw_counts = df[['lat', 'lon', 'year']].groupby(['lat', 'lon', 'year']).size().reset_index(name='count')
     locations_to_include = hw_counts[hw_counts['count'] <= threshold][['lat', 'lon']].drop_duplicates()
@@ -34,7 +32,6 @@ def filter_by_hw_count(df, threshold):
     return df[df['_merge'] == 'left_only'].drop(columns=['_merge'])
 
 def filter_by_uhi_diff_category(df, threshold, category):
-    """Filter dataframe by UHI difference category."""
     if category == 'Positive':
         return df[df['UHI_diff'] > threshold]
     elif category == 'Insignificant':
@@ -43,6 +40,161 @@ def filter_by_uhi_diff_category(df, threshold, category):
         return df[df['UHI_diff'] < -threshold]
     else:
         raise ValueError("Invalid category. Choose 'Positive', 'Insignificant', or 'Negative'.")
+
+def clear_gpu_memory():
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+class CustomRFECV(RFECV):
+    def _fit(self, X, y, step_score=None):
+        clear_gpu_memory()
+        return super()._fit(X, y, step_score)
+
+def get_long_name(var_name, df_daily_vars):
+    if var_name.startswith('delta_'):
+        original_var_name = var_name.replace('delta_', '')
+        original_long_name = df_daily_vars.loc[df_daily_vars['Variable'] == original_var_name, 'Long Name'].values
+        if original_long_name.size > 0:
+            return f"Difference of {original_long_name[0]}"
+        else:
+            return f"Difference of {original_var_name} (No long name found)"
+    else:
+        long_name = df_daily_vars.loc[df_daily_vars['Variable'] == var_name, 'Long Name'].values
+        if long_name.size > 0:
+            return long_name[0]
+        else:
+            return f"{var_name} (No long name found)"
+
+def add_long_name(input_df, join_column='Feature', df_daily_vars=df_daily_vars):
+    input_df['Long Name'] = input_df[join_column].apply(lambda x: get_long_name(x, df_daily_vars))
+    return input_df
+
+def feature_linear_slope(df, feature_name, label, confidence_level=0.95):
+    try:
+        slope, _, _, p_value, stderr = linregress(df[feature_name], df[label])
+        t_value = np.abs(np.percentile(np.random.standard_t(df[feature_name].shape[0] - 2, 100000), [(1-confidence_level)/2, 1-(1-confidence_level)/2]))[1]
+        margin_of_error = t_value * stderr
+        return slope, margin_of_error, p_value
+    except Exception as e:
+        print(f"Error calculating slope for {feature_name}: {e}")
+        return None, None, None
+
+def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'], confidence_level=0.95):
+    """Combine slopes for day and night data."""
+    data = {}
+    for feature in features:
+        slopes_with_intervals = []
+        for df, time in [(daytime_df, 'Day'), (nighttime_df, 'Night')]:
+            for label in labels:
+                print(f"Calculating slope for {time}time {label} vs {feature}")
+                slope, margin_of_error, p_value = feature_linear_slope(df, feature, label, confidence_level)
+                if slope is not None:
+                    slope_with_interval = f"{slope:.6f} (± {margin_of_error:.6f}, P: {p_value:.6f})"
+                else:
+                    slope_with_interval = "Error in calculation"
+                slopes_with_intervals.append(slope_with_interval)
+        data[feature] = slopes_with_intervals
+    columns = [f'{time}_{label}_slope' for time in ['Day', 'Night'] for label in labels]
+    results_df = pd.DataFrame(data, index=columns).transpose()
+    return results_df
+
+
+def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, learning_rate, depth):
+    print(f"Training and evaluating {model_name}...")
+    X = time_uhi_diff[daily_var_lst]
+    y = time_uhi_diff['UHI_diff']
+    
+    clear_gpu_memory()
+    
+    base_model = CatBoostRegressor(
+        iterations=iterations,
+        learning_rate=learning_rate,
+        depth=depth,
+        loss_function='RMSE',
+        eval_metric='RMSE',
+        random_seed=42,
+        task_type='GPU',
+        devices='0',
+        verbose=False
+    )
+    
+    rfecv = CustomRFECV(
+        estimator=base_model,
+        step=1,
+        cv=KFold(5, shuffle=True, random_state=42),
+        scoring='neg_mean_squared_error',
+        n_jobs=1,
+        verbose=1
+    )
+    
+    print("Starting RFECV...")
+    rfecv.fit(X, y)
+    print("RFECV completed.")
+
+    optimal_num_features = rfecv.n_features_
+    selected_features = X.columns[rfecv.support_].tolist()
+    
+    print(f"Optimal number of features: {optimal_num_features}")
+    print(f"Selected features: {selected_features}")
+    
+    X_selected = X[selected_features]
+    X_train, X_val, y_train, y_val = train_test_split(X_selected, y, test_size=0.1, random_state=42)
+    
+    clear_gpu_memory()
+    
+    final_model = CatBoostRegressor(
+        iterations=iterations,
+        learning_rate=learning_rate,
+        depth=depth,
+        loss_function='RMSE',
+        eval_metric='RMSE',
+        random_seed=42,
+        task_type='GPU',
+        devices='0',
+        verbose=False
+    )
+    
+    final_model.fit(X_train, y_train, eval_set=(X_val, y_val), use_best_model=True, early_stopping_rounds=50, verbose=False)
+    
+    # Log model parameters
+    mlflow.log_param(f"{model_name}_iterations", final_model.get_param('iterations'))
+    mlflow.log_param(f"{model_name}_learning_rate", final_model.get_param('learning_rate'))
+    mlflow.log_param(f"{model_name}_depth", final_model.get_param('depth'))
+    mlflow.log_param(f"{model_name}_optimal_num_features", optimal_num_features)
+    mlflow.log_param(f"{model_name}_selected_features", ", ".join(selected_features))
+    
+    # Calculate and log metrics
+    y_pred_train = final_model.predict(X_train)
+    y_pred_val = final_model.predict(X_val)
+    train_rmse = mean_squared_error(y_train, y_pred_train, squared=False)
+    val_rmse = mean_squared_error(y_val, y_pred_val, squared=False)
+    train_mae = mean_absolute_error(y_train, y_pred_train)
+    val_mae = mean_absolute_error(y_val, y_pred_val)
+    train_r2 = r2_score(y_train, y_pred_train)
+    val_r2 = r2_score(y_val, y_pred_val)
+    
+    mlflow.log_metric(f"{model_name}_train_rmse", train_rmse)
+    mlflow.log_metric(f"{model_name}_val_rmse", val_rmse)
+    mlflow.log_metric(f"{model_name}_train_mae", train_mae)
+    mlflow.log_metric(f"{model_name}_val_mae", val_mae)
+    mlflow.log_metric(f"{model_name}_train_r2", train_r2)
+    mlflow.log_metric(f"{model_name}_val_r2", val_r2)
+    
+    print(f"Model {model_name} metrics:")
+    print(f"Train RMSE: {train_rmse:.4f}, Validation RMSE: {val_rmse:.4f}")
+    print(f"Train MAE: {train_mae:.4f}, Validation MAE: {val_mae:.4f}")
+    print(f"Train R2: {train_r2:.4f}, Validation R2: {val_r2:.4f}")
+    
+    # Plot number of features VS. cross-validation scores
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
+    plt.xlabel("Number of features selected")
+    plt.ylabel("Cross-validation score (neg_mean_squared_error)")
+    plt.title("Optimal number of features")
+    mlflow.log_figure(plt.gcf(), f"{model_name}_feature_selection_plot.png")
+    plt.close()
+    
+    return final_model, selected_features, X_selected
 
 # Parse arguments
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
@@ -177,28 +329,6 @@ with open(daily_var_lst_path, 'w') as f:
 mlflow.log_artifact(daily_var_lst_path)
 print(f"Saved daily_var_lst to {daily_var_lst_path}")
 
-# Define helper functions
-def get_long_name(var_name, df_daily_vars):
-    """Get long name for a variable."""
-    if var_name.startswith('delta_'):
-        original_var_name = var_name.replace('delta_', '')
-        original_long_name = df_daily_vars.loc[df_daily_vars['Variable'] == original_var_name, 'Long Name'].values
-        if original_long_name.size > 0:
-            return f"Difference of {original_long_name[0]}"
-        else:
-            return f"Difference of {original_var_name} (No long name found)"
-    else:
-        long_name = df_daily_vars.loc[df_daily_vars['Variable'] == var_name, 'Long Name'].values
-        if long_name.size > 0:
-            return long_name[0]
-        else:
-            return f"{var_name} (No long name found)"
-
-def add_long_name(input_df, join_column='Feature', df_daily_vars=df_daily_vars):
-    """Add long names to a dataframe."""
-    input_df['Long Name'] = input_df[join_column].apply(lambda x: get_long_name(x, df_daily_vars))
-    return input_df
-
 # Define day and night masks
 print("Defining day and night masks...")
 daytime_mask = local_hour_adjusted_df['local_hour'].between(8, 16)
@@ -215,37 +345,6 @@ X = uhi_diff[daily_var_lst]
 y = uhi_diff['UHI_diff']
 print(f"X shape: {X.shape}, y shape: {y.shape}")
 
-# Define linear slope function with error handling
-def feature_linear_slope(df, feature_name, label, confidence_level=0.95):
-    """Calculate linear slope with error handling."""
-    try:
-        slope, _, _, p_value, stderr = linregress(df[feature_name], df[label])
-        t_value = np.abs(np.percentile(np.random.standard_t(df[feature_name].shape[0] - 2, 100000), [(1-confidence_level)/2, 1-(1-confidence_level)/2]))[1]
-        margin_of_error = t_value * stderr
-        return slope, margin_of_error, p_value
-    except Exception as e:
-        print(f"Error calculating slope for {feature_name}: {e}")
-        return None, None, None
-
-def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'], confidence_level=0.95):
-    """Combine slopes for day and night data."""
-    data = {}
-    for feature in features:
-        slopes_with_intervals = []
-        for df, time in [(daytime_df, 'Day'), (nighttime_df, 'Night')]:
-            for label in labels:
-                print(f"Calculating slope for {time}time {label} vs {feature}")
-                slope, margin_of_error, p_value = feature_linear_slope(df, feature, label, confidence_level)
-                if slope is not None:
-                    slope_with_interval = f"{slope:.6f} (± {margin_of_error:.6f}, P: {p_value:.6f})"
-                else:
-                    slope_with_interval = "Error in calculation"
-                slopes_with_intervals.append(slope_with_interval)
-        data[feature] = slopes_with_intervals
-    columns = [f'{time}_{label}_slope' for time in ['Day', 'Night'] for label in labels]
-    results_df = pd.DataFrame(data, index=columns).transpose()
-    return results_df
-
 print("Calculating feature slopes...")
 feature_names = daily_var_lst
 results_df = combine_slopes(local_hour_adjusted_df[daytime_mask], local_hour_adjusted_df[nighttime_mask], feature_names)
@@ -257,102 +356,6 @@ sorted_results_df.to_csv(sorted_results_path)
 mlflow.log_artifact(sorted_results_path)
 print(f"Saved sorted results to {sorted_results_path}")
 
-# Train and evaluate models
-def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, learning_rate, depth):
-    """Train and evaluate CatBoost model with feature selection."""
-    print(f"Training and evaluating {model_name}...")
-    X = time_uhi_diff[daily_var_lst]
-    y = time_uhi_diff['UHI_diff']
-    
-    # Initialize the CatBoostRegressor
-    base_model = CatBoostRegressor(
-        iterations=iterations,
-        learning_rate=learning_rate,
-        depth=depth,
-        loss_function='RMSE',
-        eval_metric='RMSE',
-        random_seed=42,
-        task_type='GPU',
-        early_stopping_rounds=100,
-        verbose=False
-    )
-    
-    # Perform Recursive Feature Elimination with Cross-Validation
-    rfecv = RFECV(
-        estimator=base_model,
-        step=1,
-        cv=KFold(5, shuffle=True, random_state=42),
-        scoring='neg_mean_squared_error',
-        n_jobs=-1
-    )
-    
-    rfecv.fit(X, y)
-    
-    # Get the optimal number of features and the selected features
-    optimal_num_features = rfecv.n_features_
-    selected_features = X.columns[rfecv.support_].tolist()
-    
-    print(f"Optimal number of features: {optimal_num_features}")
-    print(f"Selected features: {selected_features}")
-    
-    # Train the final model with selected features
-    X_selected = X[selected_features]
-    X_train, X_val, y_train, y_val = train_test_split(X_selected, y, test_size=0.1, random_state=42)
-    
-    final_model = CatBoostRegressor(
-        iterations=iterations,
-        learning_rate=learning_rate,
-        depth=depth,
-        loss_function='RMSE',
-        eval_metric='RMSE',
-        random_seed=42,
-        task_type='GPU',
-        early_stopping_rounds=100,
-        verbose=False
-    )
-    
-    final_model.fit(X_train, y_train, eval_set=(X_val, y_val), use_best_model=True, early_stopping_rounds=50, verbose=False)
-    
-    # Log model parameters
-    mlflow.log_param(f"{model_name}_iterations", final_model.get_param('iterations'))
-    mlflow.log_param(f"{model_name}_learning_rate", final_model.get_param('learning_rate'))
-    mlflow.log_param(f"{model_name}_depth", final_model.get_param('depth'))
-    mlflow.log_param(f"{model_name}_optimal_num_features", optimal_num_features)
-    mlflow.log_param(f"{model_name}_selected_features", ", ".join(selected_features))
-    
-    # Calculate and log metrics
-    y_pred_train = final_model.predict(X_train)
-    y_pred_val = final_model.predict(X_val)
-    train_rmse = mean_squared_error(y_train, y_pred_train, squared=False)
-    val_rmse = mean_squared_error(y_val, y_pred_val, squared=False)
-    train_mae = mean_absolute_error(y_train, y_pred_train)
-    val_mae = mean_absolute_error(y_val, y_pred_val)
-    train_r2 = r2_score(y_train, y_pred_train)
-    val_r2 = r2_score(y_val, y_pred_val)
-    
-    mlflow.log_metric(f"{model_name}_train_rmse", train_rmse)
-    mlflow.log_metric(f"{model_name}_val_rmse", val_rmse)
-    mlflow.log_metric(f"{model_name}_train_mae", train_mae)
-    mlflow.log_metric(f"{model_name}_val_mae", val_mae)
-    mlflow.log_metric(f"{model_name}_train_r2", train_r2)
-    mlflow.log_metric(f"{model_name}_val_r2", val_r2)
-    
-    print(f"Model {model_name} metrics:")
-    print(f"Train RMSE: {train_rmse:.4f}, Validation RMSE: {val_rmse:.4f}")
-    print(f"Train MAE: {train_mae:.4f}, Validation MAE: {val_mae:.4f}")
-    print(f"Train R2: {train_r2:.4f}, Validation R2: {val_r2:.4f}")
-    
-    # Plot number of features VS. cross-validation scores
-    plt.figure(figsize=(10, 6))
-    plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
-    plt.xlabel("Number of features selected")
-    plt.ylabel("Cross-validation score (neg_mean_squared_error)")
-    plt.title("Optimal number of features")
-    mlflow.log_figure(plt.gcf(), f"{model_name}_feature_selection_plot.png")
-    plt.close()
-    
-    return final_model, selected_features, X_selected
-
 print("Training the model...")
 model, selected_features, X_selected = train_and_evaluate(uhi_diff, daily_var_lst=daily_var_lst, model_name=f"{args.time_period}_model", 
                            iterations=args.iterations, learning_rate=args.learning_rate, depth=args.depth)
@@ -360,9 +363,6 @@ model, selected_features, X_selected = train_and_evaluate(uhi_diff, daily_var_ls
 # Log model
 print("Logging the trained model...")
 mlflow.catboost.log_model(model, f"{args.time_period}_model")
-
-# Update X for SHAP calculations
-X = X_selected
 
 # SHAP-related calculations and plotting
 if args.shap_calculation:
@@ -387,7 +387,7 @@ if args.shap_calculation:
         feature_importance_df = add_long_name(feature_importance_df, join_column='Feature')
         return feature_importance_df
 
-    full_pool = Pool(X, y)
+    full_pool = Pool(X_selected, y)
 
     # Feature importance plots
     print("Creating feature importance plots...")
@@ -418,11 +418,11 @@ if args.shap_calculation:
 
     # Log X data
     X_path = os.path.join(figure_dir, 'X_data.feather')
-    X.to_feather(X_path)
+    X_selected.to_feather(X_path)
     mlflow.log_artifact(X_path)
     print(f"Saved X data to {X_path}")
 
-    shap.summary_plot(shap_values, X, show=False)
+    shap.summary_plot(shap_values, X_selected, show=False)
     plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
     mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_summary_plot.png')
     plt.clf()
@@ -459,16 +459,13 @@ if args.shap_calculation:
         mlflow.log_figure(plt.gcf(), f'{time_period}_dependence_plot_{target_feature}.png')
         plt.clf()
 
-    # top_features = feature_importance['Feature'].head(5).tolist()
     top_features = feature_importance['Feature'].tolist()
 
     # Dependence plots
     print("Creating SHAP dependence plots...")
     for feature in top_features:
         print(f"Creating dependence plot for {feature}")
-        plot_dependence_grid(shap_values, X, feature_names=full_pool.get_feature_names(), time_period=args.time_period, target_feature=feature, plots_per_row=2)
+        plot_dependence_grid(shap_values, X_selected, feature_names=full_pool.get_feature_names(), time_period=args.time_period, target_feature=feature, plots_per_row=2)
 
 print("Script execution completed.")
 mlflow.end_run()
-
-
