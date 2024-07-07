@@ -178,7 +178,7 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
 
     # Plot number of features VS. cross-validation scores
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
+    plt.plot(range(1, len(rfecv.cv_results_['mean_test_score']) + 1), rfecv.cv_results_['mean_test_score'])
     plt.xlabel("Number of features selected")
     plt.ylabel("Cross-validation score (neg_mean_squared_error)")
     plt.title("Optimal number of features")
@@ -186,7 +186,6 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
     plt.close()
 
     return final_model, selected_features, X_selected
-
 
 # Parse arguments
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
