@@ -14,24 +14,19 @@ def load_data(file_path):
 def process_year(year, data_dir, hw_def, percentile):
     """Process data for a single year."""
     print(f"Processing data for year {year}")
-    hw_file = os.path.join(data_dir, f"ALL_HW_{year}.parquet")
-    no_hw_file = os.path.join(data_dir, f"ALL_NO_HW_{year}.parquet")
     
-    # Load data
-    df_hw = load_data(hw_file)
-    df_no_hw = load_data(no_hw_file)
-    print(f"Loaded {len(df_hw)} HW rows and {len(df_no_hw)} non-HW rows for year {year}")
+    # Load data for all months
+    df_all = pd.DataFrame()
+    for month in range(1, 13):
+        file_name = f"{year}_{month:02d}.parquet"
+        file_path = os.path.join(data_dir, file_name)
+        if os.path.exists(file_path):
+            df_month = load_data(file_path)
+            df_all = pd.concat([df_all, df_month], ignore_index=True)
+        else:
+            print(f"File not found: {file_path}")
     
-    # Combine data
-    initial_count = len(df_hw) + len(df_no_hw)
-    df_all = pd.concat([df_hw, df_no_hw], ignore_index=True)
-    del df_hw, df_no_hw  # Free up memory
-    gc.collect()  # Force garbage collection
-    print(f"Combined data for year {year}: {len(df_all)} total rows")
-    
-    # Validation check
-    if len(df_all) != initial_count:
-        raise ValueError(f"Data loss detected in year {year}. Expected {initial_count} rows, got {len(df_all)}")
+    print(f"Loaded {len(df_all)} rows for year {year}")
     
     # Merge with HW definition data
     print(f"Merging with HW definition data for year {year}")
@@ -42,8 +37,8 @@ def process_year(year, data_dir, hw_def, percentile):
     gc.collect()  # Force garbage collection
     
     # Validation check
-    if len(df_merged) != initial_count:
-        raise ValueError(f"Data loss detected during merge in year {year}. Expected {initial_count} rows, got {len(df_merged)}")
+    if len(df_merged) != len(df_all):
+        raise ValueError(f"Data loss detected during merge in year {year}. Expected {len(df_all)} rows, got {len(df_merged)}")
     
     # Add time-related columns
     print(f"Adding time-related columns for year {year}")
@@ -140,8 +135,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process HW and non-HW data with new HW definition.")
     parser.add_argument("--data_dir", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/parquet")
-    parser.add_argument("--summary_dir", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/hw95_summary")
-    parser.add_argument("--hw_data_path", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/hw95_summary/hw_data.feather")
+    parser.add_argument("--summary_dir", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary")
+    parser.add_argument("--hw_data_path", type=str, default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/hw_data.feather")
     parser.add_argument("--start_year", type=int, default=1985)
     parser.add_argument("--end_year", type=int, default=2013)
     parser.add_argument("--percentile", type=int, choices=[90, 95], default=95, help="Percentile for HW definition (90 or 95)")
