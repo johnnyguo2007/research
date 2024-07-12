@@ -15,14 +15,12 @@ def log_file_status(file_path, status):
     with open(log_file_path, 'a') as log_file:
         log_file.write(f'{file_path} - {status}\n')
 
-
 def convert_cftime_to_datetime(ct):
     return pd.Timestamp(ct.year, ct.month, ct.day)
-    
 
-def extract_variables(input_pattern, variables, output_file):
-    print(f"Extracting variables {variables} from {input_pattern} into {output_file}")
-    file_paths = sorted(glob.glob(input_pattern))
+def extract_variables_for_year(input_pattern, variables, year):
+    print(f"Extracting variables {variables} for year {year} from {input_pattern}")
+    file_paths = sorted(glob.glob(input_pattern.format(year=year)))
 
     # Log the processed files
     for file_path in file_paths:
@@ -34,18 +32,30 @@ def extract_variables(input_pattern, variables, output_file):
     # Convert to DataFrame Drop rows where TSA_U or TREFMXAV_R is null
     df = ds_var.to_dataframe().dropna(subset=['TSA_U', 'TREFMXAV_R']).reset_index()
 
-
     df['time'] = df['time'].apply(convert_cftime_to_datetime)
 
-    # Save to Feather
-    df.to_feather(output_file)
+    return df
 
 def main():
-    file_pattern = f'/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/sim_results/daily/i.e215.I2000Clm50SpGs.hw_production.05.clm2.h1.*-00000.nc'
+    base_pattern = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/sim_results/daily/i.e215.I2000Clm50SpGs.hw_production.05.clm2.h1.{year}*-00000.nc'
     variables_list = ['TSA', 'TSA_U', 'TSA_R', 'TREFMXAV_R']
-    output_file = f'/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/i.e215.I2000Clm50SpGs.hw_production.05.clm2.h1.TSA_UR_TREFMXAV_R.feather'
+    output_file = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/i.e215.I2000Clm50SpGs.hw_production.05.clm2.h1.TSA_UR_TREFMXAV_R.feather'
     
-    extract_variables(file_pattern, variables_list, output_file)
+    all_data = []
+
+    # Assuming the simulation runs from 1985 to 2013
+    for year in range(1985, 2014):
+        input_pattern = base_pattern.format(year=year)
+        year_data = extract_variables_for_year(input_pattern, variables_list, year)
+        all_data.append(year_data)
+        print(f"Processed year {year}")
+
+    # Combine all years' data
+    combined_data = pd.concat(all_data, ignore_index=True)
+
+    # Save combined data to a single Feather file
+    combined_data.to_feather(output_file)
+    print(f"All data saved to {output_file}")
 
 if __name__ == '__main__':
     main()
