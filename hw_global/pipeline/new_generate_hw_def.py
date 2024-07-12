@@ -10,8 +10,8 @@ import cftime
 # Set paths for input and output files
 output_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
 summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
-output_file_95 = os.path.join(output_dir, 'hw_data_95.feather')
-output_file_90 = os.path.join(output_dir, 'hw_data_90.feather')
+output_file_95 = os.path.join(output_dir, 'hw_def_95.feather')
+output_file_90 = os.path.join(output_dir, 'hw_def_90.feather')
 daily_feather_file = os.path.join(summary_dir,
                                   'i.e215.I2000Clm50SpGs.hw_production.05.clm2.h1.TSA_UR_TREFMXAV_R.feather')
 
