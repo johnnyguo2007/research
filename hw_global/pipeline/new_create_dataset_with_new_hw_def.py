@@ -174,10 +174,10 @@ def main(args):
     # Process and save HW data
     logging.info("Saving HW data")
 
-    hw_output_path = os.path.join(args.summary_dir, f'HW{args.percentile}.feather')
-    df_hw.to_feather(hw_output_path)
+    hw_output_path = os.path.join(args.summary_dir, f'local_hour_adjusted_variables_HW{args.percentile}.feather')
+    local_hour_adjusted_df.to_feather(hw_output_path)
     logging.info(f"Saved HW data to {hw_output_path}")
-    hw_rows = len(df_hw)
+    hw_rows = len(local_hour_adjusted_df)
     del df_hw  # Free up memory
     gc.collect()  # Force garbage collection
     
@@ -187,7 +187,7 @@ def main(args):
     no_hw_output_path = os.path.join(args.summary_dir, f'no_hw_HW{args.percentile}.feather')
     df_no_hw.to_feather(no_hw_output_path)
     logging.info(f"Saved non-HW data to {no_hw_output_path}")
-    no_hw_rows = len(df_merged)
+    no_hw_rows = len(df_no_hw)
     
     logging.info(f"Total combined rows: {total_rows}")
     logging.info(f"HW data: {hw_rows} rows")
