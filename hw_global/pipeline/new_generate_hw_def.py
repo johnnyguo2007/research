@@ -7,12 +7,13 @@ import duckdb
 import cftime
 
 # Set paths for input and output files
-netcdf_file = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary/i.e215.I2000Clm50SpGs.hw_production.02.clm2.h1.hwdaysOnly.nc'
-output_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary'
-summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/summary'
-output_file = os.path.join(output_dir, 'hw_data.feather')
 
-def load_and_process_netcdf(file_path, variables):
+output_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
+summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
+output_file = os.path.join(output_dir, 'hw_data.feather')
+daily_feather_file = os.path.join(summary_dir, 'i.e215.I2000Clm50SpGs.hw_production.05.clm2.h1.TSA_UR_TREFMXAV_R.feather')
+
+def load_and_process_feather(file_path, variables):
     """
     Load NetCDF file, extract specified variables, and process the data.
 
@@ -23,23 +24,16 @@ def load_and_process_netcdf(file_path, variables):
     Returns:
         pd.DataFrame: Processed DataFrame containing the specified variables.
     """
-    # Open the NetCDF file
-    ds = xr.open_dataset(file_path)
-    
-    # Convert to DataFrame and reset index
-    df = ds[variables].to_dataframe().reset_index()
+    # Open the feather file
+    df = pd.read_feather(daily_feather_file)
     
     # Remove rows with missing data for key variables
     df = df.dropna(subset=['TSA_U', 'TREFMXAV_R'])
     
     # Convert cftime to pandas datetime
-    def convert_cftime_to_datetime(ct):
-        return pd.Timestamp(ct.year, ct.month, ct.day)
-    
-    df['time'] = df['time'].apply(convert_cftime_to_datetime)
-    
-    #todo: I need to create this HW flag in boolean
-    df['HW'] = df['HW'].notna() & (df['HW'] != 0)
+    # def convert_cftime_to_datetime(ct):
+    #     return pd.Timestamp(ct.year, ct.month, ct.day)
+
     
     return df
 
@@ -59,7 +53,8 @@ def load_location_data(file_path):
 
 def calculate_heatwave_days(df, percentile):
     """
-    Calculate heatwave days based on a given percentile threshold.
+    df is NOT global summer filtered!
+    Add heatwave columns based on a given percentile threshold. 
 
     Args:
         df (pd.DataFrame): Input DataFrame containing temperature data.
@@ -97,11 +92,11 @@ def calculate_heatwave_days(df, percentile):
 # Main execution
 if __name__ == "__main__":
     # Define variables to extract from NetCDF
-    variables = ['TSA', 'TSA_U', 'TSA_R', 'TREFMXAV_R', 'HW']
+    variables = ['TSA', 'TSA_U', 'TSA_R', 'TREFMXAV_R']
     
     # Load and process NetCDF data
-    print("Loading and processing NetCDF data...")
-    df = load_and_process_netcdf(netcdf_file, variables)
+    print("Loading and processing Daily Feather data...")
+    df = load_and_process_feather(daily_feather_file, variables)
     
     # Load location data
     print("Loading location data...")
@@ -129,16 +124,16 @@ if __name__ == "__main__":
     print("DataFrame Info:")
     print(df.info())
     print(f"\nNumber of unique lat-lon pairs: {df[['lat', 'lon']].drop_duplicates().shape[0]}")
-    print(f"Number of unique lat-lon pairs with HW = 1: {df[df['HW'] == 1][['lat', 'lon']].drop_duplicates().shape[0]}")
+    print(f"Number of unique lat-lon pairs with HW95 = 1: {df[df['HW95'] == 1][['lat', 'lon']].drop_duplicates().shape[0]}")
     
     # Calculate HW ratios using duckdb for efficiency
     print("\nHeatwave Ratios:")
     print("-" * 20)
-    hw_ratio = duckdb.query("SELECT SUM(CAST(HW AS FLOAT)) / COUNT(*) AS HW_ratio FROM df").to_df()
+    # hw_ratio = duckdb.query("SELECT SUM(CAST(HW AS FLOAT)) / COUNT(*) AS HW_ratio FROM df").to_df()
     hw95_ratio = df['HW95'].mean()
     hw90_ratio = df['HW90'].mean()
     
-    print(f"HW ratio:  {hw_ratio['HW_ratio'][0]:.4f}")
+    # print(f"HW ratio:  {hw_ratio['HW_ratio'][0]:.4f}")
     print(f"HW95 ratio: {hw95_ratio:.4f}")
     print(f"HW90 ratio: {hw90_ratio:.4f}")
 
