@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-RUN_TYPE="Qstor"
+RUN_TYPE="NO_Qstor"
 
 
 # Function to run the experiment
@@ -37,8 +37,8 @@ run_experiment() {
         --learning_rate $LEARNING_RATE \
         --depth $DEPTH \
         --run_type $RUN_TYPE \
-        --exp_name_extra "Qstor_Delta_HW${hw_percentile}_no_filter" \
-        --feature_column "X_ML_Selected" \
+        --exp_name_extra "NO_Qstor_Delta_HW${hw_percentile}_no_filter" \
+        --feature_column "X_No_Qstor" \
         --delta_column "X_ML_Delta_Selected" \
         --delta_mode "include"
 }
