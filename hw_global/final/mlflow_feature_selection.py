@@ -89,45 +89,61 @@ def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'
     return results_df
 
 
-def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, learning_rate, depth):
+def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, learning_rate, depth,
+                       feature_selection=False):
     print(f"Training and evaluating {model_name}...")
     X = time_uhi_diff[daily_var_lst]
     y = time_uhi_diff['UHI_diff']
 
     clear_gpu_memory()
 
-    base_model = CatBoostRegressor(
-        iterations=iterations,
-        learning_rate=learning_rate,
-        depth=depth,
-        loss_function='RMSE',
-        eval_metric='RMSE',
-        random_seed=42,
-        task_type='GPU',
-        devices='0',
-        verbose=False
-    )
+    if feature_selection:
+        base_model = CatBoostRegressor(
+            iterations=iterations,
+            learning_rate=learning_rate,
+            depth=depth,
+            loss_function='RMSE',
+            eval_metric='RMSE',
+            random_seed=42,
+            task_type='GPU',
+            devices='0',
+            verbose=False
+        )
 
-    rfecv = CustomRFECV(
-        estimator=base_model,
-        step=1,
-        cv=KFold(5, shuffle=True, random_state=42),
-        scoring='neg_mean_squared_error',
-        n_jobs=1,
-        verbose=1
-    )
+        rfecv = CustomRFECV(
+            estimator=base_model,
+            step=1,
+            cv=KFold(5, shuffle=True, random_state=42),
+            scoring='neg_mean_squared_error',
+            n_jobs=1,
+            verbose=1
+        )
 
-    print("Starting RFECV...")
-    rfecv.fit(X, y)
-    print("RFECV completed.")
+        print("Starting RFECV...")
+        rfecv.fit(X, y)
+        print("RFECV completed.")
 
-    optimal_num_features = rfecv.n_features_
-    selected_features = X.columns[rfecv.support_].tolist()
+        optimal_num_features = rfecv.n_features_
+        selected_features = X.columns[rfecv.support_].tolist()
 
-    print(f"Optimal number of features: {optimal_num_features}")
-    print(f"Selected features: {selected_features}")
+        print(f"Optimal number of features: {optimal_num_features}")
+        print(f"Selected features: {selected_features}")
 
-    X_selected = X[selected_features]
+        X_selected = X[selected_features]
+
+        # Plot number of features VS. cross-validation scores
+        plt.figure(figsize=(10, 6))
+        plt.plot(range(1, len(rfecv.cv_results_['mean_test_score']) + 1), rfecv.cv_results_['mean_test_score'])
+        plt.xlabel("Number of features selected")
+        plt.ylabel("Cross-validation score (neg_mean_squared_error)")
+        plt.title("Optimal number of features")
+        mlflow.log_figure(plt.gcf(), f"{model_name}_feature_selection_plot.png")
+        plt.close()
+    else:
+        X_selected = X
+        optimal_num_features = len(daily_var_lst)
+        selected_features = daily_var_lst
+
     X_train, X_val, y_train, y_val = train_test_split(X_selected, y, test_size=0.1, random_state=42)
 
     clear_gpu_memory()
@@ -176,16 +192,8 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
     print(f"Train MAE: {train_mae:.4f}, Validation MAE: {val_mae:.4f}")
     print(f"Train R2: {train_r2:.4f}, Validation R2: {val_r2:.4f}")
 
-    # Plot number of features VS. cross-validation scores
-    plt.figure(figsize=(10, 6))
-    plt.plot(range(1, len(rfecv.cv_results_['mean_test_score']) + 1), rfecv.cv_results_['mean_test_score'])
-    plt.xlabel("Number of features selected")
-    plt.ylabel("Cross-validation score (neg_mean_squared_error)")
-    plt.title("Optimal number of features")
-    mlflow.log_figure(plt.gcf(), f"{model_name}_feature_selection_plot.png")
-    plt.close()
-
     return final_model, selected_features, X_selected
+
 
 # Parse arguments
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
@@ -205,8 +213,11 @@ parser.add_argument("--shap_calculation", action="store_true",
                     help="If set, SHAP-related calculations and graphs will be performed.")
 parser.add_argument("--feature_column", type=str, default="X_vars2",
                     help="Column name in df_daily_vars to select features")
+parser.add_argument("--delta_column", type=str, default="X_vars_delta",
+                    help="Column name in df_daily_vars to select delta features")
 parser.add_argument("--delta_mode", choices=["none", "include", "only"], default="include",
                     help="'none': don't use delta variables, 'include': use both original and delta variables, 'only': use only delta variables")
+parser.add_argument("--feature_selection", action="store_true", help="If set, perform feature selection using RFECV")
 
 args = parser.parse_args()
 
@@ -229,7 +240,9 @@ mlflow.log_param("iterations", args.iterations)
 mlflow.log_param("learning_rate", args.learning_rate)
 mlflow.log_param("depth", args.depth)
 mlflow.log_param("feature_selection_column", args.feature_column)
+mlflow.log_param("delta_selection_column", args.delta_column)
 mlflow.log_param("include_delta_variables", args.delta_mode)
+mlflow.log_param("perform_feature_selection", args.feature_selection)
 
 # Log the full command line
 command_line = f"python {' '.join(sys.argv)}"
@@ -281,11 +294,12 @@ df_daily_vars = pd.read_excel('/home/jguo/research/hw_global/Data/hourlyDataSche
 daily_vars = df_daily_vars.loc[df_daily_vars[args.feature_column] == 'Y', 'Variable']
 daily_var_lst = daily_vars.tolist()
 
-delta_vars = df_daily_vars.loc[df_daily_vars['X_vars_delta'] == 'Y', 'Variable']
+delta_vars = df_daily_vars.loc[df_daily_vars[args.delta_column] == 'Y', 'Variable']
 delta_var_lst = delta_vars.tolist()
 
 # Log the feature selection column and delta mode
 mlflow.log_param("feature_selection_column", args.feature_column)
+mlflow.log_param("delta_selection_column", args.delta_column)
 mlflow.log_param("delta_mode", args.delta_mode)
 
 # Calculate delta variables and modify daily_var_lst based on delta_mode
@@ -351,7 +365,7 @@ print(f"Saved daily_var_lst to {daily_var_lst_path}")
 print("Defining day and night masks...")
 daytime_mask = local_hour_adjusted_df['local_hour'].between(8, 16)
 nighttime_mask = (
-            local_hour_adjusted_df['local_hour'].between(20, 24) | local_hour_adjusted_df['local_hour'].between(0, 4))
+        local_hour_adjusted_df['local_hour'].between(20, 24) | local_hour_adjusted_df['local_hour'].between(0, 4))
 
 # Separate daytime and nighttime data
 print(f"Separating {args.time_period} data...")
@@ -379,7 +393,7 @@ print("Training the model...")
 model, selected_features, X_selected = train_and_evaluate(uhi_diff, daily_var_lst=daily_var_lst,
                                                           model_name=f"{args.time_period}_model",
                                                           iterations=args.iterations, learning_rate=args.learning_rate,
-                                                          depth=args.depth)
+                                                          depth=args.depth, feature_selection=args.feature_selection)
 
 # Log model
 print("Logging the trained model...")
@@ -462,7 +476,6 @@ if args.shap_calculation:
     plt.gcf().subplots_adjust(left=0.3)  # Increase left margin to make room for y-axis labels
     mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_waterfall_plot.png')
     plt.clf()
-
 
     # SHAP dependence plots
     def plot_dependence_grid(shap_values, X, feature_names, time_period, target_feature='U10', plots_per_row=2):
