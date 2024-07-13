@@ -1,0 +1,9 @@
+1. check iteration 100000 vs 200000
+    conclusion: 100000 is good enough.
+    becuase http://127.0.0.1:8080/#/experiments/527139408338347417/runs/d8e562d839a7471cad21d9e433bcdb8c
+    already show 0.11 in val_rmse
+    day_model_val_rmse: 0.11829392866010736
+    day_model_train_rmse: 0.013303111067462419
+
+10. Figure out the impact of Qstor
+  10.1 add lat lon or not
