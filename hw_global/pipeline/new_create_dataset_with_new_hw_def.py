@@ -202,7 +202,7 @@ if __name__ == "__main__":
                         default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary")
     parser.add_argument("--start_year", type=int, default=1985)
     parser.add_argument("--end_year", type=int, default=2013)
-    parser.add_argument("--percentile", type=int, choices=[90, 95], default=95,
+    parser.add_argument("--percentile", type=int, choices=[90, 95, 98, 99], default=95,
                         help="Percentile for HW definition (90 or 95)")
     args = parser.parse_args()
 
