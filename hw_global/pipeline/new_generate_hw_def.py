@@ -4,14 +4,13 @@ import numpy as np
 import os
 import duckdb
 import logging
+import argparse
 
 import cftime
 
 # Set paths for input and output files
 output_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
 summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
-output_file_95 = os.path.join(output_dir, 'hw_def_95.feather')
-output_file_90 = os.path.join(output_dir, 'hw_def_90.feather')
 daily_feather_file = os.path.join(summary_dir,
                                   'i.e215.I2000Clm50SpGs.hw_production.05.clm2.h1.TSA_UR_TREFMXAV_R.feather')
 
@@ -124,10 +123,7 @@ def add_event_id(df, hw_column):
     initial_count = len(df)
     df = df.sort_values(by=['location_ID', 'time'])
 
-    # df['time_diff'] = df.groupby('location_ID')['time'].diff().dt.total_seconds() / 3600
-    # df['new_event'] = (df['time_diff'] > 24) & (df[hw_column] == True)
-    # df['event_ID'] = df.groupby('location_ID')['new_event'].cumsum()
-    #event_ID was created in calculate_heatwave_days
+    # event_ID was created in calculate_heatwave_days
     df['global_event_ID'] = df['location_ID'].astype(str) + '_' + df['event_ID'].astype(str)
     logging.info(f"Added event IDs to {len(df)} rows")
     # Validation check
@@ -138,6 +134,11 @@ def add_event_id(df, hw_column):
 
 # Main execution
 if __name__ == "__main__":
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Process heatwave data for multiple thresholds.')
+    parser.add_argument('--create', type=str, help='Comma-separated list of thresholds (e.g., 99,98,95,90)')
+    args = parser.parse_args()
+
     # Define variables to extract from NetCDF
     variables = ['TSA', 'TSA_U', 'TSA_R', 'TREFMXAV_R']
 
@@ -154,23 +155,23 @@ if __name__ == "__main__":
     df = pd.merge(df, location_df, on=['lat', 'lon'], how='left')
     df = df.sort_values(['location_ID', 'time'])
 
-    # Calculate heatwave days for 95th and 90th percentiles
-    print("Calculating heatwave 95 threshold days...")
-    df_95 = calculate_heatwave_days(df, 0.95)
+    # Process thresholds from command-line argument
+    if args.create:
+        thresholds = [float(t) / 100 for t in args.create.split(',')]
+    else:
+        thresholds = [0.95, 0.90]  # Default thresholds if not provided
 
-    # Add event IDs for 95th and 90th percentiles
-    print("Adding event IDs for 95th percentile...")
-    df_95 = add_event_id(df_95, 'HW95')
+    # Calculate heatwave days and add event IDs for each threshold
+    for threshold in thresholds:
+        print(f"Calculating heatwave {int(threshold * 100)} threshold days...")
+        df_threshold = calculate_heatwave_days(df, threshold)
 
-    print(f"Saving processed data for 95th percentile to {output_file_95}...")
-    df_95.to_feather(output_file_95)
+        print(f"Adding event IDs for {int(threshold * 100)}th percentile...")
+        df_threshold = add_event_id(df_threshold, f'HW{int(threshold * 100)}')
 
-    print("Calculating heatwave 90 threshold days...")
-    df_90 = calculate_heatwave_days(df, 0.90)
-    print("Adding event IDs for 90th percentile...")
-    df_90 = add_event_id(df_90, 'HW90')
-    print(f"Saving processed data for 90th percentile to {output_file_90}...")
-    df_90.to_feather(output_file_90)
+        output_file = os.path.join(output_dir, f'hw_def_{int(threshold * 100)}.feather')
+        print(f"Saving processed data for {int(threshold * 100)}th percentile to {output_file}...")
+        df_threshold.to_feather(output_file)
+
     print("Data saved successfully.")
-
     print("\nProcessing complete.")
