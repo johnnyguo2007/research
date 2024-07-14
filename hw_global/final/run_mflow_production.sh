@@ -31,13 +31,13 @@ run_experiment() {
         --depth $DEPTH \
         --run_type $RUN_TYPE \
         --exp_name_extra "${category}_UHI_HW${HW_COUNT_THRESHOLD}" \
-        --filters "filter_by_hw_count=${HW_COUNT_THRESHOLD};filter_by_uhi_diff_category=${THRESHOLD},${category}" \
-        --shap_calculation
+        --filters "filter_by_hw_count=${HW_COUNT_THRESHOLD};filter_by_uhi_diff_category=${THRESHOLD},${category}" 
+        
 }
 
 # Run experiments for day and night, and for each UHI_diff category
 for time_period in "day" "night"; do
-    for category in "Positive" "Insignificant" "Negative"; do
+    for category in "Positive" "Negative"; do
         echo "Running experiment for $time_period, $category UHI, HW count <= ${HW_COUNT_THRESHOLD}"
         run_experiment $time_period $category
     done

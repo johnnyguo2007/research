@@ -422,7 +422,8 @@ if args.shap_calculation:
         mlflow.log_figure(plt.gcf(), f'{time_period}_dependence_plot_{target_feature}.png')
         plt.clf()
 
-    top_features = feature_importance['Feature'].head(5).tolist()
+    # top_features = feature_importance['Feature'].head(5).tolist()
+    top_features = feature_importance['Feature'].tolist()
 
     # Dependence plots
     print("Creating SHAP dependence plots...")

@@ -52,40 +52,59 @@ def load_location_data(file_path):
 
 def calculate_heatwave_days(df, percentile):
     """
-    df is NOT global summer filtered!
     Add heatwave columns based on a given percentile threshold.
-
     Args:
         df (pd.DataFrame): Input DataFrame containing temperature data.
         percentile (float): Percentile to use for threshold calculation (e.g., 0.95 for 95th percentile).
-
     Returns:
-        pd.DataFrame: DataFrame with added heatwave indicator and threshold columns.
+        pd.DataFrame: DataFrame with added heatwave indicator, threshold, and Nth_day columns.
     """
     # Sort the dataframe by location_ID and time
     df = df.sort_values(['location_ID', 'time'])
 
     # Calculate the percentile threshold of TREFMXAV_R for each location_ID
-    threshold = df.groupby('location_ID')['TREFMXAV_R'].transform(lambda x: x.quantile(percentile))
+    thresholds = df.groupby('location_ID')['TREFMXAV_R'].transform(lambda x: x.quantile(percentile))
 
-    # Create a boolean mask for days exceeding the threshold
-    exceed_threshold = df['TREFMXAV_R'] > threshold
+    # Create a new column 'exceeded' based on the threshold
+    df['exceeded'] = df['TREFMXAV_R'] > thresholds
 
-    # Use rolling window to identify streaks of 3 or more days
-    rolling_sum = exceed_threshold.groupby(df['location_ID']).rolling(window=3, min_periods=3).sum().reset_index(
-        level=0, drop=True)
+    # Function to detect heatwave days
+    def detect_heatwave(group):
+        # Create shifted columns for the two days before and after
+        two_days_before = group.shift(2)
+        one_day_before = group.shift(1)
+        one_day_after = group.shift(-1)
+        two_days_after = group.shift(-2)
+
+        # Apply the heatwave conditions
+        return group & (  # The day itself must have exceeded
+                (two_days_before & one_day_before) |  # two days before are exceeded
+                (one_day_after & two_days_after) |  # two days after are exceeded
+                (one_day_before & one_day_after)  # one day before and one day after are exceeded
+        )
 
     # Create heatwave column name based on percentile
     hw_column = f'HW{int(percentile * 100)}'
 
-    # Set heatwave days where the rolling sum is >= 3 and the threshold is exceeded
-    df[hw_column] = (rolling_sum >= 3) & exceed_threshold
-
-    # Fill NaN values with False (for the first two days of each location that can't be part of a 3-day streak)
-    df[hw_column] = df[hw_column].fillna(False)
+    # Apply the heatwave detection function and create the hw column
+    df[hw_column] = df.groupby('location_ID')['exceeded'].transform(detect_heatwave)
 
     # Add the threshold column
-    df[f'threshold{int(percentile * 100)}'] = threshold
+    df[f'threshold{int(percentile * 100)}'] = thresholds
+
+    # Calculate the event_id and Nth_day
+    def assign_event_id(group):
+        # Create a new group when HW changes from False to True
+        event_changes = group != group.shift(1)
+        # Cumulative sum of changes, but only for True values
+        return (event_changes & group).cumsum()
+
+    # Apply assign_event_id to each location group
+    df['event_ID'] = df.groupby('location_ID')[hw_column].transform(assign_event_id)
+
+    # Calculate Nth_day
+    df['Nth_day'] = df.groupby(['location_ID', 'event_ID']).cumcount() + 1
+    df.loc[~df[hw_column], 'Nth_day'] = 0
 
     return df
 
@@ -104,9 +123,11 @@ def add_event_id(df, hw_column):
     logging.info(f"Adding event IDs to HW data for {hw_column}")
     initial_count = len(df)
     df = df.sort_values(by=['location_ID', 'time'])
-    df['time_diff'] = df.groupby('location_ID')['time'].diff().dt.total_seconds() / 3600
-    df['new_event'] = (df['time_diff'] > 1) & (df[hw_column] == True)
-    df['event_ID'] = df.groupby('location_ID')['new_event'].cumsum()
+
+    # df['time_diff'] = df.groupby('location_ID')['time'].diff().dt.total_seconds() / 3600
+    # df['new_event'] = (df['time_diff'] > 24) & (df[hw_column] == True)
+    # df['event_ID'] = df.groupby('location_ID')['new_event'].cumsum()
+    #event_ID was created in calculate_heatwave_days
     df['global_event_ID'] = df['location_ID'].astype(str) + '_' + df['event_ID'].astype(str)
     logging.info(f"Added event IDs to {len(df)} rows")
     # Validation check
@@ -136,18 +157,18 @@ if __name__ == "__main__":
     # Calculate heatwave days for 95th and 90th percentiles
     print("Calculating heatwave 95 threshold days...")
     df_95 = calculate_heatwave_days(df, 0.95)
-    print("Calculating heatwave 90 threshold days...")
-    df_90 = calculate_heatwave_days(df, 0.90)
 
     # Add event IDs for 95th and 90th percentiles
     print("Adding event IDs for 95th percentile...")
     df_95 = add_event_id(df_95, 'HW95')
-    print("Adding event IDs for 90th percentile...")
-    df_90 = add_event_id(df_90, 'HW90')
 
-    # Save processed data to feather files
     print(f"Saving processed data for 95th percentile to {output_file_95}...")
     df_95.to_feather(output_file_95)
+
+    print("Calculating heatwave 90 threshold days...")
+    df_90 = calculate_heatwave_days(df, 0.90)
+    print("Adding event IDs for 90th percentile...")
+    df_90 = add_event_id(df_90, 'HW90')
     print(f"Saving processed data for 90th percentile to {output_file_90}...")
     df_90.to_feather(output_file_90)
     print("Data saved successfully.")

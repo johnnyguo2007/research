@@ -8,7 +8,6 @@ import zarr
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
-import cartopy.crs as ccrs
 
 
 def extract_variables(input_pattern, variables, output_file, log_file_path):

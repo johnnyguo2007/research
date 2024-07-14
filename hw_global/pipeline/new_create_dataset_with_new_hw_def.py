@@ -41,9 +41,18 @@ def process_year(year, data_dir, hw_def, percentile, id_topo_merged_df):
     # Merge with HW definition data
     logging.info(f"Merging with HW definition data for year {year}")
     hw_column = f'HW{percentile}'
+
+    # Convert time to date in both DataFrames
+    df_all['date'] = df_all['time'].dt.date
+    hw_def['date'] = hw_def['time'].dt.date
+
     df_merged = pd.merge(df_all,
-                         hw_def[['time', 'lat', 'lon', hw_column, 'location_ID', 'event_ID', 'global_event_ID']],
-                         on=['time', 'lat', 'lon'], how='left')
+                         hw_def[['date', 'lat', 'lon', hw_column, 'location_ID', 'event_ID', 'global_event_ID']],
+                         on=['date', 'lat', 'lon'], how='left')
+
+    # Drop the temporary 'date' column
+    df_merged.drop('date', axis=1, inplace=True)
+
     del df_all  # Free up memory
     gc.collect()  # Force garbage collection
 

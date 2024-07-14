@@ -399,44 +399,43 @@ model, selected_features, X_selected = train_and_evaluate(uhi_diff, daily_var_ls
 print("Logging the trained model...")
 mlflow.catboost.log_model(model, f"{args.time_period}_model")
 
+
+# Get feature importance
+def get_ordered_feature_importance(model: CatBoostRegressor, pool, type='FeatureImportance'):
+    if type == 'FeatureImportance':
+        feature_importances = model.get_feature_importance()
+    else:
+        feature_importances = model.get_feature_importance(pool, type=type)
+
+    feature_names = pool.get_feature_names()
+    print(f"Length of feature_importances: {len(feature_importances)}")
+    print(f"Length of feature_names: {len(feature_names)}")
+
+    # Ensure the lengths match
+    if len(feature_importances) != len(feature_names):
+        raise ValueError("Feature importances and feature names lengths do not match")
+
+    feature_importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': feature_importances})
+    feature_importance_df.sort_values(by='Importance', ascending=False, inplace=True)
+    feature_importance_df = add_long_name(feature_importance_df, join_column='Feature')
+    return feature_importance_df
+
+
+full_pool = Pool(X_selected, y)
+
+# Feature importance plots
+print("Creating feature importance plots...")
+feature_importance = get_ordered_feature_importance(model, full_pool)
+
+plt.figure(figsize=(10, 6))
+plt.barh(feature_importance['Feature'], feature_importance['Importance'])
+plt.title(f'{args.time_period.capitalize()}time Feature Importance')
+mlflow.log_figure(plt.gcf(), f'{args.time_period}time_feature_importance.png')
+plt.clf()
+
 # SHAP-related calculations and plotting
 if args.shap_calculation:
     print("Starting SHAP calculations...")
-
-
-    # Get feature importance
-    def get_ordered_feature_importance(model: CatBoostRegressor, pool, type='FeatureImportance'):
-        if type == 'FeatureImportance':
-            feature_importances = model.get_feature_importance()
-        else:
-            feature_importances = model.get_feature_importance(pool, type=type)
-
-        feature_names = pool.get_feature_names()
-        print(f"Length of feature_importances: {len(feature_importances)}")
-        print(f"Length of feature_names: {len(feature_names)}")
-
-        # Ensure the lengths match
-        if len(feature_importances) != len(feature_names):
-            raise ValueError("Feature importances and feature names lengths do not match")
-
-        feature_importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': feature_importances})
-        feature_importance_df.sort_values(by='Importance', ascending=False, inplace=True)
-        feature_importance_df = add_long_name(feature_importance_df, join_column='Feature')
-        return feature_importance_df
-
-
-    full_pool = Pool(X_selected, y)
-
-    # Feature importance plots
-    print("Creating feature importance plots...")
-    feature_importance = get_ordered_feature_importance(model, full_pool)
-
-    plt.figure(figsize=(10, 6))
-    plt.barh(feature_importance['Feature'], feature_importance['Importance'])
-    plt.title(f'{args.time_period.capitalize()}time Feature Importance')
-    mlflow.log_figure(plt.gcf(), f'{args.time_period}time_feature_importance.png')
-    plt.clf()
-
     # SHAP summary plots
     print("Creating SHAP summary plots...")
     shap_values = model.get_feature_importance(full_pool, type='ShapValues')[:, :-1]
@@ -476,6 +475,7 @@ if args.shap_calculation:
     plt.gcf().subplots_adjust(left=0.3)  # Increase left margin to make room for y-axis labels
     mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_waterfall_plot.png')
     plt.clf()
+
 
     # SHAP dependence plots
     def plot_dependence_grid(shap_values, X, feature_names, time_period, target_feature='U10', plots_per_row=2):
