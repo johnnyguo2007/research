@@ -26,6 +26,8 @@ def filter_by_year(df, year):
 def filter_by_temperature_above_300(df, temperature):
     return df[df['temperature'] > float(temperature)]
 
+def filter_by_KGMajorClass(df, major_class):
+    return df[df['KGMajorClass'] == major_class]
 
 def filter_by_hw_count(df, threshold):
     threshold = int(threshold)
@@ -278,6 +280,7 @@ if args.filters:
     # Log applied filters as a parameter
     mlflow.log_param("applied_filters", "; ".join(applied_filters))
     print(f"Dataframe shape after applying filters: {local_hour_adjusted_df.shape}")
+    mlflow.log_param(f"data_shape_after_filers", "{local_hour_adjusted_df.shape}")
 else:
     mlflow.log_param("applied_filters", "None")
     print("No filters applied")
@@ -432,6 +435,12 @@ plt.barh(feature_importance['Feature'], feature_importance['Importance'])
 plt.title(f'{args.time_period.capitalize()}time Feature Importance')
 mlflow.log_figure(plt.gcf(), f'{args.time_period}time_feature_importance.png')
 plt.clf()
+
+# Log feature_importance data
+feature_importance_path = os.path.join(figure_dir, 'feature_importance.feather')
+feature_importance.to_feather(feature_importance_path)
+mlflow.log_artifact(feature_importance_path)
+print(f"Saved feature_importance data to {feature_importance_path}")
 
 # SHAP-related calculations and plotting
 if args.shap_calculation:
