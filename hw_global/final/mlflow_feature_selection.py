@@ -78,7 +78,7 @@ def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'
         slopes_with_intervals = []
         for df, time in [(daytime_df, 'Day'), (nighttime_df, 'Night')]:
             for label in labels:
-                print(f"Calculating slope for {time}time {label} vs {feature}")
+                # print(f"Calculating slope for {time}time {label} vs {feature}")
                 slope, margin_of_error, p_value = feature_linear_slope(df, feature, label, confidence_level)
                 if slope is not None:
                     slope_with_interval = f"{slope:.6f} (± {margin_of_error:.6f}, P: {p_value:.6f})"
@@ -96,6 +96,10 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
     print(f"Training and evaluating {model_name}...")
     X = time_uhi_diff[daily_var_lst]
     y = time_uhi_diff['UHI_diff']
+
+    mean_uhi_diff = y.mean()
+    mlflow.log_metric(f"{args.time_period}_mean_uhi_diff", mean_uhi_diff)
+    print(f"Logged mean value of UHI_diff for {args.time_period}time: {mean_uhi_diff:.4f}")
 
     clear_gpu_memory()
 
@@ -280,7 +284,7 @@ if args.filters:
     # Log applied filters as a parameter
     mlflow.log_param("applied_filters", "; ".join(applied_filters))
     print(f"Dataframe shape after applying filters: {local_hour_adjusted_df.shape}")
-    mlflow.log_param(f"data_shape_after_filers", "{local_hour_adjusted_df.shape}")
+    mlflow.log_param(f"data_shape_after_filers", local_hour_adjusted_df.shape)
 else:
     mlflow.log_param("applied_filters", "None")
     print("No filters applied")
