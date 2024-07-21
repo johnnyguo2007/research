@@ -7,3 +7,10 @@
 
 10. Figure out the impact of Qstor
   10.1 add lat lon or not
+
+
+
+
+!!Important:
+we should consider the deltas between HW and non-HW also
+such wind during HW and non_HW
