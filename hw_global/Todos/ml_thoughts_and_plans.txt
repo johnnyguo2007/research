@@ -14,3 +14,10 @@
 !!Important:
 we should consider the deltas between HW and non-HW also
 such wind during HW and non_HW
+
+
+add in Day_time_Wind for night model:
+2. Heat Storage: Wind can also indirectly affect UHI intensity through its impact on heat storage. 
+Reduced wind speeds during heatwaves can lead to increased heat storage in urban materials during the day,
+which is then released at night, contributing to a stronger nighttime UHI 
+(Dan Li et al. 2016 Wind Speed Useful_apme-jamc-d-16-0102.1.pdf, page 5, paragraph 5).
