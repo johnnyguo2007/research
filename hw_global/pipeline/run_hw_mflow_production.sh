@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-RUN_TYPE="Qstor"
+RUN_TYPE="Local_hour"
 
 
 # Function to run the experiment
@@ -44,7 +44,7 @@ run_experiment() {
 }
 
 # Run experiments for HW95 and HW90, for day and night
-for hw_percentile in 95 90; do
+for hw_percentile in 99 98; do
     merged_file="local_hour_adjusted_variables_HW${hw_percentile}.feather"
     
     for time_period in "day" "night"; do

@@ -1,0 +1,38 @@
+conda install -c conda-forge jupyter_contrib_nbextensions
+conda install -c conda-forge jupyter_nbextensions_configurator
+
+
+
+jupyter nbextension list
+jupyter contrib nbextension install --user
+jupyter nbextension enable --py widgetsnbextension
+ 1353  conda install -c conda-forge xarray dask netCDF4 bottleneck
+ 1354  conda install -c conda-forge scikit-learn
+ 1355  pip install tensorflow[and-cuda]
+ 1356  conda install -c conda-forge shap
+ 1357  conda install -c conda-forge openpyxl
+
+
+conda install -c conda-forge xarray dask netCDF4 bottleneck scikit-learn shap openpyxl
+
+
+from mac:
+2201  conda list
+ 2202  conda config --add channels conda-forge\n
+ 2203  conda install catboost\n
+ 2204  unset_proxy
+ 2205  conda install catboost\n
+ 2206  conda config --set ssl_verify False
+ 2207  conda install catboost\n
+ 2208  pip install ipywidgets\n
+ 2209  jupyter nbextension list
+ 2210  pip install jupyter_contrib_nbextensions
+ 2211  jupyter contrib nbextension install
+ 2212  jupyter nbextension enable --py widgetsnbextension\n
+ 2213  jupyter contrib nbextension install
+ 2214  pip install --upgrade notebook jupyter_contrib_nbextensions jupyter_nbextensions_configurator\n
+ 2215  jupyter contrib nbextension install
+ 2216  jupyter nbextension enable --py widgetsnbextension\n
+ 2217  jupyter --version
+ 2218  conda install -n I2000 notebook jupyter_contrib_nbextensions\nconda install -n I2000 widgetsnbextension
+ 2219  jupyter nbextension enable --py widgetsnbextension\n

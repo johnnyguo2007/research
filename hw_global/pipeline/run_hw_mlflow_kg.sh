@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="KG"  # Base part of the run type
+BASE_RUN_TYPE="SOIL_KG"  # Base part of the run type
 
 # Function to run the experiment
 run_experiment() {
@@ -29,6 +29,7 @@ run_experiment() {
         --depth $DEPTH \
         --run_type "${run_type}" \
         --exp_name_extra "${exp_name_extra}" \
+        --shap_calculation \
         --filters "filter_by_KGMajorClass,${kg_major_class}" \
         --feature_column "X_ML_Selected" \
         --delta_column "X_ML_Delta_Selected" \
@@ -39,7 +40,7 @@ run_experiment() {
 kg_major_classes=("Arid" "Cold" "Temperate" "Tropical")
 
 # Run experiments for HW95 and HW90, for day and night
-for hw_percentile in 99 98; do
+for hw_percentile in 98 99; do
     merged_file="local_hour_adjusted_variables_HW${hw_percentile}.feather"
     
     for time_period in "day" "night"; do

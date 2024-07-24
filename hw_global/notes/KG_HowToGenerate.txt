@@ -1,0 +1,75 @@
+I have two netcdf files. koppen_geiger_0p5.nc and location_IDs.nc. Here are the meta data for two two files.
+
+File "koppen_geiger_0p5.nc"
+File type: Hierarchical Data Format, version 5
+ 
+netcdf file:/home/jguo/other_projects/1991_2020/koppen_geiger_0p5.nc {
+  dimensions:
+    lat = 360;
+    lon = 720;
+  variables:
+    float lat(lat=360);
+      :long_name = "latitude";
+      :units = "degrees_north";
+
+    byte kg_confidence(lat=360, lon=720);
+      :_FillValue = -15B; // byte
+      :least_significant_digit = 1L; // long
+      :units = "%";
+      :_ChunkSizes = 200U, 200U; // uint
+
+    byte kg_class(lat=360, lon=720);
+      :units = "";
+      :_FillValue = -15B; // byte
+      :least_significant_digit = 1L; // long
+      :_ChunkSizes = 200U, 200U; // uint
+
+    float lon(lon=720);
+      :units = "degrees_east";
+      :long_name = "longitude";
+
+  // global attributes:
+  :history = "Created on 2023-08-23 23:12";
+}
+
+File "location_IDs.nc"
+File type: Hierarchical Data Format, version 5
+ 
+netcdf file:/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/location_IDs.nc {
+  dimensions:
+    lon = 288;
+    lat = 192;
+  variables:
+    float lon(lon=288);
+      :_FillValue = 1.0E36f; // float
+      :long_name = "coordinate longitude";
+      :units = "degrees_east";
+      :missing_value = 1.0E36f; // float
+
+    long location_ID(lat=192, lon=288);
+
+    float lat(lat=192);
+      :_FillValue = 1.0E36f; // float
+      :long_name = "coordinate latitude";
+      :units = "degrees_north";
+      :missing_value = 1.0E36f; // float
+
+  // global attributes:
+}
+
+as you can see koppen_geiger_0p5.nc has higher precision in grid.
+In /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/location_IDs.nc
+lon has a range of 0 to 360
+lat has a range of -90 to 90
+
+in 
+/home/jguo/other_projects/1991_2020/koppen_geiger_0p5.nc
+lon has a range of -180 to 180
+lat has a range of -90 to 90
+
+
+
+I want to merge kg_class into location_ID.nc and save the resut to 
+/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/kg_class_location_ID.nc
+
+please plot map of the kg_class in both koppen_geiger_0p5 and kg_class_location_ID.nc 

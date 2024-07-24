@@ -2,7 +2,7 @@
 it has data summary and nice global map plot ( the colar bar need to have fixed scale)
 the UHI_diff and UWBI_diff plot should trigger more investigation on what is cause the difference.
 
-it might trigger why Q2m is more power than EFLX_LH_TOT
+it triggers why Q2m is more power than EFLX_LH_TOT (because UWBI_diff is close to zero and hence explain major non-zero portion of UHI_diff)
 
 
 /home/jguo/research/hw_global/final/UHI_stats.ipynb
