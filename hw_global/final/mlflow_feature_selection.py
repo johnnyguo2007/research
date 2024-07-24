@@ -489,6 +489,34 @@ if args.shap_calculation:
     mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_waterfall_plot.png')
     plt.clf()
 
+    # Get feature importance using SHAP values
+    def get_shap_feature_importance(shap_values, feature_names):
+        shap_feature_importance = np.abs(shap_values).mean(axis=0)
+        shap_importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': shap_feature_importance})
+        shap_importance_df.sort_values(by='Importance', ascending=False, inplace=True)
+        shap_importance_df = add_long_name(shap_importance_df, join_column='Feature') 
+        return shap_importance_df
+
+    shap_feature_importance = get_shap_feature_importance(shap_values, full_pool.get_feature_names())
+
+    # SHAP feature importance waterfall plot
+    print("Creating SHAP feature importance waterfall plot...")
+    shap.waterfall_plot(shap.Explanation(
+        values=shap_feature_importance['Importance'], 
+        base_values=0, 
+        feature_names=shap_feature_importance['Long Name']),
+        show=False
+    )
+    plt.gcf().set_size_inches(15, 10)  # Adjust the figure size 
+    plt.gcf().subplots_adjust(left=0.3)  # Increase left margin to make room for y-axis labels
+    mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_feature_importance_waterfall_plot.png')
+    plt.clf()
+
+    # Log SHAP feature importance data
+    shap_importance_path = os.path.join(figure_dir, 'shap_feature_importance.feather')  
+    shap_feature_importance.to_feather(shap_importance_path)
+    mlflow.log_artifact(shap_importance_path)
+    print(f"Saved SHAP feature importance data to {shap_importance_path}")
 
     # SHAP dependence plots
     def plot_dependence_grid(shap_values, X, feature_names, time_period, target_feature='U10', plots_per_row=2):
@@ -521,6 +549,8 @@ if args.shap_calculation:
         print(f"Creating dependence plot for {feature}")
         plot_dependence_grid(shap_values, X_selected, feature_names=full_pool.get_feature_names(),
                              time_period=args.time_period, target_feature=feature, plots_per_row=2)
+    
+    
 
 print("Script execution completed.")
 mlflow.end_run()
