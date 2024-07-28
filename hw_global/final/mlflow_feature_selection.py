@@ -370,9 +370,9 @@ print(f"Saved daily_var_lst to {daily_var_lst_path}")
 
 # Define day and night masks
 print("Defining day and night masks...")
-daytime_mask = local_hour_adjusted_df['local_hour'].between(8, 16)
+daytime_mask = local_hour_adjusted_df['local_hour'].between(7, 16)
 nighttime_mask = (
-        local_hour_adjusted_df['local_hour'].between(20, 24) | local_hour_adjusted_df['local_hour'].between(0, 4))
+        local_hour_adjusted_df['local_hour'].between(20, 24) | local_hour_adjusted_df['local_hour'].between(0, 6))
 
 # Separate daytime and nighttime data
 print(f"Separating {args.time_period} data...")
