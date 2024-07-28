@@ -234,7 +234,7 @@ summary_dir = args.summary_dir
 experiment_name = f'{args.run_type}_{args.time_period.capitalize()}_{args.exp_name_extra}'
 
 print(f"Setting up MLflow experiment: {experiment_name}")
-mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+mlflow.set_tracking_uri(uri="http://192.168.4.85:8080")
 mlflow.set_experiment(experiment_name)
 mlflow.start_run()
 
@@ -499,16 +499,39 @@ if args.shap_calculation:
 
     shap_feature_importance = get_shap_feature_importance(shap_values, full_pool.get_feature_names())
 
-    # SHAP feature importance waterfall plot
+# SHAP feature importance waterfall plot
     print("Creating SHAP feature importance waterfall plot...")
-    shap.waterfall_plot(shap.Explanation(
-        values=shap_feature_importance['Importance'], 
-        base_values=0, 
-        feature_names=shap_feature_importance['Long Name']),
-        show=False
+    
+    # Normalize the SHAP feature importances
+    shap_feature_importance['Normalized Importance'] = shap_feature_importance['Importance'] / shap_feature_importance['Importance'].sum()
+    
+    # Format the percentages for display
+    shap_feature_importance['Percentage'] = shap_feature_importance['Normalized Importance'].apply(lambda x: f'{x:.2%}')
+
+    # Sort the features by importance in descending order
+    shap_feature_importance.sort_values(by='Importance', ascending=False, inplace=True)
+
+    # Create the waterfall plot with all features
+    shap.waterfall_plot(
+        shap.Explanation(
+            values=shap_feature_importance['Importance'], 
+            base_values=0, 
+            feature_names=shap_feature_importance['Long Name'].tolist() + ['Percentage contribution']
+        ),
+        show=False,
+        max_display=len(shap_feature_importance)  # Display all features
     )
-    plt.gcf().set_size_inches(15, 10)  # Adjust the figure size 
-    plt.gcf().subplots_adjust(left=0.3)  # Increase left margin to make room for y-axis labels
+
+    # Customize the plot
+    plt.gcf().set_size_inches(15, 0.5 * len(shap_feature_importance))  # Adjust figure height based on number of features
+    plt.gcf().subplots_adjust(left=0.4)  # Increase left margin to make room for y-axis labels
+
+    # Add percentage contribution text next to each bar
+    for i, p in enumerate(plt.gca().patches):
+        plt.text(p.get_width() * 1.01, p.get_y() + p.get_height() / 2, 
+                 shap_feature_importance['Percentage'][i], 
+                 ha='left', va='center')
+
     mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_feature_importance_waterfall_plot.png')
     plt.clf()
 
