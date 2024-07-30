@@ -289,10 +289,10 @@ else:
     mlflow.log_param("applied_filters", "None")
     print("No filters applied")
 
-# Load location ID dataset
-location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
-print(f"Loading location ID dataset from {location_ID_path}")
-location_ID_ds = xr.open_dataset(location_ID_path, engine='netcdf4')
+# # Load location ID dataset
+# location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
+# print(f"Loading location ID dataset from {location_ID_path}")
+# location_ID_ds = xr.open_dataset(location_ID_path, engine='netcdf4')
 
 # Load feature list
 print("Loading feature list...")
@@ -303,6 +303,9 @@ daily_var_lst = daily_vars.tolist()
 
 delta_vars = df_daily_vars.loc[df_daily_vars[args.delta_column] == 'Y', 'Variable']
 delta_var_lst = delta_vars.tolist()
+
+hw_nohw_diff_vars = df_daily_vars.loc[df_daily_vars['HW_NOHW_Diff'] == 'Y', 'Variable']
+daily_var_lst += hw_nohw_diff_vars.tolist()
 
 # Log the feature selection column and delta mode
 mlflow.log_param("feature_selection_column", args.feature_column)
@@ -344,9 +347,16 @@ def get_long_name(var_name, df_daily_vars):
         original_var_name = var_name.replace('delta_', '')
         original_long_name = df_daily_vars.loc[df_daily_vars['Variable'] == original_var_name, 'Long Name'].values
         if original_long_name.size > 0:
-            return f"Difference of {original_long_name[0]}"
+            return f"U and R Difference of {original_long_name[0]}"
         else:
-            return f"Difference of {original_var_name} (No long name found)"
+            return f"U and R Difference of {original_var_name} (No long name found)"
+    elif var_name.startswith('hw_nohw_diff_'):
+        original_var_name = var_name.replace('hw_nohw_diff_', '')
+        original_long_name = df_daily_vars.loc[df_daily_vars['Variable'] == original_var_name, 'Long Name'].values
+        if original_long_name.size > 0:
+            return f"HW Non-HW Difference of {original_long_name[0]}"
+        else:
+            return f"HW Non-HW Difference of {original_var_name} (No long name found)"
     else:
         long_name = df_daily_vars.loc[df_daily_vars['Variable'] == var_name, 'Long Name'].values
         if long_name.size > 0:
