@@ -16,6 +16,7 @@ from scipy.stats import linregress
 import argparse
 import sys
 import torch
+from catboost import CatBoostRegressor, EFeaturesSelectionAlgorithm, EShapCalcType
 
 
 # Define filter functions
@@ -92,7 +93,7 @@ def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'
 
 
 def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, learning_rate, depth,
-                       feature_selection=False):
+                       feature_selection=False, num_features=None):
     print(f"Training and evaluating {model_name}...")
     X = time_uhi_diff[daily_var_lst]
     y = time_uhi_diff['UHI_diff']
@@ -103,7 +104,41 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
 
     clear_gpu_memory()
 
-    if feature_selection:
+    if num_features is not None:
+        print(f"Using CatBoost's select_features to select {num_features} features...")
+        model = CatBoostRegressor(
+            iterations=iterations,
+            learning_rate=learning_rate,
+            depth=depth,
+            loss_function='RMSE',
+            eval_metric='RMSE',
+            random_seed=42,
+            task_type='GPU',
+            devices='0',
+            verbose=False
+        )
+
+        summary = model.select_features(
+            X, y,
+            features_for_select=daily_var_lst,
+            num_features_to_select=num_features,
+            steps=10,
+            algorithm=EFeaturesSelectionAlgorithm.RecursiveByShapValues,
+            shap_calc_type=EShapCalcType.Regular,
+            train_final_model=True,
+            logging_level='Silent',
+            plot=False
+        )
+
+        selected_features = summary['selected_features']
+        eliminated_features = summary['eliminated_features']
+
+        print(f"Selected features: {selected_features}")
+        print(f"Eliminated features: {eliminated_features}")
+
+        X_selected = X.iloc[:, selected_features]
+        optimal_num_features = len(selected_features)
+    elif feature_selection:
         base_model = CatBoostRegressor(
             iterations=iterations,
             learning_rate=learning_rate,
@@ -154,7 +189,7 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
 
     clear_gpu_memory()
 
-    final_model = CatBoostRegressor(
+    final_model = model if num_features is not None else CatBoostRegressor(
         iterations=iterations,
         learning_rate=learning_rate,
         depth=depth,
@@ -174,7 +209,7 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
     mlflow.log_param(f"{model_name}_learning_rate", final_model.get_param('learning_rate'))
     mlflow.log_param(f"{model_name}_depth", final_model.get_param('depth'))
     mlflow.log_param(f"{model_name}_optimal_num_features", optimal_num_features)
-    mlflow.log_param(f"{model_name}_selected_features", ", ".join(selected_features))
+    mlflow.log_param(f"{model_name}_selected_features", ", ".join([daily_var_lst[idx] for idx in selected_features]))
 
     # Calculate and log metrics
     y_pred_train = final_model.predict(X_train)
@@ -198,8 +233,7 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
     print(f"Train MAE: {train_mae:.4f}, Validation MAE: {val_mae:.4f}")
     print(f"Train R2: {train_r2:.4f}, Validation R2: {val_r2:.4f}")
 
-    return final_model, selected_features, X_selected
-
+    return final_model, [daily_var_lst[idx] for idx in selected_features], X_selected
 
 # Parse arguments
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
@@ -224,6 +258,7 @@ parser.add_argument("--delta_column", type=str, default="X_vars_delta",
 parser.add_argument("--delta_mode", choices=["none", "include", "only"], default="include",
                     help="'none': don't use delta variables, 'include': use both original and delta variables, 'only': use only delta variables")
 parser.add_argument("--feature_selection", action="store_true", help="If set, perform feature selection using RFECV")
+parser.add_argument("--num_features", type=int, default=None, help="Number of features to select using CatBoost's feature selection")
 
 args = parser.parse_args()
 
@@ -411,7 +446,8 @@ print("Training the model...")
 model, selected_features, X_selected = train_and_evaluate(uhi_diff, daily_var_lst=daily_var_lst,
                                                           model_name=f"{args.time_period}_model",
                                                           iterations=args.iterations, learning_rate=args.learning_rate,
-                                                          depth=args.depth, feature_selection=args.feature_selection)
+                                                          depth=args.depth, feature_selection=args.feature_selection,
+                                                          num_features=args.num_features)
 
 # Log model
 print("Logging the trained model...")
