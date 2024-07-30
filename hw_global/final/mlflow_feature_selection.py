@@ -305,7 +305,8 @@ delta_vars = df_daily_vars.loc[df_daily_vars[args.delta_column] == 'Y', 'Variabl
 delta_var_lst = delta_vars.tolist()
 
 hw_nohw_diff_vars = df_daily_vars.loc[df_daily_vars['HW_NOHW_Diff'] == 'Y', 'Variable']
-daily_var_lst += hw_nohw_diff_vars.tolist()
+# Add HW-NoHW diff variables to daily_var_lst
+daily_var_lst.extend([f"hw_nohw_diff_{var}" for var in hw_nohw_diff_vars])
 
 # Log the feature selection column and delta mode
 mlflow.log_param("feature_selection_column", args.feature_column)
