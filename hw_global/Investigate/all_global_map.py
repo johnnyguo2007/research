@@ -31,13 +31,14 @@ def draw_map_subplot(ax, title, data, variable):
     m.drawparallels(np.arange(-90., 91., 30.), labels=[1, 0, 0, 0], fontsize=10)
     m.drawmeridians(np.arange(-180., 181., 60.), labels=[0, 0, 0, 1], fontsize=10)
 
-    lons, lats = np.meshgrid(np.unique(data['lon'].values), np.unique(data['lat'].values))
+    # Convert lat/lon to map coordinates
+    x, y = m(data['lon'].values, data['lat'].values)
     
-    values = data.pivot(index='lat', columns='lon', values=variable).values
+    # Use scatter plot instead of pcolormesh
+    sc = m.scatter(x, y, c=data[variable], cmap='RdBu_r', 
+                   s=10, alpha=0.7, edgecolors='none', zorder=4)
     
-    im = m.pcolormesh(lons, lats, values, cmap='RdBu_r', latlon=True)
-    
-    cbar = plt.colorbar(im, ax=ax, orientation='vertical', pad=0.02, extend='both')
+    cbar = plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02, extend='both')
     cbar.set_label(variable)
     
     ax.set_title(title)
