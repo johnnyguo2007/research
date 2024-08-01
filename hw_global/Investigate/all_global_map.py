@@ -78,10 +78,10 @@ def draw_map_scatter(data, variable, output_file):
 
     lons = normalize_longitude(data['lon'].values)
     x, y = m(lons, data['lat'].values)
-    
-    sc = m.scatter(x, y, c=data[variable], cmap='RdBu_r', 
+
+    sc = m.scatter(x, y, c=data[variable], cmap='RdBu_r',
                    s=10, alpha=0.7, edgecolors='none', zorder=4)
-    
+
     cbar = plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02, extend='both')
     cbar.set_label(variable)
 
@@ -108,45 +108,77 @@ def main():
 
         # Columns to exclude from averaging and plotting
         exclude_columns = ['HW98', 'location_ID', 'event_ID', 'global_event_ID', 'hour', 'month', 'year', 'local_time', 'local_hour', 'TOPO', 'KGClass', 'KGMajorClass', 'time', 'lat', 'lon']
-        
+
         # Get list of numeric columns excluding the ones to be removed
         numeric_columns = df.select_dtypes(include=[np.number]).columns.difference(exclude_columns).tolist()
 
-        # Group by lat and lon, and average all numeric columns
-        df_grouped = df.groupby(['lat', 'lon'])[numeric_columns].mean()
+        # Create separate DataFrames for daytime and nighttime data
+        daytime_mask = df['local_hour'].between(7, 16)
+        nighttime_mask = (df['local_hour'].between(20, 24) | df['local_hour'].between(0, 6))
 
-        # Normalize longitude values in the DataFrame
-        df_grouped = df_grouped.reset_index()
-        df_grouped['lon'] = normalize_longitude(df_grouped['lon'])
+        df_daytime = df[daytime_mask]
+        df_nighttime = df[nighttime_mask]
 
-        # Save the resulting DataFrame
-        df_grouped.to_feather(os.path.join(output_dir, 'grouped_global_map.feather'))
+        # Create separate output directories for daytime and nighttime plots
+        output_dir_daytime = os.path.join(output_dir, 'day')
+        output_dir_nighttime = os.path.join(output_dir, 'night')
+        os.makedirs(output_dir_daytime, exist_ok=True)
+        os.makedirs(output_dir_nighttime, exist_ok=True)
+
+        # Process daytime data
+        df_grouped_daytime = df_daytime.groupby(['lat', 'lon'])[numeric_columns].mean()
+        df_grouped_daytime = df_grouped_daytime.reset_index()
+        df_grouped_daytime['lon'] = normalize_longitude(df_grouped_daytime['lon'])
+        df_grouped_daytime.to_feather(os.path.join(output_dir_daytime, 'grouped_global_map_daytime.feather'))
+
+        # Process nighttime data
+        df_grouped_nighttime = df_nighttime.groupby(['lat', 'lon'])[numeric_columns].mean()
+        df_grouped_nighttime = df_grouped_nighttime.reset_index()
+        df_grouped_nighttime['lon'] = normalize_longitude(df_grouped_nighttime['lon'])
+        df_grouped_nighttime.to_feather(os.path.join(output_dir_nighttime, 'grouped_global_map_nighttime.feather'))
     else:
-        # Load the grouped_global_map DataFrame from feather files
-        df_grouped = pd.read_feather(os.path.join(output_dir, 'grouped_global_map.feather'))
+        # Load the grouped_global_map DataFrames from feather files for daytime and nighttime
+        df_grouped_daytime = pd.read_feather(os.path.join(output_dir, 'day', 'grouped_global_map_daytime.feather'))
+        df_grouped_nighttime = pd.read_feather(os.path.join(output_dir, 'night', 'grouped_global_map_nighttime.feather'))
 
     # Choose the drawing function based on the plot type
     draw_function = draw_map_pcolormesh if args.plot_type == 'pcolormesh' else draw_map_scatter
 
     # Get the list of variables to plot
-    variables = [col for col in df_grouped.columns if col not in ['lat', 'lon']]
+    variables = [col for col in df_grouped_daytime.columns if col not in ['lat', 'lon']]
 
-    # Plot each variable in a separate PNG file
+    # Plot daytime data
     for variable in variables:
         try:
             # Check if the column is numeric
-            if not np.issubdtype(df_grouped[variable].dtype, np.number):
+            if not np.issubdtype(df_grouped_daytime[variable].dtype, np.number):
                 print(f"Skipping {variable} as it's not a numeric type.")
                 continue
 
-            output_file = os.path.join(output_dir, f'{variable}_global_map.png')
-            draw_function(df_grouped, variable, output_file)
+            output_file = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime.png')
+            draw_function(df_grouped_daytime, variable, output_file)
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
             import traceback
             traceback.print_exc()
 
-    print(f"All plots have been saved in the directory: {output_dir}")
+    # Plot nighttime data
+    for variable in variables:
+        try:
+            # Check if the column is numeric
+            if not np.issubdtype(df_grouped_nighttime[variable].dtype, np.number):
+                print(f"Skipping {variable} as it's not a numeric type.")
+                continue
+
+            output_file = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime.png')
+            draw_function(df_grouped_nighttime, variable, output_file)
+        except Exception as e:
+            print(f"Error plotting {variable}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+
+    print(f"All daytime plots have been saved in the directory: {output_dir_daytime}")
+    print(f"All nighttime plots have been saved in the directory: {output_dir_nighttime}")
 
 if __name__ == "__main__":
     main()
