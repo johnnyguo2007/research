@@ -19,12 +19,7 @@ def create_land_sea_mask(m, lons, lats):
             mask[i, j] = m.is_land(xx[i, j], yy[i, j])
     return mask
 
-def draw_map_pcolormesh(data, variable, output_file):
-    print(f"Processing {variable}")
-    print(f"Data shape: {data[variable].shape}")
-    print(f"Data type: {data[variable].dtype}")
-    print(f"Sample data: {data[variable].head()}")
-
+def setup_map():
     fig, ax = plt.subplots(figsize=(12, 6))
     m = Basemap(projection='cyl', lon_0=0, ax=ax,
                 fix_aspect=False,
@@ -36,6 +31,15 @@ def draw_map_pcolormesh(data, variable, output_file):
     m.drawcountries(linewidth=0.1)
     m.drawparallels(np.arange(-90., 91., 30.), labels=[1, 0, 0, 0], fontsize=10)
     m.drawmeridians(np.arange(-180., 181., 60.), labels=[0, 0, 0, 1], fontsize=10)
+    return fig, ax, m
+
+def draw_map_pcolormesh(data, variable, output_file, mask):
+    print(f"Processing {variable}")
+    print(f"Data shape: {data[variable].shape}")
+    print(f"Data type: {data[variable].dtype}")
+    print(f"Sample data: {data[variable].head()}")
+
+    fig, ax, m = setup_map()
 
     # Create a regular grid for pcolormesh
     lon_grid, lat_grid = np.meshgrid(np.linspace(-180, 180, 360), np.linspace(-90, 90, 180))
@@ -44,9 +48,6 @@ def draw_map_pcolormesh(data, variable, output_file):
     values = griddata((data['lon'], data['lat']), data[variable], (lon_grid, lat_grid), method='linear')
 
     print(f"Debug - {variable} shape: {values.shape}, min: {np.nanmin(values)}, max: {np.nanmax(values)}")
-
-    # Create land-sea mask
-    mask = create_land_sea_mask(m, lon_grid[0, :], lat_grid[:, 0])
 
     # Apply the mask
     masked_values = np.ma.array(values, mask=~mask)
@@ -147,6 +148,13 @@ def main():
     # Get the list of variables to plot
     variables = [col for col in df_grouped_daytime.columns if col not in ['lat', 'lon']]
 
+    # Create a regular grid for pcolormesh
+    lon_grid, lat_grid = np.meshgrid(np.linspace(-180, 180, 360), np.linspace(-90, 90, 180))
+
+    # Calculate the land-sea mask once
+    _, _, m = setup_map()
+    mask = create_land_sea_mask(m, lon_grid[0, :], lat_grid[:, 0])
+
     # Plot daytime data
     for variable in variables:
         try:
@@ -156,7 +164,7 @@ def main():
                 continue
 
             output_file = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime.png')
-            draw_function(df_grouped_daytime, variable, output_file)
+            draw_function(df_grouped_daytime, variable, output_file, mask)
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
             import traceback
@@ -171,7 +179,7 @@ def main():
                 continue
 
             output_file = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime.png')
-            draw_function(df_grouped_nighttime, variable, output_file)
+            draw_function(df_grouped_nighttime, variable, output_file, mask)
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
             import traceback
