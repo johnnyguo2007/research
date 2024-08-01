@@ -7,7 +7,6 @@ import argparse
 from scipy.interpolate import griddata
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
-
 def normalize_longitude(lons):
     return np.where(lons > 180, lons - 360, lons)
 
@@ -56,7 +55,7 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask, t
     masked_values = np.ma.array(values, mask=~mask)
 
     # Set colormap based on variable name
-    if 'diff' in variable or 'delta' in variable or 'UHI' in variable:
+    if 'diff' in variable.lower() or 'delta' in variable.lower() or 'uhi' in variable.lower():
         cmap = 'RdBu_r'  # Default colormap
         # Determine the maximum absolute value for symmetric color scaling
         max_abs_val = max(abs(np.nanmin(masked_values)), abs(np.nanmax(masked_values)))*0.6
@@ -75,7 +74,6 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask, t
     plt.savefig(output_file, dpi=600, bbox_inches='tight')
     plt.close(fig)
     print(f"Pcolormesh plot for {variable} ({time_of_day}) saved as {output_file}")
-
 
 def draw_map_scatter(data, variable, output_file, mask, time_of_day):
     fig, ax, m, _, _, _ = setup_map()
@@ -100,6 +98,19 @@ def draw_map_scatter(data, variable, output_file, mask, time_of_day):
     plt.close(fig)
     print(f"Scatter plot for {variable} ({time_of_day}) saved as {output_file}")
 
+def create_new_variables(df):
+    for column in df.columns:
+        if not column.startswith('hw_nohw_diff') and column.endswith('_U'):
+            base_var = column[:-2]  # Remove '_U' from the end
+            if f'{base_var}_R' in df.columns:
+                df[f'Delta_{base_var}'] = df[f'{base_var}_U'] - df[f'{base_var}_R']
+        
+        if column.startswith('hw_nohw_diff') and column.endswith('_U'):
+            base_var = column[len('hw_nohw_diff_'):-2]  # Remove 'hw_nohw_diff_' from start and '_U' from end
+            if f'hw_nohw_diff_{base_var}_R' in df.columns:
+                df[f'Double_Differencing_{base_var}'] = df[column] - df[f'hw_nohw_diff_{base_var}_R']
+    
+    return df
 
 def main():
     # Create an argument parser
@@ -151,6 +162,10 @@ def main():
         # Load the grouped_global_map DataFrames from feather files for daytime and nighttime
         df_grouped_daytime = pd.read_feather(os.path.join(output_dir_daytime, 'grouped_global_map_daytime.feather'))
         df_grouped_nighttime = pd.read_feather(os.path.join(output_dir_nighttime, 'grouped_global_map_nighttime.feather'))
+
+    # Create new variables
+    df_grouped_daytime = create_new_variables(df_grouped_daytime)
+    df_grouped_nighttime = create_new_variables(df_grouped_nighttime)
 
     # Get the list of variables to plot
     if args.variables:
