@@ -56,17 +56,17 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask):
     masked_values = np.ma.array(values, mask=~mask)
 
     # Set colormap based on variable name
-    if 'diff' in variable or 'delta' in variable:
+    if 'diff' in variable or 'delta' in variable or 'UHI' in variable:
         # Create a custom colormap with white at the center
-        colors = ['blue',  'white',  'red']
-        n_bins = 100  # Number of color bins
-        cmap = LinearSegmentedColormap.from_list('custom_diverging', colors, N=n_bins)
-        
+        # colors = ['blue',  'white',  'red']
+        # n_bins = 100  # Number of color bins
+        # cmap = LinearSegmentedColormap.from_list('custom_diverging', colors, N=n_bins)
+        cmap = 'RdBu_r'  # Default colormap
         # Determine the maximum absolute value for symmetric color scaling
-        max_abs_val = max(abs(np.nanmin(masked_values)), abs(np.nanmax(masked_values)))
+        max_abs_val = max(abs(np.nanmin(masked_values)), abs(np.nanmax(masked_values)))*0.6
         norm = plt.Normalize(-max_abs_val, max_abs_val)
     else:
-        cmap = 'RdBu'  # Default colormap
+        cmap = 'RdBu_r'  # Default colormap
         norm = None
 
     sc = m.pcolormesh(lon_grid, lat_grid, masked_values, cmap=cmap, norm=norm, latlon=True)
@@ -110,6 +110,7 @@ def main():
     parser = argparse.ArgumentParser(description='Generate or load global map data.')
     parser.add_argument('--generate', action='store_true', help='Generate the output feather files.')
     parser.add_argument('--plot-type', choices=['pcolormesh', 'scatter'], default='pcolormesh', help='Choose the plotting method')
+    parser.add_argument('--variables', type=str, help='Comma-separated list of variables to plot')
     args = parser.parse_args()
 
     # Create a directory to save the plots and DataFrames
@@ -156,7 +157,19 @@ def main():
         df_grouped_nighttime = pd.read_feather(os.path.join(output_dir_nighttime, 'grouped_global_map_nighttime.feather'))
 
     # Get the list of variables to plot
-    variables = [col for col in df_grouped_daytime.columns if col not in ['lat', 'lon']]
+    if args.variables:
+        variables = [var.strip() for var in args.variables.split(',')]
+        # Check if all specified variables exist in the DataFrame
+        all_columns = set(df_grouped_daytime.columns)
+        invalid_vars = set(variables) - all_columns
+        if invalid_vars:
+            print(f"Warning: The following variables are not present in the data: {', '.join(invalid_vars)}")
+            variables = list(set(variables) & all_columns)
+        if not variables:
+            print("Error: No valid variables specified. Exiting.")
+            return
+    else:
+        variables = [col for col in df_grouped_daytime.columns if col not in ['lat', 'lon']]
 
     # Calculate the land-sea mask and regular grid once
     _, _, _, lon_grid, lat_grid, mask = setup_map()
