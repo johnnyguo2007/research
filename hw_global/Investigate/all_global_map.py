@@ -54,8 +54,8 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask):
     # Apply the mask
     masked_values = np.ma.array(values, mask=~mask)
 
-    # Plot using pcolormesh
-    cmap = 'RdBu_r'
+    # Set colormap based on variable name
+    cmap = 'RdBu_r'  # Default colormap
     if 'diff' in variable or 'delta' in variable:
         cmap = 'RdBu'  # Centered colormap for difference variables
 
@@ -76,7 +76,12 @@ def draw_map_scatter(data, variable, output_file, mask):
     lons = normalize_longitude(data['lon'].values)
     x, y = m(lons, data['lat'].values)
 
-    sc = m.scatter(x, y, c=data[variable], cmap='RdBu_r',
+    # Set colormap based on variable name
+    cmap = 'RdBu_r'  # Default colormap
+    if 'diff' in variable or 'delta' in variable:
+        cmap = 'RdBu'  # Centered colormap for difference variables
+
+    sc = m.scatter(x, y, c=data[variable], cmap=cmap,
                    s=10, alpha=0.7, edgecolors='none', zorder=4)
 
     cbar = plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02, extend='both')
@@ -87,6 +92,7 @@ def draw_map_scatter(data, variable, output_file, mask):
     plt.savefig(output_file, dpi=600, bbox_inches='tight')
     plt.close(fig)
     print(f"Scatter plot for {variable} saved as {output_file}")
+
 
 def main():
     # Create an argument parser
