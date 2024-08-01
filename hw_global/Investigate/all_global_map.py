@@ -31,18 +31,20 @@ def setup_map():
     m.drawcountries(linewidth=0.1)
     m.drawparallels(np.arange(-90., 91., 30.), labels=[1, 0, 0, 0], fontsize=10)
     m.drawmeridians(np.arange(-180., 181., 60.), labels=[0, 0, 0, 1], fontsize=10)
-    return fig, ax, m
 
-def draw_map_pcolormesh(data, variable, output_file, mask):
+    # Create a regular grid for pcolormesh and mask calculation
+    lon_grid, lat_grid = np.meshgrid(np.linspace(-180, 180, 360), np.linspace(-90, 90, 180))
+    mask = create_land_sea_mask(m, lon_grid[0, :], lat_grid[:, 0])
+
+    return fig, ax, m, lon_grid, lat_grid, mask
+
+def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask):
     print(f"Processing {variable}")
     print(f"Data shape: {data[variable].shape}")
     print(f"Data type: {data[variable].dtype}")
     print(f"Sample data: {data[variable].head()}")
 
-    fig, ax, m = setup_map()
-
-    # Create a regular grid for pcolormesh
-    lon_grid, lat_grid = np.meshgrid(np.linspace(-180, 180, 360), np.linspace(-90, 90, 180))
+    fig, ax, m, _, _, _ = setup_map()
 
     # Interpolate data onto the regular grid
     values = griddata((data['lon'], data['lat']), data[variable], (lon_grid, lat_grid), method='linear')
@@ -62,20 +64,10 @@ def draw_map_pcolormesh(data, variable, output_file, mask):
 
     plt.savefig(output_file, dpi=600, bbox_inches='tight')
     plt.close(fig)
-    print(f"Plot for {variable} saved as {output_file}")
+    print(f"Pcolormesh plot for {variable} saved as {output_file}")
 
-def draw_map_scatter(data, variable, output_file):
-    fig, ax = plt.subplots(figsize=(12, 6))
-    m = Basemap(projection='cyl', lon_0=0, ax=ax,
-                fix_aspect=False,
-                llcrnrlat=-90, urcrnrlat=90,
-                llcrnrlon=-180, urcrnrlon=180)
-    m.drawcoastlines(color='0.15', linewidth=0.5, zorder=3)
-    m.drawcountries(linewidth=0.1)
-    m.fillcontinents(color='white', lake_color='lightcyan')
-    m.drawmapboundary(fill_color='lightcyan')
-    m.drawparallels(np.arange(-90., 91., 30.), labels=[1, 0, 0, 0], fontsize=10)
-    m.drawmeridians(np.arange(-180., 181., 60.), labels=[0, 0, 0, 1], fontsize=10)
+def draw_map_scatter(data, variable, output_file, mask):
+    fig, ax, m, _, _, _ = setup_map()
 
     lons = normalize_longitude(data['lon'].values)
     x, y = m(lons, data['lat'].values)
@@ -90,7 +82,7 @@ def draw_map_scatter(data, variable, output_file):
 
     plt.savefig(output_file, dpi=600, bbox_inches='tight')
     plt.close(fig)
-    print(f"Plot for {variable} saved as {output_file}")
+    print(f"Scatter plot for {variable} saved as {output_file}")
 
 def main():
     # Create an argument parser
@@ -142,18 +134,11 @@ def main():
         df_grouped_daytime = pd.read_feather(os.path.join(output_dir, 'day', 'grouped_global_map_daytime.feather'))
         df_grouped_nighttime = pd.read_feather(os.path.join(output_dir, 'night', 'grouped_global_map_nighttime.feather'))
 
-    # Choose the drawing function based on the plot type
-    draw_function = draw_map_pcolormesh if args.plot_type == 'pcolormesh' else draw_map_scatter
-
     # Get the list of variables to plot
     variables = [col for col in df_grouped_daytime.columns if col not in ['lat', 'lon']]
 
-    # Create a regular grid for pcolormesh
-    lon_grid, lat_grid = np.meshgrid(np.linspace(-180, 180, 360), np.linspace(-90, 90, 180))
-
-    # Calculate the land-sea mask once
-    _, _, m = setup_map()
-    mask = create_land_sea_mask(m, lon_grid[0, :], lat_grid[:, 0])
+    # Calculate the land-sea mask and regular grid once
+    _, _, _, lon_grid, lat_grid, mask = setup_map()
 
     # Plot daytime data
     for variable in variables:
@@ -163,8 +148,11 @@ def main():
                 print(f"Skipping {variable} as it's not a numeric type.")
                 continue
 
-            output_file = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime.png')
-            draw_function(df_grouped_daytime, variable, output_file, mask)
+            output_file_pcolormesh = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime_pcolormesh.png')
+            draw_map_pcolormesh(df_grouped_daytime, variable, output_file_pcolormesh, lon_grid, lat_grid, mask)
+
+            output_file_scatter = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime_scatter.png')
+            draw_map_scatter(df_grouped_daytime, variable, output_file_scatter, mask)
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
             import traceback
@@ -178,8 +166,11 @@ def main():
                 print(f"Skipping {variable} as it's not a numeric type.")
                 continue
 
-            output_file = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime.png')
-            draw_function(df_grouped_nighttime, variable, output_file, mask)
+            output_file_pcolormesh = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime_pcolormesh.png')
+            draw_map_pcolormesh(df_grouped_nighttime, variable, output_file_pcolormesh, lon_grid, lat_grid, mask)
+
+            output_file_scatter = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime_scatter.png')
+            draw_map_scatter(df_grouped_nighttime, variable, output_file_scatter, mask)
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
             import traceback
