@@ -6,6 +6,10 @@ import os
 import argparse
 from scipy.interpolate import griddata
 
+
+def normalize_longitude(lons):
+    return np.where(lons > 180, lons - 360, lons)
+
 def create_land_sea_mask(m, lons, lats):
     print(f"Debug - create_land_sea_mask input shapes: lons {lons.shape}, lats {lats.shape}")
     xx, yy = np.meshgrid(lons, lats)
@@ -27,6 +31,8 @@ def draw_map_pcolormesh(data, variable, output_file):
                 llcrnrlat=-90, urcrnrlat=90,
                 llcrnrlon=-180, urcrnrlon=180)
     m.drawcoastlines(color='0.15', linewidth=0.5)
+    m.fillcontinents(color='white', lake_color='lightcyan')
+    m.drawmapboundary(fill_color='lightcyan')
     m.drawcountries(linewidth=0.1)
     m.drawparallels(np.arange(-90., 91., 30.), labels=[1, 0, 0, 0], fontsize=10)
     m.drawmeridians(np.arange(-180., 181., 60.), labels=[0, 0, 0, 1], fontsize=10)
@@ -57,26 +63,25 @@ def draw_map_pcolormesh(data, variable, output_file):
     plt.close(fig)
     print(f"Plot for {variable} saved as {output_file}")
 
-def draw_map_contourf(data, variable, output_file):
+def draw_map_scatter(data, variable, output_file):
     fig, ax = plt.subplots(figsize=(12, 6))
     m = Basemap(projection='cyl', lon_0=0, ax=ax,
                 fix_aspect=False,
                 llcrnrlat=-90, urcrnrlat=90,
                 llcrnrlon=-180, urcrnrlon=180)
-    m.drawcoastlines(color='0.15', linewidth=0.5)
+    m.drawcoastlines(color='0.15', linewidth=0.5, zorder=3)
     m.drawcountries(linewidth=0.1)
+    m.fillcontinents(color='white', lake_color='lightcyan')
+    m.drawmapboundary(fill_color='lightcyan')
     m.drawparallels(np.arange(-90., 91., 30.), labels=[1, 0, 0, 0], fontsize=10)
     m.drawmeridians(np.arange(-180., 181., 60.), labels=[0, 0, 0, 1], fontsize=10)
 
-    # Interpolate data to create a filled contour plot
-    lat_range = np.linspace(data['lat'].min(), data['lat'].max(), 180)
-    lon_range = np.linspace(data['lon'].min(), data['lon'].max(), 360)
-    lons, lats = np.meshgrid(lon_range, lat_range)
-    values = griddata((data['lat'], data['lon']), data[variable], (lats, lons), method='linear')
-
-    # Plot using contourf
-    sc = m.contourf(lons, lats, values, cmap='RdBu_r', latlon=True)
-
+    lons = normalize_longitude(data['lon'].values)
+    x, y = m(lons, data['lat'].values)
+    
+    sc = m.scatter(x, y, c=data[variable], cmap='RdBu_r', 
+                   s=10, alpha=0.7, edgecolors='none', zorder=4)
+    
     cbar = plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02, extend='both')
     cbar.set_label(variable)
 
@@ -90,7 +95,7 @@ def main():
     # Create an argument parser
     parser = argparse.ArgumentParser(description='Generate or load global map data.')
     parser.add_argument('--generate', action='store_true', help='Generate the output feather files.')
-    parser.add_argument('--plot-type', choices=['pcolormesh', 'contourf'], default='pcolormesh', help='Choose the plotting method')
+    parser.add_argument('--plot-type', choices=['pcolormesh', 'scatter'], default='pcolormesh', help='Choose the plotting method')
     args = parser.parse_args()
 
     # Create a directory to save the plots and DataFrames
@@ -110,9 +115,6 @@ def main():
         # Group by lat and lon, and average all numeric columns
         df_grouped = df.groupby(['lat', 'lon'])[numeric_columns].mean()
 
-        def normalize_longitude(lons):
-            return np.where(lons > 180, lons - 360, lons)
-
         # Normalize longitude values in the DataFrame
         df_grouped = df_grouped.reset_index()
         df_grouped['lon'] = normalize_longitude(df_grouped['lon'])
@@ -124,7 +126,7 @@ def main():
         df_grouped = pd.read_feather(os.path.join(output_dir, 'grouped_global_map.feather'))
 
     # Choose the drawing function based on the plot type
-    draw_function = draw_map_pcolormesh if args.plot_type == 'pcolormesh' else draw_map_contourf
+    draw_function = draw_map_pcolormesh if args.plot_type == 'pcolormesh' else draw_map_scatter
 
     # Get the list of variables to plot
     variables = [col for col in df_grouped.columns if col not in ['lat', 'lon']]
