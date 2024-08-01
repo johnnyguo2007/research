@@ -55,7 +55,11 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask):
     masked_values = np.ma.array(values, mask=~mask)
 
     # Plot using pcolormesh
-    sc = m.pcolormesh(lon_grid, lat_grid, masked_values, cmap='RdBu_r', latlon=True)
+    cmap = 'RdBu_r'
+    if 'diff' in variable or 'delta' in variable:
+        cmap = 'RdBu'  # Centered colormap for difference variables
+
+    sc = m.pcolormesh(lon_grid, lat_grid, masked_values, cmap=cmap, latlon=True)
 
     cbar = plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02, extend='both')
     cbar.set_label(variable)
@@ -95,6 +99,12 @@ def main():
     output_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/plots'
     os.makedirs(output_dir, exist_ok=True)
 
+    # Define output directories for daytime and nighttime plots
+    output_dir_daytime = os.path.join(output_dir, 'day')
+    output_dir_nighttime = os.path.join(output_dir, 'night')
+    os.makedirs(output_dir_daytime, exist_ok=True)
+    os.makedirs(output_dir_nighttime, exist_ok=True)
+
     if args.generate:
         # Load the data
         df = pd.read_feather('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/updated_local_hour_adjusted_variables_HW98.feather')
@@ -112,12 +122,6 @@ def main():
         df_daytime = df[daytime_mask]
         df_nighttime = df[nighttime_mask]
 
-        # Create separate output directories for daytime and nighttime plots
-        output_dir_daytime = os.path.join(output_dir, 'day')
-        output_dir_nighttime = os.path.join(output_dir, 'night')
-        os.makedirs(output_dir_daytime, exist_ok=True)
-        os.makedirs(output_dir_nighttime, exist_ok=True)
-
         # Process daytime data
         df_grouped_daytime = df_daytime.groupby(['lat', 'lon'])[numeric_columns].mean()
         df_grouped_daytime = df_grouped_daytime.reset_index()
@@ -131,14 +135,22 @@ def main():
         df_grouped_nighttime.to_feather(os.path.join(output_dir_nighttime, 'grouped_global_map_nighttime.feather'))
     else:
         # Load the grouped_global_map DataFrames from feather files for daytime and nighttime
-        df_grouped_daytime = pd.read_feather(os.path.join(output_dir, 'day', 'grouped_global_map_daytime.feather'))
-        df_grouped_nighttime = pd.read_feather(os.path.join(output_dir, 'night', 'grouped_global_map_nighttime.feather'))
+        df_grouped_daytime = pd.read_feather(os.path.join(output_dir_daytime, 'grouped_global_map_daytime.feather'))
+        df_grouped_nighttime = pd.read_feather(os.path.join(output_dir_nighttime, 'grouped_global_map_nighttime.feather'))
 
     # Get the list of variables to plot
     variables = [col for col in df_grouped_daytime.columns if col not in ['lat', 'lon']]
 
     # Calculate the land-sea mask and regular grid once
     _, _, _, lon_grid, lat_grid, mask = setup_map()
+
+    # Choose the plotting function based on the --plot-type argument
+    if args.plot_type == 'pcolormesh':
+        plot_function = draw_map_pcolormesh
+    elif args.plot_type == 'scatter':
+        plot_function = draw_map_scatter
+    else:
+        raise ValueError(f"Invalid plot type: {args.plot_type}")
 
     # Plot daytime data
     for variable in variables:
@@ -148,11 +160,9 @@ def main():
                 print(f"Skipping {variable} as it's not a numeric type.")
                 continue
 
-            output_file_pcolormesh = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime_pcolormesh.png')
-            draw_map_pcolormesh(df_grouped_daytime, variable, output_file_pcolormesh, lon_grid, lat_grid, mask)
+            output_file = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime_{args.plot_type}.png')
+            plot_function(df_grouped_daytime, variable, output_file, lon_grid, lat_grid, mask)
 
-            output_file_scatter = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime_scatter.png')
-            draw_map_scatter(df_grouped_daytime, variable, output_file_scatter, mask)
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
             import traceback
@@ -166,11 +176,9 @@ def main():
                 print(f"Skipping {variable} as it's not a numeric type.")
                 continue
 
-            output_file_pcolormesh = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime_pcolormesh.png')
-            draw_map_pcolormesh(df_grouped_nighttime, variable, output_file_pcolormesh, lon_grid, lat_grid, mask)
+            output_file = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime_{args.plot_type}.png')
+            plot_function(df_grouped_nighttime, variable, output_file, lon_grid, lat_grid, mask)
 
-            output_file_scatter = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime_scatter.png')
-            draw_map_scatter(df_grouped_nighttime, variable, output_file_scatter, mask)
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
             import traceback
