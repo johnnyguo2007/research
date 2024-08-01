@@ -39,7 +39,7 @@ def setup_map():
 
     return fig, ax, m, lon_grid, lat_grid, mask
 
-def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask):
+def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask, time_of_day):
     print(f"Processing {variable}")
     print(f"Data shape: {data[variable].shape}")
     print(f"Data type: {data[variable].dtype}")
@@ -57,10 +57,6 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask):
 
     # Set colormap based on variable name
     if 'diff' in variable or 'delta' in variable or 'UHI' in variable:
-        # Create a custom colormap with white at the center
-        # colors = ['blue',  'white',  'red']
-        # n_bins = 100  # Number of color bins
-        # cmap = LinearSegmentedColormap.from_list('custom_diverging', colors, N=n_bins)
         cmap = 'RdBu_r'  # Default colormap
         # Determine the maximum absolute value for symmetric color scaling
         max_abs_val = max(abs(np.nanmin(masked_values)), abs(np.nanmax(masked_values)))*0.6
@@ -74,14 +70,14 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask):
     cbar = plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02, extend='both')
     cbar.set_label(variable)
 
-    ax.set_title(variable)
+    ax.set_title(f"{variable} - {time_of_day.capitalize()}")
 
     plt.savefig(output_file, dpi=600, bbox_inches='tight')
     plt.close(fig)
-    print(f"Pcolormesh plot for {variable} saved as {output_file}")
+    print(f"Pcolormesh plot for {variable} ({time_of_day}) saved as {output_file}")
 
 
-def draw_map_scatter(data, variable, output_file, mask):
+def draw_map_scatter(data, variable, output_file, mask, time_of_day):
     fig, ax, m, _, _, _ = setup_map()
 
     lons = normalize_longitude(data['lon'].values)
@@ -98,11 +94,11 @@ def draw_map_scatter(data, variable, output_file, mask):
     cbar = plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02, extend='both')
     cbar.set_label(variable)
 
-    ax.set_title(variable)
+    ax.set_title(f"{variable} - {time_of_day.capitalize()}")
 
     plt.savefig(output_file, dpi=600, bbox_inches='tight')
     plt.close(fig)
-    print(f"Scatter plot for {variable} saved as {output_file}")
+    print(f"Scatter plot for {variable} ({time_of_day}) saved as {output_file}")
 
 
 def main():
@@ -191,7 +187,10 @@ def main():
                 continue
 
             output_file = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime_{args.plot_type}.png')
-            plot_function(df_grouped_daytime, variable, output_file, lon_grid, lat_grid, mask)
+            if args.plot_type == 'pcolormesh':
+                plot_function(df_grouped_daytime, variable, output_file, lon_grid, lat_grid, mask, "day")
+            else:
+                plot_function(df_grouped_daytime, variable, output_file, mask, "day")
 
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
@@ -207,7 +206,10 @@ def main():
                 continue
 
             output_file = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime_{args.plot_type}.png')
-            plot_function(df_grouped_nighttime, variable, output_file, lon_grid, lat_grid, mask)
+            if args.plot_type == 'pcolormesh':
+                plot_function(df_grouped_nighttime, variable, output_file, lon_grid, lat_grid, mask, "night")
+            else:
+                plot_function(df_grouped_nighttime, variable, output_file, mask, "night")
 
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
