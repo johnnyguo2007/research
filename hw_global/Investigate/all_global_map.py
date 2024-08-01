@@ -5,6 +5,7 @@ from mpl_toolkits.basemap import Basemap
 import os
 import argparse
 from scipy.interpolate import griddata
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 
 def normalize_longitude(lons):
@@ -55,11 +56,20 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask):
     masked_values = np.ma.array(values, mask=~mask)
 
     # Set colormap based on variable name
-    cmap = 'RdBu_r'  # Default colormap
     if 'diff' in variable or 'delta' in variable:
-        cmap = 'RdBu'  # Centered colormap for difference variables
+        # Create a custom colormap with white at the center
+        colors = ['blue',  'white',  'red']
+        n_bins = 100  # Number of color bins
+        cmap = LinearSegmentedColormap.from_list('custom_diverging', colors, N=n_bins)
+        
+        # Determine the maximum absolute value for symmetric color scaling
+        max_abs_val = max(abs(np.nanmin(masked_values)), abs(np.nanmax(masked_values)))
+        norm = plt.Normalize(-max_abs_val, max_abs_val)
+    else:
+        cmap = 'RdBu'  # Default colormap
+        norm = None
 
-    sc = m.pcolormesh(lon_grid, lat_grid, masked_values, cmap=cmap, latlon=True)
+    sc = m.pcolormesh(lon_grid, lat_grid, masked_values, cmap=cmap, norm=norm, latlon=True)
 
     cbar = plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02, extend='both')
     cbar.set_label(variable)
@@ -69,6 +79,7 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask):
     plt.savefig(output_file, dpi=600, bbox_inches='tight')
     plt.close(fig)
     print(f"Pcolormesh plot for {variable} saved as {output_file}")
+
 
 def draw_map_scatter(data, variable, output_file, mask):
     fig, ax, m, _, _, _ = setup_map()
