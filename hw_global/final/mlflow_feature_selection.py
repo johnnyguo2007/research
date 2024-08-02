@@ -118,6 +118,9 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
             verbose=False
         )
 
+        # Create a path for the feature selection plot
+        feature_selection_plot_path = os.path.join(figure_dir, f'{model_name}_feature_selection_plot.png')
+
         summary = model.select_features(
             X, y,
             features_for_select=daily_var_lst,
@@ -127,8 +130,13 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
             shap_calc_type=EShapCalcType.Regular,
             train_final_model=True,
             logging_level='Silent',
-            plot=False
+            plot=True,
+            plot_file=feature_selection_plot_path  # Enable plot generation and specify the file path
         )
+
+        # Log the feature selection plot as an artifact
+        mlflow.log_artifact(feature_selection_plot_path)
+        print(f"Feature selection plot saved to {feature_selection_plot_path}")
 
         selected_features = summary['selected_features']
         eliminated_features = summary['eliminated_features']
