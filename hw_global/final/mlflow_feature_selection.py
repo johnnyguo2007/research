@@ -122,7 +122,7 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
             X, y,
             features_for_select=daily_var_lst,
             num_features_to_select=num_features,
-            steps=10,
+            steps=8,
             algorithm=EFeaturesSelectionAlgorithm.RecursiveByShapValues,
             shap_calc_type=EShapCalcType.Regular,
             train_final_model=True,
@@ -206,10 +206,14 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
 
     # Log model parameters
     mlflow.log_param(f"{model_name}_iterations", final_model.get_param('iterations'))
-    mlflow.log_param(f"{model_name}_learning_rate", final_model.get_param('learning_rate'))
+    mlflow.log_param(f"{model_name}_learning_rate", final_model.get_param('learning_rate')) 
     mlflow.log_param(f"{model_name}_depth", final_model.get_param('depth'))
     mlflow.log_param(f"{model_name}_optimal_num_features", optimal_num_features)
-    mlflow.log_param(f"{model_name}_selected_features", ", ".join([daily_var_lst[idx] for idx in selected_features]))
+
+    if isinstance(selected_features[0], str):
+        mlflow.log_param(f"{model_name}_selected_features", ", ".join(selected_features))
+    else:
+        mlflow.log_param(f"{model_name}_selected_features", ", ".join([daily_var_lst[idx] for idx in selected_features]))
 
     # Calculate and log metrics
     y_pred_train = final_model.predict(X_train)
@@ -233,7 +237,7 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
     print(f"Train MAE: {train_mae:.4f}, Validation MAE: {val_mae:.4f}")
     print(f"Train R2: {train_r2:.4f}, Validation R2: {val_r2:.4f}")
 
-    return final_model, [daily_var_lst[idx] for idx in selected_features], X_selected
+    return final_model, selected_features, X_selected
 
 # Parse arguments
 parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
@@ -343,6 +347,10 @@ hw_nohw_diff_vars = df_daily_vars.loc[df_daily_vars['HW_NOHW_Diff'] == 'Y', 'Var
 # Add HW-NoHW diff variables to daily_var_lst
 daily_var_lst.extend([f"hw_nohw_diff_{var}" for var in hw_nohw_diff_vars])
 
+# Add Double Differencing variables
+double_diff_vars = df_daily_vars.loc[df_daily_vars['Double_Diff'] == 'Y', 'Variable']
+daily_var_lst.extend([f"Double_Differencing_{var}" for var in double_diff_vars])
+
 # Log the feature selection column and delta mode
 mlflow.log_param("feature_selection_column", args.feature_column)
 mlflow.log_param("delta_selection_column", args.delta_column)
@@ -369,6 +377,17 @@ if args.delta_mode in ["include", "only"]:
 else:
     print("Using original variables only...")
 
+# Calculate Double Differencing variables
+print("Calculating Double Differencing variables...")
+for var in double_diff_vars:
+    var_U = f"hw_nohw_diff_{var}_U"
+    var_R = f"hw_nohw_diff_{var}_R"
+    double_diff_var = f"Double_Differencing_{var}"
+    if var_U in local_hour_adjusted_df.columns and var_R in local_hour_adjusted_df.columns:
+        local_hour_adjusted_df[double_diff_var] = local_hour_adjusted_df[var_U] - local_hour_adjusted_df[var_R]
+    else:
+        print(f"Warning: {var_U} or {var_R} not found in dataframe columns.")
+
 print(f"Final feature list: {daily_var_lst}")
 
 # Save df_daily_vars to Excel file and log as artifact
@@ -393,6 +412,13 @@ def get_long_name(var_name, df_daily_vars):
             return f"HW Non-HW Difference of {original_long_name[0]}"
         else:
             return f"HW Non-HW Difference of {original_var_name} (No long name found)"
+    elif var_name.startswith('Double_Differencing_'):
+        original_var_name = var_name.replace('Double_Differencing_', '')  
+        original_long_name = df_daily_vars.loc[df_daily_vars['Variable'] == original_var_name, 'Long Name'].values
+        if original_long_name.size > 0:
+            return f"Double Difference of {original_long_name[0]}"
+        else:
+            return f"Double Difference of {original_var_name} (No long name found)"
     else:
         long_name = df_daily_vars.loc[df_daily_vars['Variable'] == var_name, 'Long Name'].values
         if long_name.size > 0:
