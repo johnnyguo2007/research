@@ -9,16 +9,16 @@ def extract_variable(filename):
             return filename.replace(pattern, "").split("_")[0]
     return filename.split("_")[0]
 
-def combine_images(var, input_dir, output_dir):
+def combine_images(var, input_dir, output_dir, time_of_day):
     print(f"Combining images for variable: {var}")
     
     # Define the filenames for each image
     image_files = [
-        os.path.join(input_dir, "UHI_diff_global_map_daytime_pcolormesh.png"),
-        os.path.join(input_dir, f"Double_Differencing_{var}_global_map_daytime_pcolormesh.png"),
-        os.path.join(input_dir, f"hw_nohw_diff_{var}_global_map_daytime_pcolormesh.png"),
-        os.path.join(input_dir, f"Delta_{var}_global_map_daytime_pcolormesh.png"),
-        os.path.join(input_dir, f"{var}_global_map_daytime_pcolormesh.png")
+        os.path.join(input_dir, f"UHI_diff_global_map_{time_of_day}_pcolormesh.png"),
+        os.path.join(input_dir, f"Double_Differencing_{var}_global_map_{time_of_day}_pcolormesh.png"),
+        os.path.join(input_dir, f"hw_nohw_diff_{var}_global_map_{time_of_day}_pcolormesh.png"),
+        os.path.join(input_dir, f"Delta_{var}_global_map_{time_of_day}_pcolormesh.png"),
+        os.path.join(input_dir, f"{var}_global_map_{time_of_day}_pcolormesh.png")
     ]
 
     # Find the first existing image and get its dimensions
@@ -50,7 +50,7 @@ def combine_images(var, input_dir, output_dir):
             combined_image.paste(image, position)
 
     # Save the combined image
-    output_file = os.path.join(output_dir, f"combined_{var}.png")
+    output_file = os.path.join(output_dir, f"combined_{var}_{time_of_day}.png")
     combined_image.save(output_file)
     print(f"Combined image saved as: {output_file}\n")
 
@@ -61,6 +61,8 @@ if __name__ == "__main__":
                         help="Input directory path")
     parser.add_argument("-o", "--output_dir", default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/plots/day/combined_plots",
                         help="Output directory path")
+    parser.add_argument("-t", "--time_of_day", choices=["daytime", "nighttime"], default="daytime",
+                        help="Time of day for the images (daytime or nighttime)")
     args = parser.parse_args()
 
     print("Starting image combination process...")
@@ -77,6 +79,6 @@ if __name__ == "__main__":
 
     # Combine images for each variable
     for var in variables:
-        combine_images(var, args.input_dir, args.output_dir)
+        combine_images(var, args.input_dir, args.output_dir, args.time_of_day)
 
     print("Image combination process completed.")
