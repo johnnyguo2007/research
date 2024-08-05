@@ -267,6 +267,10 @@ parser.add_argument("--feature_column", type=str, default="X_vars2",
                     help="Column name in df_daily_vars to select features")
 parser.add_argument("--delta_column", type=str, default="X_vars_delta",
                     help="Column name in df_daily_vars to select delta features")
+parser.add_argument("--hw_nohw_diff_column", type=str, default="HW_NOHW_Diff",
+                    help="Column name in df_daily_vars to select HW-NoHW diff features")
+parser.add_argument("--double_diff_column", type=str, default="Double_Diff",
+                    help="Column name in df_daily_vars to select Double Differencing features")
 parser.add_argument("--delta_mode", choices=["none", "include", "only"], default="include",
                     help="'none': don't use delta variables, 'include': use both original and delta variables, 'only': use only delta variables")
 parser.add_argument("--feature_selection", action="store_true", help="If set, perform feature selection using RFECV")
@@ -294,6 +298,8 @@ mlflow.log_param("learning_rate", args.learning_rate)
 mlflow.log_param("depth", args.depth)
 mlflow.log_param("feature_selection_column", args.feature_column)
 mlflow.log_param("delta_selection_column", args.delta_column)
+mlflow.log_param("hw_nohw_diff_column", args.hw_nohw_diff_column)
+mlflow.log_param("double_diff_column", args.double_diff_column)
 mlflow.log_param("include_delta_variables", args.delta_mode)
 mlflow.log_param("perform_feature_selection", args.feature_selection)
 
@@ -336,11 +342,6 @@ else:
     mlflow.log_param("applied_filters", "None")
     print("No filters applied")
 
-# # Load location ID dataset
-# location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
-# print(f"Loading location ID dataset from {location_ID_path}")
-# location_ID_ds = xr.open_dataset(location_ID_path, engine='netcdf4')
-
 # Load feature list
 print("Loading feature list...")
 df_daily_vars = pd.read_excel('/home/jguo/research/hw_global/Data/hourlyDataSchema.xlsx')
@@ -351,17 +352,19 @@ daily_var_lst = daily_vars.tolist()
 delta_vars = df_daily_vars.loc[df_daily_vars[args.delta_column] == 'Y', 'Variable']
 delta_var_lst = delta_vars.tolist()
 
-hw_nohw_diff_vars = df_daily_vars.loc[df_daily_vars['HW_NOHW_Diff'] == 'Y', 'Variable']
+hw_nohw_diff_vars = df_daily_vars.loc[df_daily_vars[args.hw_nohw_diff_column] == 'Y', 'Variable']
 # Add HW-NoHW diff variables to daily_var_lst
 daily_var_lst.extend([f"hw_nohw_diff_{var}" for var in hw_nohw_diff_vars])
 
 # Add Double Differencing variables
-double_diff_vars = df_daily_vars.loc[df_daily_vars['Double_Diff'] == 'Y', 'Variable']
+double_diff_vars = df_daily_vars.loc[df_daily_vars[args.double_diff_column] == 'Y', 'Variable']
 daily_var_lst.extend([f"Double_Differencing_{var}" for var in double_diff_vars])
 
 # Log the feature selection column and delta mode
 mlflow.log_param("feature_selection_column", args.feature_column)
 mlflow.log_param("delta_selection_column", args.delta_column)
+mlflow.log_param("hw_nohw_diff_column", args.hw_nohw_diff_column)
+mlflow.log_param("double_diff_column", args.double_diff_column)
 mlflow.log_param("delta_mode", args.delta_mode)
 
 # Calculate delta variables and modify daily_var_lst based on delta_mode
