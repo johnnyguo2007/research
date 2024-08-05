@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=1000
 LEARNING_RATE=0.01
 DEPTH=6
-BASE_RUN_TYPE="TEST_DD"  # Base part of the run type
+BASE_RUN_TYPE="TEST_final"  # Base part of the run type
 
 # Function to run the experiment
 run_experiment() {
@@ -15,37 +15,30 @@ run_experiment() {
     local hw_percentile=$2
     local merged_file=$3
 
+    # Construct the column names using the time_period variable
+    feature_column="${time_period}_selected"
+    delta_column="${time_period}_delta_selected"
+    hw_nohw_diff_column="${time_period}_Hw_no_hw_selected"
+    double_diff_column="${time_period}_DD_selected"
+
     # Construct the run type and experiment name
     run_type="${BASE_RUN_TYPE}"
-    exp_name_extra="HW${hw_percentile}_no_filter"
+    exp_name_extra="HW${hw_percentile}_no_filter_${feature_column}_${delta_column}_${hw_nohw_diff_column}_${double_diff_column}"
 
-        # python /home/jguo/research/hw_global/final/mlflow_feature_selection.py \
-        # --summary_dir /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary \
-        # --merged_feather_file $merged_file \
-        # --time_period $time_period \
-        # --iterations $ITERATIONS \
-        # --learning_rate $LEARNING_RATE \
-        # --depth $DEPTH \
-        # --run_type "${run_type}" \
-        # --exp_name_extra "${exp_name_extra}" \
-        # --shap_calculation \
-        # --filters "filter_by_KGMajorClass,${kg_major_class}" \
-        # --feature_column "X_ML_Selected" \
-        # --delta_column "X_ML_Delta_Selected" \
-        # --delta_mode "include"
-    
     python /home/jguo/research/hw_global/final/mlflow_feature_selection.py \
         --summary_dir /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary \
         --merged_feather_file $merged_file \
-        --time_period $time_period \
+        --time_period "${time_period}" \
         --iterations $ITERATIONS \
         --learning_rate $LEARNING_RATE \
         --depth $DEPTH \
         --run_type "${run_type}" \
         --exp_name_extra "${exp_name_extra}" \
         --filters "filter_by_year,1985" \
-        --feature_column "X_ML_Selected" \
-        --delta_column "X_ML_Delta_Selected" \
+        --feature_column "${feature_column}" \
+        --delta_column "${delta_column}" \
+        --hw_nohw_diff_column "${hw_nohw_diff_column}" \
+        --double_diff_column "${double_diff_column}" \
         --delta_mode "include"
 }
 
@@ -58,11 +51,11 @@ kg_major_classes=( "Temperate")
 for hw_percentile in 98; do
     merged_file="updated_local_hour_adjusted_variables_HW${hw_percentile}.feather"
     
-    # for time_period in "day" "night"; do
-    for time_period in "day" ; do
+    # for time_period in "Day" "Night"; do
+    for time_period in "day"; do
 
-        echo "Running experiment for $time_period, HW${hw_percentile}"
-        run_experiment $time_period $hw_percentile $merged_file
+        echo "Running experiment for ${time_period}, HW${hw_percentile}"
+        run_experiment "${time_period}" $hw_percentile $merged_file
 
     done
 done

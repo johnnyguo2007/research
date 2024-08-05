@@ -574,54 +574,56 @@ if args.shap_calculation:
     plt.clf()
 
     # Get feature importance using SHAP values
-    def get_shap_feature_importance(shap_values, feature_names):
+    def get_shap_feature_importance(shap_values, feature_names, df_daily_vars):
         shap_feature_importance = np.abs(shap_values).mean(axis=0)
-        shap_importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': shap_feature_importance})
+        total_importance = np.sum(shap_feature_importance)
+        shap_importance_df = pd.DataFrame({
+            'Feature': feature_names,
+            'Importance': shap_feature_importance,
+            'Percentage': (shap_feature_importance / total_importance) * 100
+        })
         shap_importance_df.sort_values(by='Importance', ascending=False, inplace=True)
-        shap_importance_df = add_long_name(shap_importance_df, join_column='Feature') 
+        shap_importance_df = add_long_name(shap_importance_df, join_column='Feature', df_daily_vars=df_daily_vars)
         return shap_importance_df
 
-    shap_feature_importance = get_shap_feature_importance(shap_values, full_pool.get_feature_names())
+    shap_feature_importance = get_shap_feature_importance(shap_values, full_pool.get_feature_names(), df_daily_vars)
 
-# SHAP feature importance waterfall plot
+    # SHAP feature importance waterfall plot
     print("Creating SHAP feature importance waterfall plot...")
-    
-    # Normalize the SHAP feature importances
-    shap_feature_importance['Normalized Importance'] = shap_feature_importance['Importance'] / shap_feature_importance['Importance'].sum()
-    
-    # Format the percentages for display
-    shap_feature_importance['Percentage'] = shap_feature_importance['Normalized Importance'].apply(lambda x: f'{x:.2%}')
-
-    # Sort the features by importance in descending order
-    shap_feature_importance.sort_values(by='Importance', ascending=False, inplace=True)
-
-    # Create the waterfall plot with all features
+    plt.figure(figsize=(12, 0.5 * len(shap_feature_importance)))
     shap.waterfall_plot(
         shap.Explanation(
-            values=shap_feature_importance['Importance'], 
-            base_values=0, 
-            feature_names=shap_feature_importance['Long Name'].tolist() + ['Percentage contribution']
+            values=shap_feature_importance['Importance'].values,
+            base_values=shap_values[:, -1].mean(),
+            data=X_selected.iloc[0],  # Use the first row of X_selected
+            feature_names=shap_feature_importance['Long Name'].tolist()
         ),
         show=False,
-        max_display=len(shap_feature_importance)  # Display all features
+        max_display=len(shap_feature_importance)
     )
-
-    # Customize the plot
-    plt.gcf().set_size_inches(15, 0.5 * len(shap_feature_importance))  # Adjust figure height based on number of features
-    plt.gcf().subplots_adjust(left=0.4)  # Increase left margin to make room for y-axis labels
-
-    # Add percentage contribution text next to each bar
-    for i, p in enumerate(plt.gca().patches):
-        plt.text(p.get_width() * 1.01, p.get_y() + p.get_height() / 2, 
-                 shap_feature_importance['Percentage'][i], 
-                 ha='left', va='center')
-
+    plt.title(f'SHAP Waterfall Plot for {args.time_period.capitalize()}time')
     mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_feature_importance_waterfall_plot.png')
     plt.clf()
 
+    # Percentage contribution horizontal bar plot
+    print("Creating percentage contribution plot...")
+    plt.figure(figsize=(12, 0.5 * len(shap_feature_importance)))
+    plt.barh(shap_feature_importance['Long Name'], shap_feature_importance['Percentage'], 
+             align='center', color='#ff0051')
+    plt.title(f'Feature Importance (%) for {args.time_period.capitalize()}time')
+    plt.xlabel('Percentage Contribution')
+    plt.gca().invert_yaxis()
+    
+    for i, percentage in enumerate(shap_feature_importance['Percentage']):
+        plt.text(percentage, i, f' {percentage:.1f}%', va='center')
+
+    plt.tight_layout()
+    mlflow.log_figure(plt.gcf(), f'{args.time_period}_percentage_contribution_plot.png')
+    plt.clf()
+
     # Log SHAP feature importance data
-    shap_importance_path = os.path.join(figure_dir, 'shap_feature_importance.feather')  
-    shap_feature_importance.to_feather(shap_importance_path)
+    shap_importance_path = os.path.join(figure_dir, f'{args.time_period}_shap_feature_importance.csv')
+    shap_feature_importance.to_csv(shap_importance_path, index=False)
     mlflow.log_artifact(shap_importance_path)
     print(f"Saved SHAP feature importance data to {shap_importance_path}")
 
@@ -660,4 +662,4 @@ if args.shap_calculation:
     
 
 print("Script execution completed.")
-mlflow.end_run()
+mlflow.end_run() # JG

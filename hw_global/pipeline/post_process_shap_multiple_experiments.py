@@ -1,4 +1,5 @@
 import os
+import argparse
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -144,11 +145,11 @@ def process_experiment(experiment_name):
 
     return shap_feature_importance
 
-def main():
+def main(prefix, hw_pct):
     mlflow.set_tracking_uri(uri="http://192.168.4.85:8080")
 
     experiments = mlflow.search_experiments()
-    filtered_experiments = [exp for exp in experiments if exp.name.startswith("SOIL_KG") and "HW99" in exp.name]
+    filtered_experiments = [exp for exp in experiments if exp.name.startswith(prefix) and hw_pct in exp.name]
 
     all_shap_feature_importance = []
 
@@ -163,11 +164,24 @@ def main():
 
     if len(all_shap_feature_importance) > 0:
         combined_shap_feature_importance = pd.concat(all_shap_feature_importance, ignore_index=True)
-        output_path = "combined_shap_feature_importance_HW99.xlsx"
+        
+        # Sort by ExperimentName in ascending order and Percentage in descending order
+        combined_shap_feature_importance.sort_values(by=['ExperimentName', 'Percentage'], ascending=[True, False], inplace=True)
+        
+        # Add a column for feature ranking within each experiment
+        combined_shap_feature_importance['Rank'] = combined_shap_feature_importance.groupby('ExperimentName').cumcount() + 1
+        
+        output_path = f"combined_shap_feature_importance_{prefix}_{hw_pct}.xlsx"
         combined_shap_feature_importance.to_excel(output_path, index=False)
         logging.info(f"Combined shap_feature_importance saved to {output_path}")
     else:
         logging.warning("No shap_feature_importance data found in the processed experiments.")
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Process SHAP feature importance for multiple experiments.')
+    parser.add_argument('--prefix', type=str, default='KG_SHAP', help='Prefix for filtering experiments (default: KG_SHAP)')
+    parser.add_argument('--hw_pct', type=str, default='HW98', help='hw_pct name for filtering experiments (default: HW98)')
+    args = parser.parse_args()
+
+    main(prefix=args.prefix, hw_pct=args.hw_pct)
+    

@@ -127,6 +127,7 @@ def main(experiment_name):
         max_display=len(shap_feature_importance)
     )
     plt.title(f'SHAP Waterfall Plot for {time_period.capitalize()}time')
+    # plt.gca().yaxis.set_ticklabels([])
     waterfall_output_path = os.path.join(artifact_uri, f"post_process_{time_period}_shap_waterfall_plot.png")
     plt.savefig(waterfall_output_path, dpi=300, bbox_inches='tight')
     logging.info(f"SHAP waterfall plot for {time_period}time saved to {waterfall_output_path}")
