@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=1000
 LEARNING_RATE=0.01
 DEPTH=6
-BASE_RUN_TYPE="TEST_final"  # Base part of the run type
+BASE_RUN_TYPE="TEST_feature_group"  # Base part of the run type
 
 # Function to run the experiment
 run_experiment() {
@@ -35,6 +35,7 @@ run_experiment() {
         --run_type "${run_type}" \
         --exp_name_extra "${exp_name_extra}" \
         --filters "filter_by_year,1985" \
+        --shap_calculation \
         --feature_column "${feature_column}" \
         --delta_column "${delta_column}" \
         --hw_nohw_diff_column "${hw_nohw_diff_column}" \
@@ -51,8 +52,7 @@ kg_major_classes=( "Temperate")
 for hw_percentile in 98; do
     merged_file="updated_local_hour_adjusted_variables_HW${hw_percentile}.feather"
     
-    # for time_period in "Day" "Night"; do
-    for time_period in "day"; do
+    for time_period in "night"; do
 
         echo "Running experiment for ${time_period}, HW${hw_percentile}"
         run_experiment "${time_period}" $hw_percentile $merged_file

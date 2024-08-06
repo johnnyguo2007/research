@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-RUN_TYPE="Final"
+BASE_RUN_TYPE="Final"
 
 
 # Function to run the experiment

@@ -92,7 +92,18 @@ def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'
     return results_df
 
 
-def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, learning_rate, depth,
+def get_feature_group(feature_name, df_daily_vars):
+    if feature_name.startswith('delta_'):
+        return feature_name.replace('delta_', '')
+    elif feature_name.startswith('hw_nohw_diff_'):
+        return feature_name.replace('hw_nohw_diff_', '')
+    elif feature_name.startswith('Double_Differencing_'):
+        return feature_name.replace('Double_Differencing_', '')
+    else:
+        return feature_name
+
+
+def train_and_evaluate(time_uhi_diff, daily_var_lst, feature_groups, model_name, iterations, learning_rate, depth,
                        feature_selection=False, num_features=None):
     print(f"Training and evaluating {model_name}...")
     X = time_uhi_diff[daily_var_lst]
@@ -118,6 +129,12 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
             verbose=False
         )
 
+        # Create a dictionary to map features to their corresponding groups
+        feature_to_group = dict(zip(daily_var_lst, feature_groups))
+
+        # Create a new array to store the feature group for each feature
+        feature_group_array = np.array([feature_to_group[feature] for feature in daily_var_lst])
+
         # Create a path for the feature selection plot
         feature_selection_plot_path = os.path.join(figure_dir, f'{model_name}_feature_selection_plot.png')
 
@@ -131,7 +148,8 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, model_name, iterations, lea
             train_final_model=True,
             logging_level='Silent',
             plot=True,
-            plot_file=feature_selection_plot_path  # Enable plot generation and specify the file path
+            plot_file=feature_selection_plot_path,  # Enable plot generation and specify the file path
+            eval_feature_groups=feature_group_array  # Specify the feature groups
         )
 
         # Log the feature selection plot as an artifact
@@ -479,8 +497,10 @@ sorted_results_df.to_csv(sorted_results_path)
 mlflow.log_artifact(sorted_results_path)
 print(f"Saved sorted results to {sorted_results_path}")
 
+feature_groups = [get_feature_group(feature, df_daily_vars) for feature in daily_var_lst]
+
 print("Training the model...")
-model, selected_features, X_selected = train_and_evaluate(uhi_diff, daily_var_lst=daily_var_lst,
+model, selected_features, X_selected = train_and_evaluate(uhi_diff, daily_var_lst=daily_var_lst, feature_groups=feature_groups,
                                                           model_name=f"{args.time_period}_model",
                                                           iterations=args.iterations, learning_rate=args.learning_rate,
                                                           depth=args.depth, feature_selection=args.feature_selection,
@@ -587,6 +607,35 @@ if args.shap_calculation:
         return shap_importance_df
 
     shap_feature_importance = get_shap_feature_importance(shap_values, full_pool.get_feature_names(), df_daily_vars)
+    shap_feature_importance['Feature Group'] = shap_feature_importance['Feature'].apply(lambda x: get_feature_group(x, df_daily_vars))
+
+    shap_feature_importance_by_group = shap_feature_importance.groupby('Feature Group')['Importance'].sum().reset_index()
+    shap_feature_importance_by_group_path = os.path.join(figure_dir, f'{args.time_period}_shap_feature_importance_by_group.csv')
+    shap_feature_importance_by_group.to_csv(shap_feature_importance_by_group_path, index=False)
+    mlflow.log_artifact(shap_feature_importance_by_group_path)
+    print(f"Saved SHAP feature importance by group data to {shap_feature_importance_by_group_path}")
+
+    # Create a dictionary to map features to their corresponding groups
+    feature_to_group = dict(zip(shap_feature_importance['Feature'], shap_feature_importance['Feature Group']))
+
+    # Create a new array to store the feature group for each feature
+    feature_groups = np.array([feature_to_group[feature] for feature in full_pool.get_feature_names()])
+
+    # Create a color mapping for feature groups
+    unique_feature_groups = np.unique(feature_groups)
+    color_map = plt.cm.get_cmap('tab20', len(unique_feature_groups))
+    group_colors = color_map(np.arange(len(unique_feature_groups)))
+    group_color_dict = dict(zip(unique_feature_groups, group_colors))
+
+    # Map feature groups to colors
+    feature_colors = [group_color_dict[group] for group in feature_groups]
+
+    # Create the SHAP summary plot by feature groups
+    shap.summary_plot(shap_values, X_selected, plot_type='bar', feature_names=full_pool.get_feature_names(), 
+                    max_display=len(shap_feature_importance), show=False, color=feature_colors)
+    plt.gcf().set_size_inches(15, 10)  # Adjust the figure size
+    mlflow.log_figure(plt.gcf(), f'{args.time_period}_shap_summary_plot_by_group.png')
+    plt.clf()
 
     # SHAP feature importance waterfall plot
     print("Creating SHAP feature importance waterfall plot...")
@@ -658,8 +707,6 @@ if args.shap_calculation:
         print(f"Creating dependence plot for {feature}")
         plot_dependence_grid(shap_values, X_selected, feature_names=full_pool.get_feature_names(),
                              time_period=args.time_period, target_feature=feature, plots_per_row=2)
-    
-    
 
 print("Script execution completed.")
-mlflow.end_run() # JG
+mlflow.end_run()
