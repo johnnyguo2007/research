@@ -610,6 +610,16 @@ if args.shap_calculation:
     shap_feature_importance['Feature Group'] = shap_feature_importance['Feature'].apply(lambda x: get_feature_group(x, df_daily_vars))
 
     shap_feature_importance_by_group = shap_feature_importance.groupby('Feature Group')['Importance'].sum().reset_index()
+
+    # Calculate the total importance
+    total_importance = shap_feature_importance_by_group['Importance'].sum()
+
+    # Add the "Percentage" column
+    shap_feature_importance_by_group['Percentage'] = (shap_feature_importance_by_group['Importance'] / total_importance) * 100
+
+    # Sort by "Importance" in descending order
+    shap_feature_importance_by_group.sort_values(by='Importance', ascending=False, inplace=True)
+
     shap_feature_importance_by_group_path = os.path.join(figure_dir, f'{args.time_period}_shap_feature_importance_by_group.csv')
     shap_feature_importance_by_group.to_csv(shap_feature_importance_by_group_path, index=False)
     mlflow.log_artifact(shap_feature_importance_by_group_path)
@@ -677,36 +687,32 @@ if args.shap_calculation:
     print(f"Saved SHAP feature importance data to {shap_importance_path}")
 
     # SHAP dependence plots
-    def plot_dependence_grid(shap_values, X, feature_names, time_period, target_feature='U10', plots_per_row=2):
+    def plot_dependence_grid(shap_values, X, feature_names, time_period, target_feature='U10'):
         feature_names = [f for f in feature_names if f != target_feature]
-        num_features = len(feature_names)
-        num_rows = (num_features + plots_per_row - 1) // plots_per_row
-
-        fig, axes = plt.subplots(num_rows, plots_per_row, figsize=(30, 10 * num_rows))
-        axes = axes.flatten()
+        
+        dependence_plots_dir = os.path.join(figure_dir, 'dependence_plots', target_feature)
+        os.makedirs(dependence_plots_dir, exist_ok=True)
 
         for i, feature_name in enumerate(feature_names):
+            fig, ax = plt.subplots(figsize=(10, 6))
             shap.dependence_plot(ind=target_feature, shap_values=shap_values, features=X,
-                                 interaction_index=feature_name, ax=axes[i], show=False)
-            axes[i].set_title(f"{time_period.capitalize()} time {target_feature} vs {feature_name}")
+                                interaction_index=feature_name, ax=ax, show=False)
+            ax.set_title(f"{time_period.capitalize()} time {target_feature} vs {feature_name}")
 
-        for j in range(i + 1, len(axes)):
-            axes[j].axis('off')
+            interaction_plot_path = os.path.join(dependence_plots_dir, f'{time_period}_{target_feature}_vs_{feature_name}.png')
+            fig.savefig(interaction_plot_path)
+            plt.close(fig)
+            
+            mlflow.log_artifact(interaction_plot_path)
 
-        plt.tight_layout()
-        fig.set_size_inches(30, 10 * num_rows)
-        mlflow.log_figure(plt.gcf(), f'{time_period}_dependence_plot_{target_feature}.png')
-        plt.clf()
+top_features = feature_importance['Feature'].tolist()
 
-
-    top_features = feature_importance['Feature'].tolist()
-
-    # Dependence plots
-    print("Creating SHAP dependence plots...")
-    for feature in top_features:
-        print(f"Creating dependence plot for {feature}")
-        plot_dependence_grid(shap_values, X_selected, feature_names=full_pool.get_feature_names(),
-                             time_period=args.time_period, target_feature=feature, plots_per_row=2)
+# Dependence plots
+print("Creating SHAP dependence plots...")
+for feature in top_features:
+    print(f"Creating dependence plots for {feature}")
+    plot_dependence_grid(shap_values, X_selected, feature_names=full_pool.get_feature_names(),
+                         time_period=args.time_period, target_feature=feature)
 
 print("Script execution completed.")
 mlflow.end_run()
