@@ -689,21 +689,34 @@ if args.shap_calculation:
     # SHAP dependence plots
     def plot_dependence_grid(shap_values, X, feature_names, time_period, target_feature='U10'):
         feature_names = [f for f in feature_names if f != target_feature]
-        
-        dependence_plots_dir = os.path.join(figure_dir, 'dependence_plots', target_feature)
-        os.makedirs(dependence_plots_dir, exist_ok=True)
+
+        # Create the nested folder structure
+        nested_path = os.path.join('x_dependence_plots', target_feature)
+        full_nested_path = os.path.join(figure_dir, nested_path)
+        os.makedirs(full_nested_path, exist_ok=True)
 
         for i, feature_name in enumerate(feature_names):
             fig, ax = plt.subplots(figsize=(10, 6))
-            shap.dependence_plot(ind=target_feature, shap_values=shap_values, features=X,
-                                interaction_index=feature_name, ax=ax, show=False)
+            shap.dependence_plot(
+                ind=target_feature, 
+                shap_values=shap_values, 
+                features=X,
+                interaction_index=feature_name, 
+                ax=ax, 
+                show=False
+            )
             ax.set_title(f"{time_period.capitalize()} time {target_feature} vs {feature_name}")
 
-            interaction_plot_path = os.path.join(dependence_plots_dir, f'{time_period}_{target_feature}_vs_{feature_name}.png')
-            fig.savefig(interaction_plot_path)
+            # Save the figure
+            plot_filename = f'{time_period}_{target_feature}_vs_{feature_name}.png'
+            plot_path = os.path.join(full_nested_path, plot_filename)
+            fig.savefig(plot_path)
             plt.close(fig)
-            
-            mlflow.log_artifact(interaction_plot_path)
+
+            # Log the artifact with the nested path
+            mlflow.log_artifact(plot_path, nested_path)
+
+        print(f"Dependence plots for {target_feature} have been created and logged to MLflow.")
 
 top_features = feature_importance['Feature'].tolist()
 
