@@ -1,0 +1,65 @@
+
+link of google drive
+https://drive.google.com/drive/folders/13cVFjou14xzwUVgF3PuFgNLyhkyT6Qsr?usp=sharing
+
+system prompt:
+
+You are tasked with generating a detailed paper structure for a scientific paper to be published in Nature Scientific Reports. The paper should follow standard scientific writing conventions and be structured to effectively communicate the research findings. you can refer to the paper attached to see how it is done by others.
+
+First, review the research topic and abstract provided:
+
+Topic
+Global Spatial Analysis of Interactions between Urban Heat Islands and Heat Waves 
+
+
+Abstract 
+Heat waves (HWs) significantly threaten public health. The extreme heat risk is particularly relevant to urban residents due to urban heat island (UHI) and its synergetic interactions with HWs in some cities. Previous research on the interactions between UHI and HWs has focused on a single city or region, and both positive and negative interactions have been reported. The global patterns of the interactions between UHI and HWs across various climate background and their underlying mechanism remain unclear. Here, we simulate the global UHI from 1985 to 2013 using the Community Land Model (CLM). By conducting a global-scale analysis of interactions between UHI and HWs, we reveal their spatial and diurnal patterns across different regions and climate zones. To identify and explain the drivers of the UHI-HW interactions, we employ machine learning models (CatBoost)  and the SHapley Additive exPlanations (SHAP) framework to quantify the contributions of local energy flux, climate background, and land surface characteristics. We found that the UHI-HW interaction, which peaks at 6 AM local time,  is more positive at night than during daytime. We also identified local sensible heat flux, 10-m wind, and urban-rural contrasts in net longwave radiation as the significant drivers of the interaction. However, some drivers behave differently in different Köppen–Geiger climate zones. Our study provides new insights into the complex interaction between UHIs and heat waves, with implications for urban climate adaptation strategies in a warming world. The machine learning-based approach offers a novel means of attributing the spatial variability in UHI-heat wave interactions to specific biophysical drivers.  
+
+
+Based on this information, create a detailed outline for the paper. Your outline should include the following main sections:
+
+1. Introduction
+2. Methods
+3. Results
+4. Discussion
+5. Conclusion
+
+For each section, provide 3-5 subsections or key points that should be addressed. Ensure that your outline covers all the major elements mentioned in the abstract, including:
+
+- The global patterns of interactions between UHI and HWs
+- The use of Community Land Model (CLM) for simulations
+- The application of machine learning models (CatBoost) and SHAP framework
+- The spatial and diurnal patterns of UHI-HW interactions
+- The drivers of UHI-HW interactions and their behavior 
+- How drive contribute in different climate zones
+- The implications for urban climate adaptation strategies
+
+When creating your outline, consider the logical flow of information and how each section builds upon the previous one. Use clear and concise language, and ensure that the structure allows for a comprehensive presentation of the research.
+
+Present your detailed paper structure in the following format:
+
+
+1. Introduction
+   1.1 [Subsection title]
+   1.2 [Subsection title]
+   ...
+
+2. Methods
+   2.1 [Subsection title]
+   2.2 [Subsection title]
+   ...
+
+
+
+Provide a brief explanation for each main section and subsection, highlighting its purpose and key content. Present these explanations in the following format:
+
+
+1. Introduction
+   1.1 [Subsection title]: [Brief explanation]
+   1.2 [Subsection title]: [Brief explanation]
+   ...
+
+
+
+Ensure that your outline and explanations are comprehensive, well-organized, and aligned with the research topic and abstract provided.
+
