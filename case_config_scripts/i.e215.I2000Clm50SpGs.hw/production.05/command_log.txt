@@ -1,0 +1,45 @@
+cd /home/jguo/projects/cesm/scratch
+cd /home/jguo/my_cesm_sandbox/cime/scripts
+./create_newcase --case /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.02 --compset I2000Clm50SpGs --res f09_g17 --run-unsupported
+cd /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.02
+./xmlchange RUN_STARTDATE=1985-01-01,STOP_OPTION=nyears,STOP_N=1,RESUBMIT=29
+./xmlchange DATM_CLMNCEP_YR_ALIGN=1985,DATM_CLMNCEP_YR_START=1985,DATM_CLMNCEP_YR_END=2014
+./xmlchange DOUT_S_ROOT=/media/jguo/external_data/simulation_output/archive/case
+./case.setup
+./xmlquery RUN_REFCASE,RUN_REFDIR,RUN_REFDATE,RUN_TYPE,RUN_STARTDATE,CCSM_BGC,CCSM_CO2_PPMV,CLM_NML_USE_CASE,CLM_CO2_TYPE,CLM_BLDNML_OPTS,STOP_OPTION,STOP_N,RESUBMIT,JOB_WALLCLOCK_TIME,CONTINUE_RUN,DATM_CPLHIST_CASE,DATM_CPLHIST_DIR,LND_TUNING_MODE,DATM_CPLHIST_YR_ALIGN,DATM_CPLHIST_YR_END,DATM_CPLHIST_YR_START,DATM_CLMNCEP_YR_ALIGN,DATM_CLMNCEP_YR_START,DATM_CLMNCEP_YR_END
+cp /home/jguo/research/case_config_scripts/i.e215.I2000Clm50SpGs.hw/production.02/user_nl_clm /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.02/
+cp -r /home/jguo/research/case_config_scripts/i.e215.I2000Clm50SpGs.hw/production.02/SourceMods /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.02/
+./case.build --clean-all
+./case.build
+./case.submit
+cd /home/jguo/projects/cesm/scratch
+cd /home/jguo/my_cesm_sandbox/cime/scripts
+./create_newcase --case /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05 --compset I2000Clm50SpGs --res f09_g17 --run-unsupported
+cd /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05
+./xmlchange RUN_STARTDATE=1985-01-01,STOP_OPTION=nyears,STOP_N=1,RESUBMIT=29
+./xmlchange DATM_CLMNCEP_YR_ALIGN=1985,DATM_CLMNCEP_YR_START=1985,DATM_CLMNCEP_YR_END=2013
+./xmlchange DOUT_S_ROOT=/media/jguo/external_data/simulation_output/archive/case/i.e215.I2000Clm50SpGs.hw_production.05
+./case.setup
+./xmlquery RUN_REFCASE,RUN_REFDIR,RUN_REFDATE,RUN_TYPE,RUN_STARTDATE,CCSM_BGC,CCSM_CO2_PPMV,CLM_NML_USE_CASE,CLM_CO2_TYPE,CLM_BLDNML_OPTS,STOP_OPTION,STOP_N,RESUBMIT,JOB_WALLCLOCK_TIME,CONTINUE_RUN,DATM_CPLHIST_CASE,DATM_CPLHIST_DIR,LND_TUNING_MODE,DATM_CPLHIST_YR_ALIGN,DATM_CPLHIST_YR_END,DATM_CPLHIST_YR_START,DATM_CLMNCEP_YR_ALIGN,DATM_CLMNCEP_YR_START,DATM_CLMNCEP_YR_END
+cp /home/jguo/research/case_config_scripts/i.e215.I2000Clm50SpGs.hw/production.05/user_nl_clm /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05/
+cp -r /home/jguo/research/case_config_scripts/i.e215.I2000Clm50SpGs.hw/production.05/SourceMods /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05/
+./case.build --clean-all
+./case.build
+cd /home/jguo/projects/cesm/scratch
+echo Directory /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05 already exists. Aborting.
+cd /home/jguo/projects/cesm/scratch
+echo Removing existing case directory: /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05
+rm -rf /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05
+cd /home/jguo/my_cesm_sandbox/cime/scripts
+./create_newcase --case /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05 --compset I2000Clm50SpGs --res f09_g17 --run-unsupported
+cd /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05
+./xmlchange RUN_STARTDATE=1985-01-01,STOP_OPTION=nyears,STOP_N=1,RESUBMIT=29
+./xmlchange DATM_CLMNCEP_YR_ALIGN=1985,DATM_CLMNCEP_YR_START=1985,DATM_CLMNCEP_YR_END=2013
+./xmlchange DOUT_S_ROOT=/media/jguo/external_data/simulation_output/archive/case/i.e215.I2000Clm50SpGs.hw_production.05
+./case.setup
+./xmlquery RUN_REFCASE,RUN_REFDIR,RUN_REFDATE,RUN_TYPE,RUN_STARTDATE,CCSM_BGC,CCSM_CO2_PPMV,CLM_NML_USE_CASE,CLM_CO2_TYPE,CLM_BLDNML_OPTS,STOP_OPTION,STOP_N,RESUBMIT,JOB_WALLCLOCK_TIME,CONTINUE_RUN,DATM_CPLHIST_CASE,DATM_CPLHIST_DIR,LND_TUNING_MODE,DATM_CPLHIST_YR_ALIGN,DATM_CPLHIST_YR_END,DATM_CPLHIST_YR_START,DATM_CLMNCEP_YR_ALIGN,DATM_CLMNCEP_YR_START,DATM_CLMNCEP_YR_END
+cp /home/jguo/research/case_config_scripts/i.e215.I2000Clm50SpGs.hw/production.05/user_nl_clm /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05/
+cp -r /home/jguo/research/case_config_scripts/i.e215.I2000Clm50SpGs.hw/production.05/SourceMods /home/jguo/projects/cesm/scratch/i.e215.I2000Clm50SpGs.hw_production.05/
+./case.build --clean-all
+./case.build
+./case.submit

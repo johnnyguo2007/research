@@ -1,0 +1,65 @@
+!----------------------------------------------------------------------------------
+! Users should add all user specific namelist changes below in the form of 
+! namelist_var = new_namelist_value 
+!
+! EXCEPTIONS: 
+! Set use_cndv           by the compset you use and the CLM_BLDNML_OPTS -dynamic_vegetation setting
+! Set use_vichydro       by the compset you use and the CLM_BLDNML_OPTS -vichydro           setting
+! Set use_cn             by the compset you use and CLM_BLDNML_OPTS -bgc  setting
+! Set use_crop           by the compset you use and CLM_BLDNML_OPTS -crop setting
+! Set spinup_state       by the CLM_BLDNML_OPTS -bgc_spinup      setting
+! Set irrigate           by the CLM_BLDNML_OPTS -irrig .true.    setting
+! Set co2_ppmv           with CCSM_CO2_PPMV                      option
+! Set dtime              with L_NCPL                             option
+! Set fatmlndfrc         with LND_DOMAIN_PATH/LND_DOMAIN_FILE    options
+! Set finidat            with RUN_REFCASE/RUN_REFDATE/RUN_REFTOD options for hybrid or branch cases
+!                        (includes $inst_string for multi-ensemble cases)
+!                        or with CLM_FORCE_COLDSTART to do a cold start
+!                        or set it with an explicit filename here.
+! Set maxpatch_glcmec    with GLC_NEC                            option
+! Set glc_do_dynglacier  with GLC_TWO_WAY_COUPLING               env variable
+!----------------------------------------------------------------------------------
+
+
+!Question to Keer: do I use this surface data? or the I2000 default surface data is ok?
+!fsurdat = '/home/jguo/research/from_KeerZ/SurfaceData/2015-2100urbanveg/surfdata_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr2015_GaoUrbanveg2015_c230601.nc'
+!!!! Keer: use the default surface data (the same surface data in your spinning up simulation)
+
+finidat ='/home/jguo/important_results/i.e215.I2000Clm50SpGs.hw_spinup.03/case/rest/0021-01-01-00000/i.e215.I2000Clm50SpGs.hw_spinup.03.clm2.r.0021-01-01-00000.nc'
+
+!use_init_interp = .true.
+
+
+!use_individual_pft_soil_column=.false. !default shared soil column
+
+! ### hist_empty_htapes allows you to turn off all default output.
+! ### I need this to save disk space
+hist_empty_htapes=.true.
+  
+urban_hac='ON_WASTEHEAT'
+building_temp_method=1
+calc_human_stress_indices='ALL'
+
+! h0 Monthly average; grid mean
+hist_mfilt(1) = 1
+hist_dov2xy(1) = .true.
+hist_nhtfrq(1) = 0
+hist_fincl1='TSA','TSA_R','TSA_U','Q2M','Q2M_U','Q2M_R','WBA_U','WBA_R','WBA','VAPOR_PRES','VAPOR_PRES_U','VAPOR_PRES_R','WASTEHEAT','HEAT_FROM_AC','URBAN_HEAT','FSDS','FLDS','FIRE','FIRE_U','FIRE_R','FIRA','FIRA_U','FIRA_R','FSA','FSA_U','FSA_R','EFLX_LH_TOT','EFLX_LH_TOT_R','EFLX_LH_TOT_U','FSH_R','FSH_U','FSH','FGR_R','FGR_U','FGR','RAIN','SNOW','TBOT','QBOT','PBOT','WIND','THBOT','TSKIN','TSKIN_U','TSKIN_R','APPAR_TEMP','APPAR_TEMP_U','APPAR_TEMP_R','HIA','HIA_U','HIA_R','U10','RH2M','RH2M_R','RH2M_U'
+!!!! Keer: add these monthly output 'RH2M','RH2M_R','RH2M_U'
+!!!! Keer: delete these monthly output 'QIRRIG','SOILLIQ','TSOI'
+
+! h1 Daily average; grid mean
+hist_mfilt(2) = 1
+hist_dov2xy(2) = .true.
+hist_nhtfrq(2) = -24
+hist_fincl2='TSA','TSA_R','TSA_U','Q2M','Q2M_U','Q2M_R','WBA_U','WBA_R','WBA','VAPOR_PRES','VAPOR_PRES_U','VAPOR_PRES_R','WASTEHEAT','HEAT_FROM_AC','URBAN_HEAT','FSDS','FLDS','FIRE','FIRE_U','FIRE_R','FIRA','FIRA_U','FIRA_R','FSA','FSA_U','FSA_R','EFLX_LH_TOT','EFLX_LH_TOT_R','EFLX_LH_TOT_U','FSH_R','FSH_U','FSH','FGR_R','FGR_U','FGR','RAIN','SNOW','TBOT','QBOT','PBOT','WIND','THBOT','TSKIN','TSKIN_U','TSKIN_R','APPAR_TEMP','APPAR_TEMP_U','APPAR_TEMP_R','HIA','HIA_U','HIA_R','U10','TREFMNAV','TREFMNAV_R','TREFMNAV_U','TREFMXAV','TREFMXAV_R','TREFMXAV_U'
+!!!! Keer: add these daily output 'TREFMNAV','TREFMNAV_R','TREFMNAV_U','TREFMXAV','TREFMXAV_R','TREFMXAV_U'
+!!!! Keer: delete these daily output 'QIRRIG'
+
+! h2 Hourly average; grid mean
+hist_mfilt(3) = 24
+hist_dov2xy(3) = .true.
+hist_nhtfrq(3) = -1
+hist_fincl3='TSA','TSA_R','TSA_U','Q2M','Q2M_U','Q2M_R','WBA_U','WBA_R','WBA','VAPOR_PRES','VAPOR_PRES_U','VAPOR_PRES_R','WASTEHEAT','HEAT_FROM_AC','URBAN_HEAT','FSDS','FLDS','FIRE','FIRE_U','FIRE_R','FIRA','FIRA_U','FIRA_R','FSA','FSA_U','FSA_R','EFLX_LH_TOT','EFLX_LH_TOT_R','EFLX_LH_TOT_U','FSH_R','FSH_U','FSH','FGR_R','FGR_U','FGR','RAIN','SNOW','TBOT','QBOT','PBOT','WIND','THBOT','TSKIN','TSKIN_U','TSKIN_R','APPAR_TEMP','APPAR_TEMP_U','APPAR_TEMP_R','HIA','HIA_U','HIA_R','U10','SOILWATER_10CM','H2OSOI','SOILLIQ','Qstor'
+!!!! Keer: delete these hourly output 'QIRRIG'
+
