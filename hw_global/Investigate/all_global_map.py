@@ -4,20 +4,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import os
 import argparse
-from scipy.interpolate import griddata
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 def normalize_longitude(lons):
     return np.where(lons > 180, lons - 360, lons)
-
-def create_land_sea_mask(m, lons, lats):
-    print(f"Debug - create_land_sea_mask input shapes: lons {lons.shape}, lats {lats.shape}")
-    xx, yy = np.meshgrid(lons, lats)
-    mask = np.zeros(xx.shape, dtype=bool)
-    for i in range(xx.shape[0]):
-        for j in range(xx.shape[1]):
-            mask[i, j] = m.is_land(xx[i, j], yy[i, j])
-    return mask
 
 def setup_map():
     fig, ax = plt.subplots(figsize=(12, 6))
@@ -32,39 +22,41 @@ def setup_map():
     m.drawparallels(np.arange(-90., 91., 30.), labels=[1, 0, 0, 0], fontsize=10)
     m.drawmeridians(np.arange(-180., 181., 60.), labels=[0, 0, 0, 1], fontsize=10)
 
-    # Create a regular grid for pcolormesh and mask calculation
-    lon_grid, lat_grid = np.meshgrid(np.linspace(-180, 180, 360), np.linspace(-90, 90, 180))
-    mask = create_land_sea_mask(m, lon_grid[0, :], lat_grid[:, 0])
+    return fig, ax, m
 
-    return fig, ax, m, lon_grid, lat_grid, mask
-
-def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask, time_of_day):
+def draw_map_pcolormesh(data, variable, output_file, time_of_day):
     print(f"Processing {variable}")
     print(f"Data shape: {data[variable].shape}")
     print(f"Data type: {data[variable].dtype}")
     print(f"Sample data: {data[variable].head()}")
 
-    fig, ax, m, _, _, _ = setup_map()
+    fig, ax, m = setup_map()
 
-    # Interpolate data onto the regular grid
-    values = griddata((data['lon'], data['lat']), data[variable], (lon_grid, lat_grid), method='linear')
+    lons = normalize_longitude(data['lon'].values)
+    lats = data['lat'].values
+    values = data[variable].values
 
     print(f"Debug - {variable} shape: {values.shape}, min: {np.nanmin(values)}, max: {np.nanmax(values)}")
-
-    # Apply the mask
-    masked_values = np.ma.array(values, mask=~mask)
 
     # Set colormap based on variable name
     if 'diff' in variable.lower() or 'delta' in variable.lower() or 'uhi' in variable.lower():
         cmap = 'RdBu_r'  # Default colormap
         # Determine the maximum absolute value for symmetric color scaling
-        max_abs_val = max(abs(np.nanmin(masked_values)), abs(np.nanmax(masked_values)))*0.6
+        max_abs_val = max(abs(np.nanmin(values)), abs(np.nanmax(values))) * 0.6
         norm = plt.Normalize(-max_abs_val, max_abs_val)
     else:
         cmap = 'RdBu_r'  # Default colormap
         norm = None
 
-    sc = m.pcolormesh(lon_grid, lat_grid, masked_values, cmap=cmap, norm=norm, latlon=True)
+    lon_grid, lat_grid = np.meshgrid(np.unique(lons), np.unique(lats))
+    value_grid = np.full(lon_grid.shape, np.nan)
+
+    for i in range(len(lats)):
+        lat_idx = np.where(lat_grid[:,0] == lats[i])[0][0]
+        lon_idx = np.where(lon_grid[0,:] == lons[i])[0][0]
+        value_grid[lat_idx, lon_idx] = values[i]
+
+    sc = m.pcolormesh(lon_grid, lat_grid, value_grid, cmap=cmap, norm=norm, latlon=True)
 
     cbar = plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02, extend='both')
     cbar.set_label(variable)
@@ -75,8 +67,8 @@ def draw_map_pcolormesh(data, variable, output_file, lon_grid, lat_grid, mask, t
     plt.close(fig)
     print(f"Pcolormesh plot for {variable} ({time_of_day}) saved as {output_file}")
 
-def draw_map_scatter(data, variable, output_file, mask, time_of_day):
-    fig, ax, m, _, _, _ = setup_map()
+def draw_map_scatter(data, variable, output_file, time_of_day):
+    fig, ax, m = setup_map()
 
     lons = normalize_longitude(data['lon'].values)
     x, y = m(lons, data['lat'].values)
@@ -104,12 +96,12 @@ def create_new_variables(df):
             base_var = column[:-2]  # Remove '_U' from the end
             if f'{base_var}_R' in df.columns:
                 df[f'Delta_{base_var}'] = df[f'{base_var}_U'] - df[f'{base_var}_R']
-        
+
         if column.startswith('hw_nohw_diff') and column.endswith('_U'):
             base_var = column[len('hw_nohw_diff_'):-2]  # Remove 'hw_nohw_diff_' from start and '_U' from end
             if f'hw_nohw_diff_{base_var}_R' in df.columns:
                 df[f'Double_Differencing_{base_var}'] = df[column] - df[f'hw_nohw_diff_{base_var}_R']
-    
+
     return df
 
 def main():
@@ -121,7 +113,7 @@ def main():
     args = parser.parse_args()
 
     # Create a directory to save the plots and DataFrames
-    output_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/plots'
+    output_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/new_plots'
     os.makedirs(output_dir, exist_ok=True)
 
     # Define output directories for daytime and nighttime plots
@@ -182,9 +174,6 @@ def main():
     else:
         variables = [col for col in df_grouped_daytime.columns if col not in ['lat', 'lon']]
 
-    # Calculate the land-sea mask and regular grid once
-    _, _, _, lon_grid, lat_grid, mask = setup_map()
-
     # Choose the plotting function based on the --plot-type argument
     if args.plot_type == 'pcolormesh':
         plot_function = draw_map_pcolormesh
@@ -202,10 +191,7 @@ def main():
                 continue
 
             output_file = os.path.join(output_dir_daytime, f'{variable}_global_map_daytime_{args.plot_type}.png')
-            if args.plot_type == 'pcolormesh':
-                plot_function(df_grouped_daytime, variable, output_file, lon_grid, lat_grid, mask, "day")
-            else:
-                plot_function(df_grouped_daytime, variable, output_file, mask, "day")
+            plot_function(df_grouped_daytime, variable, output_file, "day")
 
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")
@@ -221,10 +207,7 @@ def main():
                 continue
 
             output_file = os.path.join(output_dir_nighttime, f'{variable}_global_map_nighttime_{args.plot_type}.png')
-            if args.plot_type == 'pcolormesh':
-                plot_function(df_grouped_nighttime, variable, output_file, lon_grid, lat_grid, mask, "night")
-            else:
-                plot_function(df_grouped_nighttime, variable, output_file, mask, "night")
+            plot_function(df_grouped_nighttime, variable, output_file, "night")
 
         except Exception as e:
             print(f"Error plotting {variable}: {str(e)}")

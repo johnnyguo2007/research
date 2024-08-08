@@ -1,0 +1,267 @@
+Source,StationID,StationName,Type,Latitude,Longitude,Elevation,Timezone,YearStart,YearEnd,Climate
+Integrated Surface Database,72097299999,ST MARY HOSPITAL HELIPORT,Urban,44.016667,-92.483333,355,-6,2015,2019,Inter
+Integrated Surface Database,72659604978,DODGE CENTER ARPT,Rural,44.01778,-92.83139,397.76,-6,2015,2019,Inter
+Integrated Surface Database,72343403973,SPRINGDALE MUNICIPAL ARPT,Urban,36.16667,-94.11667,412.4,-6,2015,2019,Inter
+Integrated Surface Database,72343653922,FAYETTEVILLE SPRINGDALE NW AR REGL AIRPORT,Rural,36.28333,-94.3,392.28,-6,2015,2019,Inter
+Integrated Surface Database,72059400188,HOUSTON DUNN HELISTOP,Urban,29.714664,-95.394764,69.19,-6,2010,2019,Inter
+Integrated Surface Database,72061700208,HOUSTON EXECUTIVE AIRPORT,Rural,29.8,-95.9,51.21,-6,2010,2019,Inter
+Integrated Surface Database,72046699999,SUPERDOME HELIPORT,Urban,29.95,-90.083333,15.24,-6,2013,2015,Inter
+Integrated Surface Database,72104699999,"LOUISIANA REGIONAL AIRPORT GONZALES, LA US",Rural,30.167418,-90.940606,4.27,-6,2013,2015,Inter
+Integrated Surface Database,72494693232,SAN JOSE REID HILLVIEW AIRPORT,Urban,37.33333,-121.81667,40.54,-8,2015,2019,Dry
+Integrated Surface Database,74917900392,HOLLISTER MUNICIPAL AIRPORT,Rural,36.9,-121.417,72.24,-8,2015,2019,Dry
+Oklahoma mesonet ,129,Oklahoma City West,Urban,35.47112,-97.58245,366,-6,2013,2015,Inter
+Oklahoma mesonet ,87,Spencer,Rural,35.54208,-97.34146,373,-6,2013,2015,Inter
+Arizona mesonet,29,Mesa,Urban,33.386786,-111.867431,368,-7,2015,2019,Dry
+Arizona mesonet,22,Queen Creek,Rural,33.193943,-111.532582,462,-7,2015,2019,Dry
+Arizona mesonet,15,Phoenix Encanto,Urban,33.478443,-112.098046,334,-7,2015,2019,Dry
+Arizona mesonet,26,Buckeye,Rural,33.409193,-112.677836,301,-7,2015,2019,Dry
+Arizona mesonet,12,Phoenix Greenway,Urban,33.623279,-112.107687,403,-7,2015,2019,Dry
+Arizona mesonet,26,Buckeye,Rural,33.409193,-112.677836,301,-7,2015,2019,Dry
+"Moyer and Hawkins, 2017",317,River7,Urban,40.275775,-76.86083333,123,-5,2014,2015,Inter
+"Moyer and Hawkins, 2017",330,River20,Rural,40.16898333,-76.95722222,138,-5,2014,2015,Inter
+"Moyer and Hawkins, 2017",312,River8,Urban,40.25738889,-76.86083333,109,-5,2014,2015,Inter
+"Moyer and Hawkins, 2017",330,River20,Rural,40.16898333,-76.95722222,138,-5,2014,2015,Inter
+"Moyer and Hawkins, 2017",326,River16,Urban,40.23974722,-76.925,123,-5,2014,2015,Inter
+"Moyer and Hawkins, 2017",330,River20,Rural,40.16898333,-76.95722222,138,-5,2014,2015,Inter
+"Moyer and Hawkins, 2017",328,River18,Urban,40.23285,-76.94583333,122,-5,2014,2015,Inter
+"Moyer and Hawkins, 2017",330,River20,Rural,40.16898333,-76.95722222,138,-5,2014,2015,Inter
+EPA AQS (USA),299510985,29_510_85,Urban,38.656429,-90.198348,150,-6,2015,2019,Inter
+Integrated Surface Database,72434753904,ST CHARLES CO SMARTT ARPT,Rural,38.92861,-90.42806,132.89,-6,2015,2019,Inter
+DWD Climate Data Center (Germany),75184926,Stuttgart (Neckartal),Urban,48.7896,9.2167,224,1,2009,2013,Inter
+DWD Climate Data Center (Germany),75183362,Mhlacker,Rural,48.9721,8.8734,244,1,2009,2013,Inter
+DWD Climate Data Center (Germany),75183379,Mnchen-Stadt,Urban,48.1631,11.5429,515,1,2015,2019,Inter
+DWD Climate Data Center (Germany),75181103,Ebersberg-Halbing,Rural,48.1003,11.9872,592,1,2015,2019,Inter
+DWD Climate Data Center (Germany),75182444,Jena (Sternwarte),Urban,50.9251,11.583,155,1,2015,2019,Inter
+DWD Climate Data Center (Germany),75187420,Naumburg/Saale-Kreipitzsch,Rural,51.1044,11.7112,246,1,2015,2019,Inter
+DWD Climate Data Center (Germany),7518399,Berlin-Alexanderplatz,Urban,52.5198,13.4057,36,1,2015,2018,Inter
+DWD Climate Data Center (Germany),7518410,Berlin-Kaniswall,Rural,52.404,13.7309,33,1,2015,2018,Inter
+DWD Climate Data Center (Germany),7518420,Berlin-Marzahn,Urban,52.5447,13.5598,60,1,2015,2019,Inter
+DWD Climate Data Center (Germany),75187389,Heckelberg,Rural,52.7461,13.8427,82,1,2015,2019,Inter
+DWD Climate Data Center (Germany),75181424,Frankfurt/Main-Westend,Urban,50.1269,8.6694,124,1,2015,2019,Inter
+DWD Climate Data Center (Germany),75184411,Schaafheim-Schlierbach,Rural,49.9195,8.9671,155,1,2015,2019,Inter
+Federal Office of Meteorology and Climatology MeteoSwiss,1923159,Zurich ,Urban,47.37793,8.56574,556,1,2017,2019,Inter
+Federal Office of Meteorology and Climatology MeteoSwiss,1923121,Runenberg,Rural,47.43457,7.87941,611,1,2017,2019,Inter
+Meteo France,6187085009,LIMOGES VILLE,Urban,45.82861111,1.2675,252,0,2017,2019,Inter
+Meteo France,6187089003,MAGNAC-LAVAL,Rural,46.20972222,1.186944444,246,0,2017,2019,Inter
+Meteo France,6125388002,MONTBELIARD,Urban,47.50361111,6.813333333,318,0,2012,2014,Inter
+Meteo France,6168062001,CARSPACH,Rural,47.63194444,7.212777778,332,0,2012,2014,Inter
+Meteo France,6167482001,STRASBOURG - BOTANIQUE,Urban,48.58194444,7.768888889,139,1,2017,2019,Inter
+Meteo France,6167124001,STRASBOURG-ENTZHEIM,Rural,48.54944444,7.640277778,150,1,2017,2019,Inter
+Meteo France,6175120006,BELLEVILLE PARC,Urban,48.87138889,2.384722222,80,0,2012,2014,Inter
+Meteo France,6177192002,FONTENAY-TRES,Rural,48.69166667,2.823888889,105,0,2012,2014,Inter
+Meteo France,6178621001,TRAPPES,Urban,48.77444444,2.009722222,167,0,2017,2019,Dry
+Meteo France,6191200002,DOURDAN,Rural,48.52611111,1.993055556,116,0,2017,2019,Dry
+Meteo France,6113001009,AIX EN PROVENCE,Urban,43.52944444,5.424444444,173,0,2017,2019,Dry
+Meteo France,6113091002,ST CANNAT,Rural,43.60055556,5.316944444,250,0,2017,2019,Dry
+Met Office (UK),2111525,SHEFFIELD,Urban,53.381,-1.48986,131,0,2015,2019,Inter
+Met Office (UK),211119204,GRINGLEY-ON-THE-HILL,Rural,53.4059,-0.88265,68,0,2015,2019,Inter
+Met Office (UK),211156424,WINTERBOURNE NO2,Urban,52.456,-1.92619,140,0,2015,2019,Inter
+Met Office (UK),2111595,CHURCH LAWFORD,Rural,52.3584,-1.32987,107,0,2015,2019,Inter
+Met Office (UK),211162084,BATTERSEA HELIPORT ,Urban,51.4691,-0.17782,5,0,2018,2019,Inter
+Integrated Surface Database,3684099999,ANDREWSFIELD,Rural,51.89611111,0.45055556,87,0,2018,2019,Dry
+Finnish meteorological institution,69101928,Rovaniemi railway station,Urban,66.49832,25.7088,85,2,2017,2019,Inter
+Integrated Surface Database,2845099999,ROVANIEMI,Rural,66.564822,25.830411,196.5,2,2017,2019,Inter
+Finnish meteorological institution,69101064,Pori railway station,Urban,61.47893,21.7832,9,1,2017,2019,Inter
+Finnish meteorological institution,69101291,KankaanpSS Niinisalo Airfield,Rural,61.83864,22.46368,123,1,2017,2019,Inter
+Swedish Meteorological and Hydrological Institute,192371420,Gsteborg A,Urban,57.7156,11.9924,3.038,1,2015,2019,Inter
+Swedish Meteorological and Hydrological Institute,192372420,Landvetter airport,Rural,57.6764,12.2919,154,1,2015,2019,Inter
+Swedish Meteorological and Hydrological Institute,192398230,Stockholm,Urban,59.3417,18.0549,43.133,1,2015,2019,Inter
+Swedish Meteorological and Hydrological Institute,192397100,Tullinge A,Rural,59.1785,17.9093,44.858,1,2015,2019,Inter
+Swedish Meteorological and Hydrological Institute,192397510,Uppsala Aut,Urban,59.8586,17.6253,13,1,2015,2019,Inter
+Swedish Meteorological and Hydrological Institute,192397530,Uppsala Flygplats,Rural,59.8953,17.5935,21,1,2015,2019,Inter
+Zentralanstalt fu?r Meteorologie und Geodynamik (Austria),121111060,LINZ-STADT,Urban,48.296389,14.285278,262,1,2017,2019,Inter
+Zentralanstalt fu?r Meteorologie und Geodynamik (Austria),121111002,ENNS,Rural,48.195833,14.450278,317,1,2017,2019,Inter
+Zentralanstalt fu?r Meteorologie und Geodynamik (Austria),121111238,GRAZ-STRASSGANG,Urban,47.046111,15.410278,357,1,2017,2019,Inter
+Zentralanstalt fu?r Meteorologie und Geodynamik (Austria),121111392,WORTERBERG,Rural,47.226111,16.096667,404,1,2017,2019,Inter
+Zentralanstalt fu?r Meteorologie und Geodynamik (Austria),121111090,WIEN-DONAUFELD,Urban,48.257222,16.431389,160,1,2017,2019,Inter
+Zentralanstalt fu?r Meteorologie und Geodynamik (Austria),121111085,ZWERNDORF,Rural,48.338056,16.831389,144,1,2017,2019,Inter
+The State Meteorological Agency of Spain (AEMET),191603705,GIRONA-PARC MIGDIA,Urban,41.97222222,2.819444444,76,0,2017,2019,Dry
+The State Meteorological Agency of Spain (AEMET),1916367,GIRONA/COSTA BRAVA,Rural,41.91166667,2.763333333,143,0,2017,2019,Dry
+The State Meteorological Agency of Spain (AEMET),191615181,LUGO-COL.FINGOI,Urban,42.99833333,-7.5525,442,-1,2017,2019,Dry
+The State Meteorological Agency of Spain (AEMET),19161505,LUGO/ROZAS,Rural,43.11138889,-7.4575,445,0,2017,2019,Dry
+Norwegian Meteorological Institute,1413190,SARPSBORG,Urban,59.2852,11.1128,57,1,2015,2019,Inter
+Norwegian Meteorological Institute,1413370,OSAKER,Rural,59.3193,11.0422,45,1,2015,2019,Inter
+Norwegian Meteorological Institute,14118700,OSLO - BLINDERN,Urban,59.9423,10.72,94,1,2015,2019,Inter
+Norwegian Meteorological Institute,1412650,AURSKOG II,Rural,59.9119,11.5801,128,1,2015,2019,Inter
+Norwegian Meteorological Institute,14118230,ALNA,Urban,59.9273,10.8352,90,1,2012,2015,Inter
+Norwegian Meteorological Institute,1412650,AURSKOG II,Rural,59.9119,11.5801,128,1,2012,2015,Inter
+Integrated Surface Database,1821137058,GEORGIEVSK,Urban,44.139,43.458,287.2,3,2017,2019,Inter
+Integrated Surface Database,1821137054,MINERAL'NYE VODY (37054-0),Rural,44.23333,43.06667,323,3,2017,2019,Inter
+Reliable Prognosis,1821127605,Moscow (Balchug),Urban,55.745,37.63,127,3,2015,2019,Inter
+Integrated Surface Database,37000899999,DOMODEDOVO,Rural,55.4088,37.9063,167,3,2015,2019,Inter
+Integrated Surface Database,2159225,PERTH METRO,Urban,-31.9192,115.8728,24.9,8,2015,2019,Dry
+Integrated Surface Database,2159053,PEARCE RAAF,Rural,-31.6669,116.0189,40,8,2015,2019,Dry
+Integrated Surface Database,21523090,KENT TOWN,Urban,-34.9211,138.6216,48,9,2015,2019,Dry
+Integrated Surface Database,21523122,ROSEWORTHY AG COLLEGE,Rural,-34.5106,138.6763,65,9,2015,2019,Dry
+Integrated Surface Database,21540913,BRISBANE,Urban,-27.4808,153.0389,8.1,10,2015,2019,Inter
+Integrated Surface Database,21540082,UNIVERSITY OF QUEENSLAND GATTON,Rural,-27.5436,152.3375,89,10,2015,2019,Inter
+Integrated Surface Database,21586104,SCORESBY RESEARCH INSTITUTE,Urban,-37.871,145.2561,80,10,2015,2019,Dry
+Integrated Surface Database,21587113,AVALON AIRPORT,Rural,-38.0287,144.4783,10.6,10,2015,2019,Dry
+Integrated Surface Database,21586071,MELBOURNE REGIONAL OFFICE,Urban,-37.8075,144.97,31.2,10,2012,2014,Dry
+Integrated Surface Database,21587113,AVALON AIRPORT,Rural,-38.0287,144.4783,10.6,10,2012,2014,Dry
+Government of Canada,301128051,WINNIPEG THE FORKS,Urban,49.888336,-97.129446,230,-6,2015,2019,Inter
+Government of Canada,301150897,KLEEFELD (MAFRI),Rural,49.517778,-96.901111,246.5,-6,2015,2019,Inter
+Government of Canada,301127377,STE-FOY (U. LAVAL),Urban,46.780278,-71.2875,91.4,-5,2015,2019,Inter
+Government of Canada,301127325,DESCHAMBAULT,Rural,46.690833,-71.971667,61,-5,2015,2019,Inter
+Government of Canada,301110761,MCTAVISH,Urban,45.504742,-73.579167,72.8,-5,2015,2019,Inter
+Government of Canada,301110843,LACADIE,Rural,45.293889,-73.349444,43.8,-5,2015,2019,Inter
+Government of Canada,301153760,PA DOWNSVIEW,Urban,43.780361,-79.467361,198.5,-5,2015,2015,Inter
+Government of Canada,301152638,PA ANGUS GLEN GOLF CLUB,Rural,43.908278,-79.323167,230.5,-5,2015,2015,Inter
+Government of Canada,301153758,PA YORK UNIVERSITY,Urban,43.775333,-79.509972,200.5,-5,2015,2015,Inter
+Government of Canada,301152638,PA ANGUS GLEN GOLF CLUB,Rural,43.908278,-79.323167,230.5,-5,2015,2015,Inter
+Government of Canada,301153759,PA HAMILTON SOCCER,Urban,43.251,-79.829556,93.5,-5,2015,2015,Inter
+Government of Canada,301152743,PA ATMOS FENWICK,Rural,43.051106,-79.365172,193,-5,2015,2015,Inter
+South Africa weather service,191568443,BLOEMFONTEIN - STAD,Urban,-29.1204,26.1874,1408,2,2012,2019,Inter
+South Africa weather service,191568447,GLEN COLLEGE AWS,Rural,-28.942,26.3258,1296,2,2012,2019,Inter
+South Africa weather service,191568255,RUSTENBURG,Urban,-25.6607,27.2322,1162,2,2012,2019,Inter
+South Africa weather service,191568254,BUFFELSPOORT II AGR,Rural,-25.7539,27.4828,1221,2,2012,2019,Inter
+TAHMO,200100370,Bamako-Ville,Urban,12.635845,-8.0225964,332,-1,2018,2019,Wet
+Integrated Surface Database,61291099999,SENOU,Rural,12.536179,-7.954428,380,-1,2018,2019,Wet
+TAHMO,200100393,"Kumasi SHS, Kumasi",Urban,6.660956,-1.581071,272,0,2018,2019,Inter
+TAHMO,200100050,"Bompata Presby SHS, Bompata",Rural,6.619158333,-1.052630556,204,0,2018,2019,Inter
+TAHMO,200100098,GMet HQ,Urban,5.6511025,-0.1645213,19,0,2018,2019,Inter
+TAHMO,200100248,"Osudoku SHTS, Asutsuare",Rural,6.075671,0.196261,41,0,2018,2019,Inter
+TAHMO,200100216,Makerere Synoptic,Urban,0.333542,32.56863,1244,2,2017,2019,Inter
+TAHMO,200100219,Butambala HQ,Rural,0.18395,32.13239,1223,2,2017,2019,Inter
+TAHMO,200100270,Kinyereri primary school,Urban,-6.84239,39.15676,96,3,2017,2019,Inter
+TAHMO,200100271,Visegese,Rural,-6.87985,39.02493,174,3,2017,2019,Inter
+National Meteorological Service (Argentina),10787345,CORDOBA OBSERVATORIO,Urban,-31.42076,-64.19826,425,-4,2015,2019,Inter
+National Meteorological Service (Argentina),10787344,CORDOBA AERO,Rural,-31.29663,-64.21185,495,-4,2015,2019,Inter
+Japan Meteorological Agency,100187426,Miyakonojo,Urban,31.73,131.081667,154,9,2017,2019,Wet
+Integrated Surface Database,47851099999,KAGOSHIMA,Rural,31.803397,130.719408,276.14,9,2017,2019,Wet
+Integrated Surface Database,76665099999,MORELIA  MICH.,Urban,19.721786,-101.182922,1913,-7,2015,2019,Inter
+Integrated Surface Database,76665599999,GENERAL FRANCISCO J MUJICA INTL,Rural,19.849944,-101.0255,1838.85,-7,2015,2019,Inter
+Integrated Surface Data,17069099999,ADAPAZARI,Urban,40.767573,30.393406,30,2,2015,2019,Dry
+Integrated Surface Data,17200599999,TOPEL,Rural,40.735028,30.083336,55.47,2,2015,2019,Dry
+Integrated Surface Data,48450099999,KANCHANA BURI,Urban,14.0225,99.535833,29,7,2010,2019,Inter
+Integrated Surface Data,48451099999,NAKHONPATHOM,Rural,14.016667,99.966667,10,7,2010,2019,Inter
+Integrated Surface Data,48455099999,BANGKOK METROPOLIS,Urban,13.726389,100.56,4,7,2010,2019,Wet
+Integrated Surface Data,48451099999,NAKHONPATHOM,Rural,14.016667,99.966667,10,7,2010,2019,Inter
+Integrated Surface Data,47156099999,GWANGJU,Urban,35.17294,126.89158,74,8,2015,2019,Wet
+Integrated Surface Data,47172099999,GOCHANG,Rural,35.348889,126.598889,55,8,2015,2019,Wet
+National Institute of Meteorology (Brazil),2181101,MANAUS,Urban,-3.103682,-60.015461,48.79,-4,2015,2019,Wet
+National Institute of Meteorology (Brazil),2181125,RIO URUBU,Rural,-2.633654,-59.600582,112.84,-4,2015,2019,Wet
+National Institute of Meteorology (Brazil),2181307,PETROLINA,Urban,-9.388323,-40.523262,372.72,-3,2015,2019,Inter
+National Institute of Meteorology (Brazil),2181448,CURACA,Rural,-9.0013,-39.9124,370,-3,2015,2019,Inter
+National Institute of Meteorology (Brazil),2181707,PRESIDENTE PRUDENTE,Urban,-22.119867,-51.408637,431.92,-3,2015,2019,Wet
+National Institute of Meteorology (Brazil),2181718,RANCHARIA,Rural,-22.372832,-50.97471,398.75,-3,2015,2019,Wet
+National Institute of Meteorology (Brazil),2181835,MARINGA,Urban,-23.405357,-51.932828,548.51,-3,2015,2019,Inter
+Integrated Surface Data,83767099999,REGIONAL DE MARINGA SILVIO NAME JUNIOR,Rural,-23.476392,-52.016406,544.98,-3,2015,2019,Inter
+National Institute of Meteorology (Brazil),2181714,ITAPEVA,Urban,-23.981918,-48.885818,743.33,-3,2015,2019,Inter
+National Institute of Meteorology (Brazil),2181715,SAO MIGUEL ARCANJO,Rural,-23.852022,-48.164817,675.68,-3,2015,2019,Wet
+National Institute of Meteorology (Brazil),2181807,CURITIBA,Urban,-25.448688,-49.230602,922.91,-3,2016,2019,Inter
+National Institute of Meteorology (Brazil),2182806,COLOMBO,Rural,-25.322464,-49.157733,950,-3,2016,2019,Wet
+National Institute of Meteorology (Mexico),130551998,GUADALAJARA,Urban,20.706497,-103.392389,1551,-7,2013,2018,Wet
+National Institute of Meteorology (Mexico),1305513129,LA PRIMAVERA,Rural,20.676111,-103.643889,1468,-7,2013,2018,Wet
+National Institute of Meteorology (Mexico),1305519195,PUEBLA,Urban,19.054878,-98.163333,2179,-7,2015,2018,Inter
+Integrated Surface Data,76685099999,HERMANOS SERDAN INTL,Rural,19.158144,-98.371447,2243.63,-7,2015,2018,Inter
+National Institute of Meteorology (Mexico),1305519261,VILLAHERMOSA,Urban,17.980978,-92.921467,6.5,-6,2013,2018,Wet
+Integrated Surface Data,76743399999,C P A CARLOS ROVIROSA INTL,Rural,17.983333,-92.816667,14.02,-6,2013,2018,Wet
+Chilean Meteorological Directorate,308330020,"Quinta Normal, Santiago",Urban,-33.444999,-70.682777,534,-5,2018,2019,Dry
+Integrated Surface Data,85574099999,ARTURO MERINO BENITEZ INTL,Rural,-33.39408,-70.801533,473.96,-5,2018,2019,Dry
+Chilean Meteorological Directorate,308330114,Saint Paul - DASA,Urban,-33.442221,-70.746666,490,-5,2018,2019,Dry
+Integrated Surface Data,85574099999,ARTURO MERINO BENITEZ INTL,Rural,-33.39408,-70.801533,473.96,-5,2018,2019,Dry
+China Meteorological Administration,54337,54337,Urban,41.140278,121.122222,65.9,8,2009,2013,Inter
+China Meteorological Administration,54453,54453,Rural,40.872778,120.960278,38.9,8,2009,2013,Inter
+China Meteorological Administration,54619,54619,Urban,38.925,116.915278,5.5,8,2009,2013,Inter
+China Meteorological Administration,54612,54612,Rural,38.846389,116.455833,4.3,8,2009,2013,Inter
+China Meteorological Administration,54749,54749,Urban,37.185,119.944444,48.4,8,2009,2013,Inter
+China Meteorological Administration,54755,54755,Rural,37.328333,120.386944,117.8,8,2009,2013,Inter
+China Meteorological Administration,54940,54940,Urban,35.749722,119.205556,148.2,8,2009,2013,Inter
+China Meteorological Administration,54848,54848,Rural,35.963333,119.484722,109,8,2009,2013,Inter
+China Meteorological Administration,54939,54939,Urban,35.168889,118.821944,113.8,8,2009,2013,Inter
+China Meteorological Administration,54938,54938,Rural,35.245833,118.423611,124,8,2009,2013,Inter
+China Meteorological Administration,54918,54918,Urban,35.6,116.973333,62.3,8,2009,2013,Inter
+China Meteorological Administration,54912,54912,Rural,35.765,116.505556,41.8,8,2009,2013,Inter
+China Meteorological Administration,53580,53580,Urban,39.834722,113.098889,1044.6,8,2009,2013,Inter
+China Meteorological Administration,53487,53487,Rural,40.078333,113.409444,1052.6,8,2009,2013,Inter
+China Meteorological Administration,57081,57081,Urban,34.793056,113.3975,140.9,8,2009,2013,Inter
+China Meteorological Administration,53989,53989,Rural,35.082778,113.982222,75.9,8,2009,2013,Inter
+China Meteorological Administration,57093,57093,Urban,34.841389,114.825,73.3,8,2009,2013,Inter
+China Meteorological Administration,57191,57191,Rural,34.514167,114.469722,64.2,8,2009,2013,Inter
+China Meteorological Administration,57193,57193,Urban,33.783611,114.519167,52.6,8,2009,2013,Inter
+China Meteorological Administration,57198,57198,Rural,33.495,114.564444,44.6,8,2009,2013,Inter
+China Meteorological Administration,57195,57195,Urban,33.611667,114.631667,46.6,8,2009,2013,Inter
+China Meteorological Administration,57198,57198,Rural,33.495,114.564444,44.6,8,2009,2013,Inter
+China Meteorological Administration,57156,57156,Urban,33.308611,111.486667,250.3,7,2009,2013,Inter
+China Meteorological Administration,57169,57169,Rural,33.153611,111.888889,221.2,7,2009,2013,Inter
+China Meteorological Administration,58453,58453,Urban,30.072127,120.509443,7.9,8,2009,2013,Inter
+China Meteorological Administration,58553,58553,Rural,30.054167,120.814167,6.4,8,2009,2013,Inter
+China Meteorological Administration,59469,59469,Urban,22.164444,111.786944,37.7,7,2009,2013,Wet
+China Meteorological Administration,59477,59477,Rural,22.265833,112.230556,69.3,7,2009,2013,Wet
+China Meteorological Administration,59075,59075,Urban,24.473056,112.631944,70.5,8,2009,2013,Wet
+China Meteorological Administration,59072,59072,Rural,24.810833,112.370833,131.7,8,2009,2013,Wet
+China Meteorological Administration,57868,57868,Urban,26.594722,111.857222,113.2,7,2009,2013,Inter
+China Meteorological Administration,57865,57865,Rural,26.495556,111.616111,192.8,7,2009,2013,Inter
+China Meteorological Administration,57688,57688,Urban,28.156111,113.630556,101.1,8,2009,2013,Inter
+China Meteorological Administration,57679,57679,Rural,28.211667,113.197222,101.4,8,2009,2013,Inter
+China Meteorological Administration,57469,57469,Urban,30.176944,111.773611,69.5,7,2009,2013,Inter
+China Meteorological Administration,57465,57465,Rural,30.362222,111.431944,120.1,7,2009,2013,Inter
+China Meteorological Administration,57957,57957,Urban,25.3225,110.304722,164.4,7,2009,2013,Wet
+China Meteorological Administration,57958,57958,Rural,25.078611,110.309722,151.3,7,2009,2013,Wet
+China Meteorological Administration,56783,56783,Urban,25.501667,103.799444,1906.2,7,2009,2013,Wet
+China Meteorological Administration,56790,56790,Rural,25.675833,104.242222,1925.8,7,2009,2013,Wet
+China Meteorological Administration,57816,57816,Urban,26.589167,106.7275,1223.8,7,2009,2013,Wet
+China Meteorological Administration,57811,57811,Rural,26.836715,106.600397,1296.7,7,2009,2013,Inter
+China Meteorological Administration,56092,56092,Urban,34.994444,104.646667,1728.2,7,2009,2013,Inter
+China Meteorological Administration,53908,53908,Rural,35.208611,105.228333,1769.8,7,2009,2013,Inter
+China Meteorological Administration,54502,54502,Urban,39.475,116.035,29.3,8,2009,2013,Inter
+China Meteorological Administration,54518,54518,Rural,39.168611,116.392778,8.9,8,2009,2013,Inter
+China Meteorological Administration,54339,54339,Urban,41.090278,122.999444,77.3,8,2009,2013,Inter
+China Meteorological Administration,54336,54336,Rural,41.417222,122.430278,8.3,8,2009,2013,Inter
+China Meteorological Administration,59480,59480,Urban,22.848611,113.244167,21.4,8,2009,2013,Wet
+China Meteorological Administration,59287,59287,Rural,23.21,113.482222,70.7,8,2009,2013,Wet
+China Meteorological Administration,54823,54823,Urban,36.601944,117.008056,170.3,8,2009,2013,Inter
+China Meteorological Administration,54816,54816,Rural,36.524167,116.796944,98.9,8,2009,2013,Inter
+China Meteorological Administration,54846,54846,Urban,36.385278,119.736111,51.5,8,2009,2013,Inter
+China Meteorological Administration,54849,54849,Rural,36.220792,120.03145,84.4,8,2009,2013,Inter
+China Meteorological Administration,54905,54905,Urban,35.589167,115.927222,46.2,8,2009,2013,Inter
+China Meteorological Administration,54912,54912,Rural,35.765,116.505556,41.8,8,2009,2013,Inter
+China Meteorological Administration,53868,53868,Urban,36.061667,111.493889,449.5,7,2009,2013,Inter
+China Meteorological Administration,53866,53866,Rural,36.226667,111.659722,462.8,7,2009,2013,Inter
+China Meteorological Administration,54526,54526,Urban,39.083611,117.338056,1.9,8,2009,2013,Inter
+China Meteorological Administration,54518,54518,Rural,39.168611,116.392778,8.9,8,2009,2013,Inter
+China Meteorological Administration,57388,57388,Urban,31.263889,113.693333,53.7,8,2009,2013,Inter
+China Meteorological Administration,57381,57381,Rural,31.619167,113.338611,106.5,8,2009,2013,Inter
+China Meteorological Administration,57678,57678,Urban,28.251389,112.543611,74.7,8,2009,2013,Inter
+China Meteorological Administration,57773,57773,Rural,27.875556,112.8275,63.8,8,2009,2013,Inter
+China Meteorological Administration,59284,59284,Urban,23.420278,113.236667,38.9,8,2009,2013,Wet
+China Meteorological Administration,59287,59287,Rural,23.21,113.482222,70.7,8,2009,2013,Wet
+China Meteorological Administration,53998,53998,Urban,35.193333,114.654722,61.6,8,2009,2013,Inter
+China Meteorological Administration,53992,53992,Rural,35.658663,114.516401,58.2,8,2009,2013,Inter
+National Institute of Meteorology (Mexico),1305513266,ZACATECAS,Urban,22.746667,-102.506111,2270,-7,2012,2019,Inter
+Integrated Surface Data,76525599999,GENERAL LEOBARDO C RUIZ INTL,Rural,22.897112,-102.68689,2176.57,-7,2012,2019,Inter
+Birmingham Urban Climate Lab,W006,W006,Urban,52.5045,-1.92291,132,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W007,W007,Urban,52.4899,-1.90248,134,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W008,W008,Urban,52.4361,-1.96937,168,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W010,W010,Urban,52.4775,-1.92939,157,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W012,W012,Urban,52.4209,-1.91201,134,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W013,W013,Urban,52.4725,-1.90111,125,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W014,W014,Urban,52.4161,-1.84386,141,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W015,W015,Urban,52.5118,-1.83008,98,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W016,W016,Urban,52.4452,-1.82001,130,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W017,W017,Urban,52.4827,-1.78627,101,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W018,W018,Urban,52.4925,-1.80763,100,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W019,W019,Urban,52.4964,-1.87332,110,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W020,W020,Urban,52.525,-1.8502,140,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Birmingham Urban Climate Lab,W027,W027,Urban,52.4429,-1.88521,158,0,2013,2014,Inter
+Birmingham Urban Climate Lab,W002,W002,Rural,52.3948,-2.06238,187,0,2012,2014,Inter
+Thai Meteorological Department,21047001301,BANG NA AGROMET,Urban,13.666389,100.606111,3,7,2009,2019,Wet
+Thai Meteorological Department,27302001301,NAKHONPATHOM,Rural,14.011667,99.97,7.46,7,2009,2019,Inter
+Thai Meteorological Department,23201001201,SURIN,Urban,14.87611111,103.4961111,145.81,7,2009,2019,Wet
+Thai Meteorological Department,23201001301,SURIN AGROMET,Rural,14.883333,103.45,142.56,7,2009,2019,Wet
+Thai Meteorological Department,23001001201,NAKHON RATCHASIMA,Urban,14.97,102.0821944,186.6,7,2015,2019,Inter
+Integrated Surface Data,48431599999,NAKHON RATCHASIMA AIRPORT,Rural,14.9495,102.313,233.17,7,2015,2019,Inter
