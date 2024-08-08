@@ -6,8 +6,9 @@ def extract_variable(filename):
     patterns = ["UHI_diff_", "Double_Differencing_", "hw_nohw_diff_", "Delta_"]
     for pattern in patterns:
         if filename.startswith(pattern):
-            return filename.replace(pattern, "").split("_")[0]
-    return filename.split("_")[0]
+            filename = filename.replace(pattern, "")
+    return filename.split("_global")[0]
+
 
 def combine_images(var, input_dir, output_dir, time_of_day):
     print(f"Combining images for variable: {var}")
@@ -48,6 +49,8 @@ def combine_images(var, input_dir, output_dir, time_of_day):
             image = Image.open(file)
             image = image.resize((width, height))
             combined_image.paste(image, position)
+        else:
+             print(f"File {file} not found")
 
     # Save the combined image
     output_file = os.path.join(output_dir, f"combined_{var}_{time_of_day}.png")
@@ -57,9 +60,9 @@ def combine_images(var, input_dir, output_dir, time_of_day):
 if __name__ == "__main__":
     # Set up command-line arguments
     parser = argparse.ArgumentParser(description="Combine images for each variable.")
-    parser.add_argument("-i", "--input_dir", default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/plots/day",
+    parser.add_argument("-i", "--input_dir", default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/new_plots/day",
                         help="Input directory path")
-    parser.add_argument("-o", "--output_dir", default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/plots/day/combined_plots",
+    parser.add_argument("-o", "--output_dir", default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/new_plots/day/combined_plots",
                         help="Output directory path")
     parser.add_argument("-t", "--time_of_day", choices=["daytime", "nighttime"], default="daytime",
                         help="Time of day for the images (daytime or nighttime)")
