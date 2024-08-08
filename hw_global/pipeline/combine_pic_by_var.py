@@ -76,7 +76,8 @@ if __name__ == "__main__":
     for filename in os.listdir(args.input_dir):
         if filename.endswith(".png"):
             var = extract_variable(filename)
-            variables.add(var)
+            if not (var.endswith("U") or var.endswith("R")):
+                variables.add(var)
 
     print(f"Found {len(variables)} unique variables: {', '.join(variables)}\n")
 
