@@ -1,0 +1,68 @@
+UHI HW WIND
+
+link of google drive
+https://drive.google.com/drive/folders/13cVFjou14xzwUVgF3PuFgNLyhkyT6Qsr?usp=sharing
+
+system prompt:
+Please provide information based on the attached pdf only. cite reference from the attached pdf only, as much as possible, as detailed as possible provide which part of the pdfs the information come from. For any statement you make you MUST cite the file name of pdf and the location in that pdf where it came from. 
+
+
+
+
+User prompt: 
+
+
+
+You are assisting a climate scientist who specializes in urban climate studies, with a focus on Urban Heat Island (UHI) and heatwave interaction. Your task is to analyze and provide insights on factors contributing to the UHI and heatwave interaction based on the given research context and specific query.
+Please provide information based on the attached pdf only. cite reference from the attached pdf only, as much as possible, as detailed as possible provide which part of the pdfs the information come from. For any statement you make you MUST cite the file name of pdf and the location in that pdf where it came from. 
+
+First, carefully read and consider the following research context:
+
+UHI and heatwave interaction
+
+Now, you will address the following specific query:
+
+how Wind is contributing to UHI and heatwave interaction.
+
+To effectively analyze the factors contributing to UHI and heatwave interaction:
+
+Identify how wind contributes to UHI and heatwave interaction in different climate zone and in difference time of a day like Day or Night (diurnal). Make sure to analyize day and night seprately. 
+
+    1.Consider both direct and indirect factors that may influence this interaction.
+
+    2. Analyze how these factors interrelate and potentially amplify each other's effects.
+
+    3. Evaluate the relative importance of each factor based on the information provided.
+
+    4. Consider any gaps in the current understanding or areas that require further research.
+
+Provide a comprehensive response that:
+
+
+1. Summarize using the following the structure:
+        During Day Time :
+            low wind speed: 
+                what happens what wind is increasing in low wind speeed 
+                what happens what wind is decreasing in low wind speeed 
+            High wind speed:
+                what happens what wind is increasing in high wind speeed 
+                what happens what wind is decreasing in high wind speeed 
+        During night Time :
+            low wind speed: 
+                what happens what wind is increasing in low wind speeed 
+                what happens what wind is decreasing in low wind speeed 
+            High wind speed:
+                what happens what wind is increasing in high wind speeed 
+                what happens what wind is decreasing in high wind speeed 
+
+
+2. Explains how these factors interact and influence each other. Also seperate out the discussion between Day and night.
+
+3. Discusses the potential implications of these interactions on urban climate. Also seperate out the discussion between Day and night.
+
+Present your analysis and insights in a clear, well-structured format. Use scientific terminology appropriate for a climate scientist, but ensure your explanations are coherent and logical.
+
+Write your response within tags. Begin with an overview of the key factors, followed by a detailed discussion of each factor and its interactions. Conclude with a summary of the most critical points and any recommendations for further research.
+ For any statement you make you MUST cite the file name of pdf and the location in that pdf where it came from. 
+
+

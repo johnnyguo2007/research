@@ -1,0 +1,2050 @@
+{
+    "metadata": {
+        ".zattrs": {
+            "Conventions": "CF-1.0",
+            "Initial_conditions_dataset": "i.e215.I2000Clm50SpGs.hw_spinup.03.clm2.r.0021-01-01-00000.nc",
+            "PFT_physiological_constants_dataset": "clm5_params.c171117.nc",
+            "Surface_dataset": "surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "Time_constant_3Dvars": "ZSOI:DZSOI:WATSAT:SUCSAT:BSW:HKSAT:ZLAKE:DZLAKE",
+            "Time_constant_3Dvars_filename": "./i.e215.I2000Clm50SpGs.hw_production.02.clm2.h0.2013-01.nc",
+            "case_id": "i.e215.I2000Clm50SpGs.hw_production.02",
+            "case_title": "UNSET",
+            "cft_c3_crop": 1,
+            "cft_c3_irrigated": 2,
+            "comment": "NOTE: None of the variables are weighted by land fraction!",
+            "ctype_crop": 2,
+            "ctype_crop_noncompete": "2*100+m, m=cft_lb,cft_ub",
+            "ctype_deep_lake": 5,
+            "ctype_landice": 3,
+            "ctype_landice_multiple_elevation_classes": "4*100+m, m=1,glcnec",
+            "ctype_urban_impervious_road": 74,
+            "ctype_urban_pervious_road": 75,
+            "ctype_urban_roof": 71,
+            "ctype_urban_shadewall": 73,
+            "ctype_urban_sunwall": 72,
+            "ctype_vegetated_or_bare_soil": 1,
+            "ctype_wetland": 6,
+            "history": "created on 02/17/24 04:02:29",
+            "hostname": "JohnnyThinkStation",
+            "ltype_UNUSED": 3,
+            "ltype_crop": 2,
+            "ltype_deep_lake": 5,
+            "ltype_landice_multiple_elevation_classes": 4,
+            "ltype_urban_hd": 8,
+            "ltype_urban_md": 9,
+            "ltype_urban_tbd": 7,
+            "ltype_vegetated_or_bare_soil": 1,
+            "ltype_wetland": 6,
+            "revision_id": "$Id: histFileMod.F90 42903 2012-12-21 15:32:10Z muszala $",
+            "source": "Community Land Model CLM4.0",
+            "time_period_freq": "hour_1",
+            "title": "CLM History file information",
+            "username": "jguo",
+            "version": "release-cesm2.1.5"
+        },
+        ".zgroup": {
+            "zarr_format": 2
+        },
+        "APPAR_TEMP/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "APPAR_TEMP/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "2 m apparent temperature",
+            "units": "C"
+        },
+        "APPAR_TEMP_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "APPAR_TEMP_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural 2 m apparent temperature",
+            "units": "C"
+        },
+        "APPAR_TEMP_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "APPAR_TEMP_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban 2 m apparent temperature",
+            "units": "C"
+        },
+        "EFLX_LH_TOT/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "EFLX_LH_TOT/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "total latent heat flux [+ to atm]",
+            "units": "W/m^2"
+        },
+        "EFLX_LH_TOT_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "EFLX_LH_TOT_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural total evaporation",
+            "units": "W/m^2"
+        },
+        "EFLX_LH_TOT_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "EFLX_LH_TOT_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban total evaporation",
+            "units": "W/m^2"
+        },
+        "FGR/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FGR/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "heat flux into soil/snow including snow melt and lake / snow light transmission",
+            "units": "W/m^2"
+        },
+        "FGR_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FGR_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural heat flux into soil/snow including snow melt and snow light transmission",
+            "units": "W/m^2"
+        },
+        "FGR_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FGR_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban heat flux into soil/snow including snow melt",
+            "units": "W/m^2"
+        },
+        "FIRA/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FIRA/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "net infrared (longwave) radiation",
+            "units": "W/m^2"
+        },
+        "FIRA_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FIRA_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural net infrared (longwave) radiation",
+            "units": "W/m^2"
+        },
+        "FIRA_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FIRA_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban net infrared (longwave) radiation",
+            "units": "W/m^2"
+        },
+        "FIRE/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FIRE/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "emitted infrared (longwave) radiation",
+            "units": "W/m^2"
+        },
+        "FIRE_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FIRE_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural emitted infrared (longwave) radiation",
+            "units": "W/m^2"
+        },
+        "FIRE_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FIRE_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban emitted infrared (longwave) radiation",
+            "units": "W/m^2"
+        },
+        "FLDS/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FLDS/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "atmospheric longwave radiation (downscaled to columns in glacier regions)",
+            "units": "W/m^2"
+        },
+        "FSA/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FSA/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "absorbed solar radiation",
+            "units": "W/m^2"
+        },
+        "FSA_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FSA_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural absorbed solar radiation",
+            "units": "W/m^2"
+        },
+        "FSA_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FSA_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban absorbed solar radiation",
+            "units": "W/m^2"
+        },
+        "FSDS/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FSDS/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "atmospheric incident solar radiation",
+            "units": "W/m^2"
+        },
+        "FSH/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FSH/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "sensible heat not including correction for land use change and rain/snow conversion",
+            "units": "W/m^2"
+        },
+        "FSH_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FSH_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural sensible heat",
+            "units": "W/m^2"
+        },
+        "FSH_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "FSH_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban sensible heat",
+            "units": "W/m^2"
+        },
+        "HEAT_FROM_AC/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "HEAT_FROM_AC/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "sensible heat flux put into canyon due to heat removed from air conditioning",
+            "units": "W/m^2"
+        },
+        "HIA/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "HIA/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "2 m NWS Heat Index",
+            "units": "C"
+        },
+        "HIA_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "HIA_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural 2 m NWS Heat Index",
+            "units": "C"
+        },
+        "HIA_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "HIA_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban 2 m NWS Heat Index",
+            "units": "C"
+        },
+        "HW/.zarray": {
+            "chunks": [
+                96,
+                144,
+                2232
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                192,
+                288,
+                262800
+            ],
+            "zarr_format": 2
+        },
+        "HW/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lat",
+                "lon",
+                "time"
+            ]
+        },
+        "PBOT/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "PBOT/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "atmospheric pressure at surface (downscaled to columns in glacier regions)",
+            "units": "Pa"
+        },
+        "Q2M/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "Q2M/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "2m specific humidity",
+            "units": "kg/kg"
+        },
+        "Q2M_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "Q2M_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural 2m specific humidity",
+            "units": "kg/kg"
+        },
+        "Q2M_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "Q2M_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban 2m specific humidity",
+            "units": "kg/kg"
+        },
+        "QBOT/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "QBOT/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "atmospheric specific humidity (downscaled to columns in glacier regions)",
+            "units": "kg/kg"
+        },
+        "RAIN/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "RAIN/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "atmospheric rain, after rain/snow repartitioning based on temperature",
+            "units": "mm/s"
+        },
+        "SNOW/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "SNOW/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "atmospheric snow, after rain/snow repartitioning based on temperature",
+            "units": "mm/s"
+        },
+        "TBOT/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "TBOT/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "atmospheric air temperature (downscaled to columns in glacier regions)",
+            "units": "K"
+        },
+        "THBOT/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "THBOT/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "atmospheric air potential temperature (downscaled to columns in glacier regions)",
+            "units": "K"
+        },
+        "TSA/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "TSA/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "2m air temperature",
+            "units": "K"
+        },
+        "TSA_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "TSA_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural 2m air temperature",
+            "units": "K"
+        },
+        "TSA_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "TSA_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban 2m air temperature",
+            "units": "K"
+        },
+        "TSKIN/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "TSKIN/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "skin temperature",
+            "units": "K"
+        },
+        "TSKIN_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "TSKIN_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "skin temperature",
+            "units": "K"
+        },
+        "TSKIN_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "TSKIN_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "urban skin temperature",
+            "units": "K"
+        },
+        "U10/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "U10/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "10-m wind",
+            "units": "m/s"
+        },
+        "UBWI/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "UBWI/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ]
+        },
+        "UHI/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "UHI/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ]
+        },
+        "URBAN_HEAT/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "URBAN_HEAT/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "urban heating flux",
+            "units": "W/m^2"
+        },
+        "VAPOR_PRES/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "VAPOR_PRES/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "2 m vapor pressure",
+            "units": "Pa"
+        },
+        "VAPOR_PRES_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "VAPOR_PRES_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural 2 m vapor pressure",
+            "units": "Pa"
+        },
+        "VAPOR_PRES_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "VAPOR_PRES_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban 2 m vapor pressure",
+            "units": "Pa"
+        },
+        "WASTEHEAT/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "WASTEHEAT/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "sensible heat flux from heating/cooling sources of urban waste heat",
+            "units": "W/m^2"
+        },
+        "WBA/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "WBA/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "2 m Wet Bulb",
+            "units": "C"
+        },
+        "WBA_R/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "WBA_R/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Rural 2 m Wet Bulb",
+            "units": "C"
+        },
+        "WBA_U/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "WBA_U/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "Urban 2 m Wet Bulb",
+            "units": "C"
+        },
+        "WIND/.zarray": {
+            "chunks": [
+                2232,
+                96,
+                144
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 3,
+                "cname": "zstd",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800,
+                192,
+                288
+            ],
+            "zarr_format": 2
+        },
+        "WIND/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "cell_methods": "time: mean",
+            "long_name": "atmospheric wind velocity magnitude",
+            "units": "m/s"
+        },
+        "lat/.zarray": {
+            "chunks": [
+                192
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f4",
+            "fill_value": 9.999999616903162e+35,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                192
+            ],
+            "zarr_format": 2
+        },
+        "lat/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lat"
+            ],
+            "long_name": "coordinate latitude",
+            "missing_value": 9.999999616903162e+35,
+            "units": "degrees_north"
+        },
+        "lon/.zarray": {
+            "chunks": [
+                288
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f4",
+            "fill_value": 9.999999616903162e+35,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                288
+            ],
+            "zarr_format": 2
+        },
+        "lon/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lon"
+            ],
+            "long_name": "coordinate longitude",
+            "missing_value": 9.999999616903162e+35,
+            "units": "degrees_east"
+        },
+        "time/.zarray": {
+            "chunks": [
+                8760
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dimension_separator": ".",
+            "dtype": "<i8",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                262800
+            ],
+            "zarr_format": 2
+        },
+        "time/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time"
+            ],
+            "calendar": "proleptic_gregorian",
+            "units": "hours since 1985-01-01"
+        }
+    },
+    "zarr_consolidated_format": 1
+}

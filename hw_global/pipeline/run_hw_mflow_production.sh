@@ -60,7 +60,6 @@ run_experiment() {
 for hw_percentile in 98; do
     merged_file="updated_local_hour_adjusted_variables_HW${hw_percentile}.feather"
     
-    # for time_period in "Day" "Night"; do
     for time_period in "day" "night"; do
 
         echo "Running experiment for ${time_period}, HW${hw_percentile}"

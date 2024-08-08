@@ -4,10 +4,11 @@
 HW_COUNT_THRESHOLD=60
 
 # Set other parameters
-ITERATIONS=100000
+ITERATIONS=200000
 LEARNING_RATE=0.01
 DEPTH=10
 RUN_TYPE="Feature_Selection"
+
 
 # Function to run the experiment
 run_experiment() {
@@ -40,7 +41,7 @@ for hw_percentile in 95 90; do
         run_experiment $time_period $hw_percentile $merged_file
     done
 done
-
+# run_experiment "day" 95 "local_hour_adjusted_variables_HW95.feather"
 echo "All experiments completed."
 
 # parser.add_argument("--feature_column", type=str, default="X_vars2", help="Column name in df_daily_vars to select features")

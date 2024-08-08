@@ -1,0 +1,43 @@
+Loading and processing NetCDF data...
+Loading location data...
+Merging location data...
+Calculating heatwave 95 threshold days...
+Calculating heatwave 95 threshold days...
+Saving processed data to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary/hw_data.feather...
+Data saved successfully.
+
+Summary Statistics:
+--------------------
+DataFrame Info:
+<class 'pandas.core.frame.DataFrame'>
+Index: 46417050 entries, 0 to 46417049
+Data columns (total 13 columns):
+ #   Column       Dtype         
+---  ------       -----         
+ 0   time         datetime64[ns]
+ 1   lat          float32       
+ 2   lon          float32       
+ 3   TSA          float32       
+ 4   TSA_U        float32       
+ 5   TSA_R        float32       
+ 6   TREFMXAV_R   float32       
+ 7   HW           bool          
+ 8   location_ID  int64         
+ 9   HW95         bool          
+ 10  threshold95  float64       
+ 11  HW90         bool          
+ 12  threshold90  float64       
+dtypes: bool(3), datetime64[ns](1), float32(6), float64(2), int64(1)
+memory usage: 2.9 GB
+None
+
+Number of unique lat-lon pairs: 4239
+Number of unique lat-lon pairs with HW = 1: 3787
+
+Heatwave Ratios:
+--------------------
+HW ratio:  0.1957
+HW95 ratio: 0.0153
+HW90 ratio: 0.0417
+
+Processing complete.

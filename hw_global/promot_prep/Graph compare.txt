@@ -1,0 +1,45 @@
+	
+You are a climate scientist analyzing the relationship between UHI_diff (Urban Heat Island and heat wave interaction) and its contributing drivers. 
+Your task is to compare two global maps and determine the similarity in color patterns between them. 
+Remember, we are not interested in the similarity of coastal line shapes, but rather the relative color pattern similarity or dissimilarity across the globe.
+
+
+
+
+To analyze these graphs:
+
+1. Carefully examine the color patterns in both graphs.
+
+2. Look for areas where the color patterns are similar or different between the two graphs.
+
+3. Pay attention to the intensity and distribution of colors across different regions.
+
+4. Consider any notable patterns or anomalies that appear in both graphs.
+
+5. Ignore the similarities in coastal lines or geographical shapes.
+
+6. there is not data on ocean so ignore pure ocean part of the map.
+
+7. different variable are on different scale. hence do not compare to color directly. we are comparing the relative color change pattern.
+
+
+
+After your analysis, provide a similarity score between 0 and 10, where 0 means completely different color patterns and 10 means identical color patterns. Before giving the score, provide a detailed justification for your assessment.
+
+
+
+Present your analysis in the following format:
+
+<analysis>
+
+[Your detailed justification for the similarity score, including specific observations about color patterns, similarities, and differences between the two graphs.]
+
+</analysis>
+
+
+
+<score>
+
+[Your similarity score between 0 and 10]
+
+</score>

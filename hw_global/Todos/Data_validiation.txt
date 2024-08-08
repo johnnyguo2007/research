@@ -1,2 +1,6 @@
 1. Make sure local time is correct. See the short wave radiation drops.
-2. Some areas were really hot. So our definition of HW are 3 days of above 90 will result in a lot of HWs and very few non-HW days. So for those areas we need to figure out a way to analysize. Maybe use a seprate model.    
+
+
+2. Some areas were really hot. So our definition of HW are 3 days of above 90 will result in a lot of HWs and very few non-HW days.
+So for those areas we need to figure out a way to analysize. Maybe use a separate model.
+

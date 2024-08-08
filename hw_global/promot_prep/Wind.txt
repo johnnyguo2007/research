@@ -43,17 +43,17 @@ Provide a comprehensive response that:
         During Day Time :
             low wind speed: 
                 what happens what wind is increasing in low wind speeed 
-                what happens what wind is decreasing in low wind speeed 
+                
             High wind speed:
                 what happens what wind is increasing in high wind speeed 
-                what happens what wind is decreasing in high wind speeed 
+                
         During night Time :
             low wind speed: 
                 what happens what wind is increasing in low wind speeed 
-                what happens what wind is decreasing in low wind speeed 
+                
             High wind speed:
                 what happens what wind is increasing in high wind speeed 
-                what happens what wind is decreasing in high wind speeed 
+                
 
 
 2. Explains how these factors interact and influence each other. Also seperate out the discussion between Day and night.

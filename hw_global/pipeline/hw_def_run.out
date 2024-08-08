@@ -1,0 +1,41 @@
+Loading and processing Daily Feather data...
+Loading location data...
+Merging location data...
+Calculating heatwave 95 threshold days...
+Calculating heatwave 95 threshold days...
+Saving processed data to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/hw_data.feather...
+Data saved successfully.
+
+Summary Statistics:
+--------------------
+DataFrame Info:
+<class 'pandas.core.frame.DataFrame'>
+Index: 44865576 entries, 0 to 44865575
+Data columns (total 12 columns):
+ #   Column       Dtype         
+---  ------       -----         
+ 0   time         datetime64[ns]
+ 1   lat          float32       
+ 2   lon          float32       
+ 3   TSA          float32       
+ 4   TSA_U        float32       
+ 5   TSA_R        float32       
+ 6   TREFMXAV_R   float32       
+ 7   location_ID  int64         
+ 8   HW95         bool          
+ 9   threshold95  float64       
+ 10  HW90         bool          
+ 11  threshold90  float64       
+dtypes: bool(2), datetime64[ns](1), float32(6), float64(2), int64(1)
+memory usage: 2.8 GB
+None
+
+Number of unique lat-lon pairs: 4239
+Number of unique lat-lon pairs with HW95 = 1: 4239
+
+Heatwave Ratios:
+--------------------
+HW95 ratio: 0.0153
+HW90 ratio: 0.0418
+
+Processing complete.
