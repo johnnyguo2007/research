@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="Final"
+BASE_RUN_TYPE="DFreq"
 
 
 # Function to run the experiment
@@ -53,6 +53,7 @@ run_experiment() {
         --delta_column "${delta_column}" \
         --hw_nohw_diff_column "${hw_nohw_diff_column}" \
         --double_diff_column "${double_diff_column}" \
+        --daily_freq \
         --delta_mode "include"
 }
 
