@@ -293,6 +293,8 @@ parser.add_argument("--delta_mode", choices=["none", "include", "only"], default
                     help="'none': don't use delta variables, 'include': use both original and delta variables, 'only': use only delta variables")
 parser.add_argument("--feature_selection", action="store_true", help="If set, perform feature selection using RFECV")
 parser.add_argument("--num_features", type=int, default=None, help="Number of features to select using CatBoost's feature selection")
+parser.add_argument("--daily_freq", action="store_true",
+                    help="If set, data will be averaged by day before training the model.")
 
 args = parser.parse_args()
 
@@ -475,12 +477,21 @@ daytime_mask = local_hour_adjusted_df['local_hour'].between(7, 16)
 nighttime_mask = (
         local_hour_adjusted_df['local_hour'].between(20, 24) | local_hour_adjusted_df['local_hour'].between(0, 6))
 
+local_hour_adjusted_df['date'] = pd.to_datetime(local_hour_adjusted_df['local_time']).dt.date
 # Separate daytime and nighttime data
 print(f"Separating {args.time_period} data...")
 if args.time_period == "day":
     uhi_diff = local_hour_adjusted_df[daytime_mask]
 else:
     uhi_diff = local_hour_adjusted_df[nighttime_mask]
+
+if args.daily_freq:
+    print("Calculating daily average...")
+    # Subset the columns before grouping
+    uhi_diff = uhi_diff[daily_var_lst + ['UHI_diff', 'lat', 'lon', 'date']]
+
+    # Now perform the grouping and aggregation
+    uhi_diff = uhi_diff.groupby(['lat', 'lon', 'date']).mean().reset_index()
 
 X = uhi_diff[daily_var_lst]
 y = uhi_diff['UHI_diff']
