@@ -7,9 +7,15 @@ import shap
 import mlflow
 import logging
 
+# Configure logging to display information, warnings, and errors with timestamps
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_long_name(var_name, df_daily_vars):
+    """
+    Retrieve the long name for a given variable name from the dataframe.
+    If the variable name starts with 'delta_', it indicates a difference and the function
+    will return a modified long name indicating the difference.
+    """
     if df_daily_vars is None:
         logging.warning("df_daily_vars is None. Returning original var_name.")
         return var_name
@@ -29,10 +35,18 @@ def get_long_name(var_name, df_daily_vars):
             return f"{var_name} (No long name found)"
 
 def add_long_name(input_df, join_column='Feature', df_daily_vars=None):
+    """
+    Add a 'Long Name' column to the input dataframe by mapping the feature names
+    to their corresponding long names using the get_long_name function.
+    """
     input_df['Long Name'] = input_df[join_column].apply(lambda x: get_long_name(x, df_daily_vars))
     return input_df
 
 def get_shap_feature_importance(shap_values, feature_names, df_daily_vars):
+    """
+    Calculate the SHAP feature importance and return a dataframe with feature names,
+    their importance, and percentage contribution. Also, add long names to the features.
+    """
     shap_feature_importance = np.abs(shap_values).mean(axis=0)
     total_importance = np.sum(shap_feature_importance)
     shap_importance_df = pd.DataFrame({
@@ -45,6 +59,10 @@ def get_shap_feature_importance(shap_values, feature_names, df_daily_vars):
     return shap_importance_df
 
 def process_experiment(experiment_name):
+    """
+    Process a single experiment by loading the necessary data, calculating SHAP feature importance,
+    and generating plots and CSV files for the results.
+    """
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
         logging.error(f"Experiment '{experiment_name}' not found.")
@@ -104,6 +122,7 @@ def process_experiment(experiment_name):
 
     shap_feature_importance = get_shap_feature_importance(shap_values, feature_names, df_daily_vars)
 
+    # Create and save SHAP waterfall plot
     logging.info(f"Creating SHAP waterfall plot for {time_period}time...")
     plt.figure(figsize=(12, 0.5 * len(shap_feature_importance)))
     shap.waterfall_plot(
@@ -122,6 +141,7 @@ def process_experiment(experiment_name):
     logging.info(f"SHAP waterfall plot for {time_period}time saved to {waterfall_output_path}")
     plt.close()
 
+    # Create and save percentage contribution plot
     logging.info(f"Creating percentage contribution plot for {time_period}time...")
     plt.figure(figsize=(12, 0.5 * len(shap_feature_importance)))
     plt.barh(shap_feature_importance['Long Name'], shap_feature_importance['Percentage'], 
@@ -139,6 +159,7 @@ def process_experiment(experiment_name):
     logging.info(f"Percentage contribution plot for {time_period}time saved to {percentage_output_path}")
     plt.close()
 
+    # Save SHAP feature importance data to CSV
     shap_importance_path = os.path.join(artifact_uri, f'{time_period}_shap_feature_importance.csv')
     shap_feature_importance.to_csv(shap_importance_path, index=False)
     logging.info(f"SHAP feature importance data saved to {shap_importance_path}")
@@ -146,6 +167,10 @@ def process_experiment(experiment_name):
     return shap_feature_importance
 
 def main(prefix, hw_pct):
+    """
+    Main function to process multiple experiments based on the given prefix and hw_pct.
+    Combines the SHAP feature importance data from all processed experiments and saves it to an Excel file.
+    """
     mlflow.set_tracking_uri(uri="http://192.168.4.85:8080")
 
     experiments = mlflow.search_experiments()
@@ -184,4 +209,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(prefix=args.prefix, hw_pct=args.hw_pct)
-    

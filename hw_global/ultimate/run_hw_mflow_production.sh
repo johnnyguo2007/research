@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="Only_DD"
+BASE_RUN_TYPE="DD_No_Hour_No_FSA"
 
 
 # Function to run the experiment
@@ -26,19 +26,6 @@ run_experiment() {
     run_type="${BASE_RUN_TYPE}"
     exp_name_extra="HW${hw_percentile}_no_filter"
 
-    # python /home/jguo/research/hw_global/ultimate/mlflow_production_run.py \
-#    python /home/jguo/research/hw_global/ultimate/mlflow_feature_selection.py \
-#        --summary_dir /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.02/research_results/hw95_summary \
-#        --merged_feather_file $merged_file \
-#        --time_period $time_period \
-#        --iterations $ITERATIONS \
-#        --learning_rate $LEARNING_RATE \
-#        --depth $DEPTH \
-#        --run_type $RUN_TYPE \
-#        --exp_name_extra "Year_Lon_Lat_Direct_and_Delta_HW${hw_percentile}_no_filter" \
-#        --shap_calculation \
-#        --feature_column "X_Direct" \
-#        --delta_mode "include"
     python /home/jguo/research/hw_global/ultimate/mlflow_feature_selection.py \
         --summary_dir /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary \
         --merged_feather_file $merged_file \
@@ -53,7 +40,6 @@ run_experiment() {
         --delta_column "${delta_column}" \
         --hw_nohw_diff_column "${hw_nohw_diff_column}" \
         --double_diff_column "${double_diff_column}" \
-        --daily_freq \
         --delta_mode "include"
 }
 
@@ -61,7 +47,8 @@ run_experiment() {
 for hw_percentile in 98; do
     merged_file="updated_local_hour_adjusted_variables_HW${hw_percentile}.feather"
     
-    for time_period in "day" "night"; do
+    # for time_period in "day" "night"; do
+    for time_period in "day"; do
 
         echo "Running experiment for ${time_period}, HW${hw_percentile}"
         run_experiment "${time_period}" $hw_percentile $merged_file
@@ -70,7 +57,3 @@ for hw_percentile in 98; do
 done
 # run_experiment "day" 95 "local_hour_adjusted_variables_HW95.feather"
 echo "All experiments completed."
-
-# parser.add_argument("--feature_column", type=str, default="X_vars2", help="Column name in df_daily_vars to select features")
-# parser.add_argument("--delta_mode", choices=["none", "include", "only"], default="include", 
-#                     help="'none': don't use delta variables, 'include': use both original and delta variables, 'only': use only delta variables")

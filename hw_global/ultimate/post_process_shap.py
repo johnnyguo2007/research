@@ -1,3 +1,9 @@
+"""
+This script processes and visualizes SHAP (SHapley Additive exPlanations) values from MLflow experiments.
+It creates waterfall plots and percentage contribution plots to help interpret model predictions.
+"""
+
+# Standard library imports
 import os
 import numpy as np
 import pandas as pd
@@ -7,9 +13,20 @@ import mlflow
 import argparse
 import logging
 
+# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_long_name(var_name, df_daily_vars):
+    """
+    Convert variable names to their longer, more descriptive names.
+    
+    Args:
+        var_name (str): The short variable name
+        df_daily_vars (pd.DataFrame): DataFrame containing variable mappings
+    
+    Returns:
+        str: The descriptive long name for the variable
+    """
     if df_daily_vars is None:
         logging.warning("df_daily_vars is None. Returning original var_name.")
         return var_name
@@ -29,10 +46,32 @@ def get_long_name(var_name, df_daily_vars):
             return f"{var_name} (No long name found)"
 
 def add_long_name(input_df, join_column='Feature', df_daily_vars=None):
+    """
+    Add long descriptive names to a DataFrame based on the feature names.
+    
+    Args:
+        input_df (pd.DataFrame): Input DataFrame containing feature names
+        join_column (str): Column name containing the feature names
+        df_daily_vars (pd.DataFrame): DataFrame containing variable mappings
+    
+    Returns:
+        pd.DataFrame: DataFrame with added long names
+    """
     input_df['Long Name'] = input_df[join_column].apply(lambda x: get_long_name(x, df_daily_vars))
     return input_df
 
 def get_shap_feature_importance(shap_values, feature_names, df_daily_vars):
+    """
+    Calculate feature importance based on SHAP values.
+    
+    Args:
+        shap_values (np.array): SHAP values for all features
+        feature_names (list): List of feature names
+        df_daily_vars (pd.DataFrame): DataFrame containing variable mappings
+    
+    Returns:
+        pd.DataFrame: DataFrame containing feature importance metrics
+    """
     shap_feature_importance = np.abs(shap_values).mean(axis=0)
     total_importance = np.sum(shap_feature_importance)
     shap_importance_df = pd.DataFrame({
@@ -45,10 +84,16 @@ def get_shap_feature_importance(shap_values, feature_names, df_daily_vars):
     return shap_importance_df
 
 def main(experiment_name):
-    # Set up MLflow
+    """
+    Main function to process SHAP values and create visualizations.
+    
+    Args:
+        experiment_name (str): Name of the MLflow experiment to analyze
+    """
+    # Set up MLflow connection
     mlflow.set_tracking_uri(uri="http://192.168.4.85:8080")
 
-    # Get the experiment by name
+    # Retrieve experiment information
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
         logging.error(f"Experiment '{experiment_name}' not found.")
@@ -158,6 +203,7 @@ def main(experiment_name):
 
     
 if __name__ == "__main__":
+    # Set up command line argument parsing
     parser = argparse.ArgumentParser(description="Generate and save SHAP feature importance plot based on experiment name.")
     parser.add_argument("--experiment_name", type=str, required=True, help="Name of the MLflow experiment.")
 
