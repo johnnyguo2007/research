@@ -562,6 +562,10 @@ mlflow.log_artifact(feature_importance_path)
 print(f"Saved feature_importance data to {feature_importance_path}")
 
 # SHAP-related calculations and plotting
+# Assuming original_training_features should be the columns of the training data
+original_training_features = X_selected.columns.tolist()
+
+# SHAP-related calculations and plotting
 if args.shap_calculation:
     print("Starting SHAP calculations...")
 
@@ -578,7 +582,18 @@ if args.shap_calculation:
     # Create a Pool with filtered data
     full_pool_filtered = Pool(X_selected_filtered, y)
 
-    # Get SHAP values using the filtered Pool
+    # Before SHAP calculation, ensure local_hour is included
+    features = [...] # your feature list
+    if 'local_hour' in original_training_features:
+        # Keep local_hour in the features list
+        full_pool_filtered = pool.slice(features)
+    else:
+        # If you must exclude it, retrain the model without it first
+        features.remove('local_hour')
+        # Retrain model with updated feature set
+        model.fit(train_data[features])
+
+    # Then calculate SHAP values
     shap_values = model.get_feature_importance(full_pool_filtered, type='ShapValues')[:, :-1]
 
     # Save SHAP values and feature names
