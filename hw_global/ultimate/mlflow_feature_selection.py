@@ -91,16 +91,12 @@ def combine_slopes(daytime_df, nighttime_df, features, labels=['UHI', 'UHI_diff'
     results_df = pd.DataFrame(data, index=columns).transpose()
     return results_df
 
-
-def get_feature_group(feature_name, df_daily_vars):
-    if feature_name.startswith('delta_'):
-        return feature_name.replace('delta_', '')
-    elif feature_name.startswith('hw_nohw_diff_'):
-        return feature_name.replace('hw_nohw_diff_', '')
-    elif feature_name.startswith('Double_Differencing_'):
-        return feature_name.replace('Double_Differencing_', '')
-    else:
-        return feature_name
+def get_feature_group(feature_name):
+    prefixes = ['delta_', 'hw_nohw_diff_', 'Double_Differencing_']
+    for prefix in prefixes:
+        if feature_name.startswith(prefix):
+            return feature_name.replace(prefix, '')
+    return feature_name
 
 
 def train_and_evaluate(time_uhi_diff, daily_var_lst, feature_groups, model_name, iterations, learning_rate, depth,
@@ -508,7 +504,7 @@ sorted_results_df.to_csv(sorted_results_path)
 mlflow.log_artifact(sorted_results_path)
 print(f"Saved sorted results to {sorted_results_path}")
 
-feature_groups = [get_feature_group(feature, df_daily_vars) for feature in daily_var_lst]
+feature_groups = [get_feature_group(feature) for feature in daily_var_lst]
 
 print("Training the model...")
 model, selected_features, X_selected = train_and_evaluate(uhi_diff, daily_var_lst=daily_var_lst, feature_groups=feature_groups,
@@ -618,7 +614,7 @@ if args.shap_calculation:
         return shap_importance_df
 
     shap_feature_importance = get_shap_feature_importance(shap_values, full_pool.get_feature_names(), df_daily_vars)
-    shap_feature_importance['Feature Group'] = shap_feature_importance['Feature'].apply(lambda x: get_feature_group(x, df_daily_vars))
+    shap_feature_importance['Feature Group'] = shap_feature_importance['Feature'].apply(lambda x: get_feature_group(x))
 
     shap_feature_importance_by_group = shap_feature_importance.groupby('Feature Group')['Importance'].sum().reset_index()
 
