@@ -58,6 +58,16 @@ def get_shap_feature_importance(shap_values, feature_names, df_daily_vars):
     shap_importance_df = add_long_name(shap_importance_df, join_column='Feature', df_daily_vars=df_daily_vars)
     return shap_importance_df
 
+def get_feature_group(feature_name):
+    """
+    Extracts the feature group from the feature name.
+    """
+    prefixes = ['delta_', 'hw_nohw_diff_', 'Double_Differencing_']
+    for prefix in prefixes:
+        if feature_name.startswith(prefix):
+            return feature_name.replace(prefix, '')
+    return feature_name
+
 def process_experiment(experiment_name):
     """
     Process a single experiment by loading the necessary data, calculating SHAP feature importance,
@@ -66,19 +76,19 @@ def process_experiment(experiment_name):
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
         logging.error(f"Experiment '{experiment_name}' not found.")
-        return None
+        return None, None
     experiment_id = experiment.experiment_id
 
     runs = mlflow.search_runs(experiment_ids=[experiment_id], order_by=["start_time desc"], max_results=1)
     if len(runs) == 0:
         logging.error(f"No runs found in experiment '{experiment_name}'. Please check the experiment name and make sure it contains runs.")
-        return None
+        return None, None
 
     run = runs.iloc[0]
     run_id = run.run_id
 
     artifact_uri = mlflow.get_run(run_id).info.artifact_uri
-    artifact_uri = artifact_uri.replace("mlflow-artifacts:", "/home/jguo/research/hw_global/mlartifacts")
+    artifact_uri = artifact_uri.replace("mlflow-artifacts:", "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts")
 
     df_daily_vars_path = os.path.join(artifact_uri, "hourlyDataSchema.xlsx")
     if os.path.exists(df_daily_vars_path):
@@ -101,7 +111,7 @@ def process_experiment(experiment_name):
         logging.info(f"Loaded shap_values from {shap_values_path}")
     else:
         logging.error(f"shap_values file not found at {shap_values_path}")
-        return None
+        return None, None
 
     feature_names_path = os.path.join(artifact_uri, "feature_names.txt")
     if os.path.exists(feature_names_path):
@@ -110,7 +120,7 @@ def process_experiment(experiment_name):
         logging.info(f"Loaded feature_names from {feature_names_path}")
     else:
         logging.error(f"feature_names file not found at {feature_names_path}")
-        return None
+        return None, None
 
     X_path = os.path.join(artifact_uri, "X_data.feather")
     if os.path.exists(X_path):
@@ -120,25 +130,89 @@ def process_experiment(experiment_name):
         logging.warning(f"X_data file not found at {X_path}. Continuing without it.")
         X = None
 
+    # Calculate SHAP feature importance
     shap_feature_importance = get_shap_feature_importance(shap_values, feature_names, df_daily_vars)
 
-    # Create and save SHAP waterfall plot
-    logging.info(f"Creating SHAP waterfall plot for {time_period}time...")
-    plt.figure(figsize=(12, 0.5 * len(shap_feature_importance)))
+    # Calculate SHAP feature importance by group
+    shap_feature_importance['Feature Group'] = shap_feature_importance['Feature'].apply(lambda x: get_feature_group(x))
+    shap_feature_importance_by_group = shap_feature_importance.groupby('Feature Group')['Importance'].sum().reset_index()
+    total_importance = shap_feature_importance_by_group['Importance'].sum()
+    shap_feature_importance_by_group['Percentage'] = (shap_feature_importance_by_group['Importance'] / total_importance) * 100
+    shap_feature_importance_by_group.sort_values(by='Importance', ascending=False, inplace=True)
+
+    # Calculate group-level SHAP values and feature values
+    group_shap_values = []
+    group_feature_values = []
+    for group in shap_feature_importance_by_group['Feature Group']:
+        # Get features in this group
+        group_features = shap_feature_importance['Feature'][shap_feature_importance['Feature Group'] == group]
+        group_indices = [feature_names.index(feat) for feat in group_features]
+        
+        # Sum SHAP values for all features in the group
+        group_shap = shap_values[:, group_indices].sum(axis=1)
+        group_shap_values.append(group_shap)
+        
+        # Sum feature values for all features in the group
+        if X is not None:
+            group_feature_value = X.iloc[:, group_indices].sum(axis=1).values
+            group_feature_values.append(group_feature_value)
+    
+    group_shap_values = np.array(group_shap_values).T  # Transform to shape (n_samples, n_groups)
+    if X is not None:
+        group_feature_values = np.array(group_feature_values).T  # Transform to shape (n_samples, n_groups)
+    
+    # Create directory for feature group SHAP plots
+    feature_group_shap_dir = os.path.join(artifact_uri, 'feature_group_shap')
+    os.makedirs(feature_group_shap_dir, exist_ok=True)
+
+    # Save SHAP feature importance by group
+    shap_feature_importance_by_group_path = os.path.join(feature_group_shap_dir, f'{time_period}_shap_feature_importance_by_group.csv')
+    shap_feature_importance_by_group.to_csv(shap_feature_importance_by_group_path, index=False)
+    mlflow.log_artifact(shap_feature_importance_by_group_path)
+    logging.info(f"SHAP feature importance by group data saved to {shap_feature_importance_by_group_path}")
+
+    # Create and log SHAP waterfall plot by feature group
+    logging.info(f"Creating SHAP waterfall plot by feature group for {time_period}time...")
+    plt.figure(figsize=(12, 0.5 * len(shap_feature_importance_by_group)))
     shap.waterfall_plot(
         shap.Explanation(
-            values=shap_feature_importance['Importance'].values,
-            base_values=shap_values[:, -1].mean(),
-            data=X.iloc[0] if X is not None else None,
-            feature_names=shap_feature_importance['Long Name'].tolist()
+            values=shap_feature_importance_by_group['Importance'].values,
+            base_values=group_shap_values[:, -1].mean(),
+            data=None,
+            feature_names=shap_feature_importance_by_group['Feature Group'].tolist()
         ),
         show=False,
-        max_display=len(shap_feature_importance)
+        max_display=len(shap_feature_importance_by_group)
     )
-    plt.title(f'SHAP Waterfall Plot for {time_period.capitalize()}time')
-    waterfall_output_path = os.path.join(artifact_uri, f"post_process_{time_period}_shap_waterfall_plot.png")
-    plt.savefig(waterfall_output_path, dpi=300, bbox_inches='tight')
-    logging.info(f"SHAP waterfall plot for {time_period}time saved to {waterfall_output_path}")
+    plt.title(f'SHAP Waterfall Plot by Feature Group for {time_period.capitalize()}time')
+    waterfall_group_output_path = os.path.join(feature_group_shap_dir, f"post_process_{time_period}_shap_waterfall_plot_by_group.png")
+    plt.savefig(waterfall_group_output_path, dpi=300, bbox_inches='tight')
+    mlflow.log_artifact(waterfall_group_output_path)
+    logging.info(f"SHAP waterfall plot by feature group saved to {waterfall_group_output_path}")
+    plt.close()
+
+    # Create and log SHAP summary plot by feature group
+    logging.info(f"Creating SHAP summary plot by feature group for {time_period}time...")
+    plt.figure(figsize=(10, 8))
+    if X is not None:
+        shap.summary_plot(
+            group_shap_values,
+            group_feature_values,
+            feature_names=shap_feature_importance_by_group['Feature Group'].tolist(),
+            show=False
+        )
+    else:
+        # Fallback to plot without feature values if X is not available
+        shap.summary_plot(
+            group_shap_values,
+            feature_names=shap_feature_importance_by_group['Feature Group'].tolist(),
+            show=False
+        )
+    plt.title(f'SHAP Summary Plot by Feature Group for {time_period.capitalize()}time')
+    summary_group_output_path = os.path.join(feature_group_shap_dir, f"post_process_{time_period}_shap_summary_plot_by_group.png")
+    plt.savefig(summary_group_output_path, dpi=300, bbox_inches='tight')
+    mlflow.log_artifact(summary_group_output_path)
+    logging.info(f"SHAP summary plot by feature group saved to {summary_group_output_path}")
     plt.close()
 
     # Create and save percentage contribution plot
@@ -164,7 +238,7 @@ def process_experiment(experiment_name):
     shap_feature_importance.to_csv(shap_importance_path, index=False)
     logging.info(f"SHAP feature importance data saved to {shap_importance_path}")
 
-    return shap_feature_importance
+    return shap_feature_importance, shap_feature_importance_by_group
 
 def main(prefix, hw_pct):
     """
@@ -177,15 +251,19 @@ def main(prefix, hw_pct):
     filtered_experiments = [exp for exp in experiments if exp.name.startswith(prefix) and hw_pct in exp.name]
 
     all_shap_feature_importance = []
+    all_shap_feature_importance_by_group = []
 
     for experiment in filtered_experiments:
         experiment_name = experiment.name
         logging.info(f"Processing experiment: {experiment_name}")
 
-        shap_feature_importance = process_experiment(experiment_name)
+        shap_feature_importance, shap_feature_importance_by_group = process_experiment(experiment_name)
         if shap_feature_importance is not None:
             shap_feature_importance['ExperimentName'] = experiment_name
             all_shap_feature_importance.append(shap_feature_importance)
+
+            shap_feature_importance_by_group['ExperimentName'] = experiment_name
+            all_shap_feature_importance_by_group.append(shap_feature_importance_by_group)
 
     if len(all_shap_feature_importance) > 0:
         combined_shap_feature_importance = pd.concat(all_shap_feature_importance, ignore_index=True)
@@ -201,6 +279,16 @@ def main(prefix, hw_pct):
         logging.info(f"Combined shap_feature_importance saved to {output_path}")
     else:
         logging.warning("No shap_feature_importance data found in the processed experiments.")
+
+    if len(all_shap_feature_importance_by_group) > 0:
+        combined_shap_feature_importance_by_group = pd.concat(all_shap_feature_importance_by_group, ignore_index=True)
+        
+        # Save combined SHAP feature importance by group to Excel
+        shap_feature_importance_by_group_excel_path = f"combined_shap_feature_importance_by_group_{prefix}_{hw_pct}.xlsx"
+        combined_shap_feature_importance_by_group.to_excel(shap_feature_importance_by_group_excel_path, index=False)
+        logging.info(f"Combined SHAP feature importance by group saved to {shap_feature_importance_by_group_excel_path}")
+    else:
+        logging.warning("No SHAP feature importance by group data found in the processed experiments.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process SHAP feature importance for multiple experiments.')
