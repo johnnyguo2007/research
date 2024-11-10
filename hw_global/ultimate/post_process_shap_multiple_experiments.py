@@ -140,27 +140,45 @@ def process_experiment(experiment_name):
     shap_feature_importance_by_group['Percentage'] = (shap_feature_importance_by_group['Importance'] / total_importance) * 100
     shap_feature_importance_by_group.sort_values(by='Importance', ascending=False, inplace=True)
 
-    # Calculate group-level SHAP values and feature values
+    # Normalize feature values
+    if X is not None:
+        X_normalized = X.copy()
+        for col in X.columns:
+            max_val = X[col].max()
+            min_val = X[col].min()
+            range_val = max_val - min_val
+            if range_val == 0:
+                range_val = 1e-8  # Avoid division by zero
+            X_normalized[col] = (X[col] - min_val) / range_val
+        logging.info("Feature values normalized using min-max scaling.")
+    else:
+        X_normalized = None
+
+    # Calculate group-level SHAP values and normalized feature values
     group_shap_values = []
     group_feature_values = []
     for group in shap_feature_importance_by_group['Feature Group']:
         # Get features in this group
-        group_features = shap_feature_importance['Feature'][shap_feature_importance['Feature Group'] == group]
+        group_features = shap_feature_importance['Feature'][shap_feature_importance['Feature Group'] == group].tolist()
         group_indices = [feature_names.index(feat) for feat in group_features]
         
         # Sum SHAP values for all features in the group
         group_shap = shap_values[:, group_indices].sum(axis=1)
         group_shap_values.append(group_shap)
         
-        # Sum feature values for all features in the group
-        if X is not None:
-            group_feature_value = X.iloc[:, group_indices].sum(axis=1).values
+        # Sum normalized feature values for all features in the group
+        if X_normalized is not None:
+            group_feature_value = X_normalized.iloc[:, group_indices].sum(axis=1).values
             group_feature_values.append(group_feature_value)
-    
+        else:
+            group_feature_values.append(None)
+
     group_shap_values = np.array(group_shap_values).T  # Transform to shape (n_samples, n_groups)
-    if X is not None:
+    if X_normalized is not None:
         group_feature_values = np.array(group_feature_values).T  # Transform to shape (n_samples, n_groups)
-    
+    else:
+        group_feature_values = None
+
     # Create directory for feature group SHAP plots
     feature_group_shap_dir = os.path.join(artifact_uri, 'feature_group_shap')
     os.makedirs(feature_group_shap_dir, exist_ok=True)
@@ -194,7 +212,7 @@ def process_experiment(experiment_name):
     # Create and log SHAP summary plot by feature group
     logging.info(f"Creating SHAP summary plot by feature group for {time_period}time...")
     plt.figure(figsize=(10, 8))
-    if X is not None:
+    if X_normalized is not None:
         shap.summary_plot(
             group_shap_values,
             group_feature_values,

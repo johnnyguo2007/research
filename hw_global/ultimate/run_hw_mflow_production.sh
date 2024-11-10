@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="full_group"
+BASE_RUN_TYPE="Positive_No_Hour_full_group"
 
 
 # Function to run the experiment
