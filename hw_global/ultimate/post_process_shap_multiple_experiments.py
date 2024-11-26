@@ -68,6 +68,12 @@ def get_feature_group(feature_name):
             return feature_name.replace(prefix, '')
     return feature_name
 
+def save_and_log_artifact(filename, directory):
+    plt.gcf().set_size_inches(15, 10)  # Set consistent figure size
+    full_path = os.path.join(directory, filename)
+    plt.savefig(full_path)
+    plt.close()
+
 def process_experiment(experiment_name, exclude_features=None):
     """
     Process a single experiment by loading the necessary data, calculating SHAP feature importance,
@@ -136,13 +142,6 @@ def process_experiment(experiment_name, exclude_features=None):
     os.makedirs(post_process_shap_dir, exist_ok=True)
     os.makedirs(feature_group_shap_dir, exist_ok=True)
 
-    # When saving files, always use the full artifact path
-    def save_and_log_artifact(fig, filename, directory):
-        full_path = os.path.join(directory, filename)
-        fig.savefig(full_path)
-        # Remove the mlflow.log_artifact call since files are already in the artifact directory
-        plt.close()
-
     # Calculate SHAP feature importance
     shap_feature_importance = get_shap_feature_importance(shap_values, feature_names, df_daily_vars)
 
@@ -160,8 +159,7 @@ def process_experiment(experiment_name, exclude_features=None):
         show=False
     )
     summary_output_path = f"post_process_{time_period}_shap_summary_plot.png"
-    plt.gcf().set_size_inches(15, 10)
-    save_and_log_artifact(plt.gcf(), summary_output_path, post_process_shap_dir)
+    save_and_log_artifact(summary_output_path, post_process_shap_dir)
     plt.clf()
 
     # Generate SHAP value-based importance plot
@@ -177,8 +175,7 @@ def process_experiment(experiment_name, exclude_features=None):
     )
     plt.title(f'SHAP Value-based Importance Plot for {time_period.capitalize()}time')
     importance_output_path = f"post_process_{time_period}_shap_importance_plot.png"
-    plt.gcf().set_size_inches(15, 10)
-    save_and_log_artifact(plt.gcf(), importance_output_path, post_process_shap_dir)
+    save_and_log_artifact(importance_output_path, post_process_shap_dir)
     plt.clf()
 
     # Calculate SHAP feature importance by group
@@ -250,7 +247,7 @@ def process_experiment(experiment_name, exclude_features=None):
     )
     plt.title(f'SHAP Waterfall Plot by Feature Group for {time_period.capitalize()}time')
     waterfall_output_path = f"post_process_{time_period}_shap_waterfall_plot_by_group.png"
-    save_and_log_artifact(plt.gcf(), waterfall_output_path, feature_group_shap_dir)
+    save_and_log_artifact(waterfall_output_path, feature_group_shap_dir)
 
     # Create and log SHAP summary plot by feature group
     logging.info(f"Creating SHAP summary plot by feature group for {time_period}time...")
@@ -271,7 +268,7 @@ def process_experiment(experiment_name, exclude_features=None):
         )
     plt.title(f'SHAP Summary Plot by Feature Group for {time_period.capitalize()}time')
     summary_group_output_path = f"post_process_{time_period}_shap_summary_plot_by_group.png"
-    save_and_log_artifact(plt.gcf(), summary_group_output_path, feature_group_shap_dir)
+    save_and_log_artifact(summary_group_output_path, feature_group_shap_dir)
 
     # Create and save percentage contribution plot
     logging.info(f"Creating percentage contribution plot for {time_period}time...")
@@ -287,7 +284,7 @@ def process_experiment(experiment_name, exclude_features=None):
 
     plt.tight_layout()
     percentage_output_path = f"post_process_{time_period}_percentage_contribution_plot.png"
-    save_and_log_artifact(plt.gcf(), percentage_output_path, post_process_shap_dir)
+    save_and_log_artifact(percentage_output_path, post_process_shap_dir)
 
     # Save SHAP feature importance data to CSV
     shap_importance_path = os.path.join(post_process_shap_dir, f'{time_period}_shap_feature_importance.csv')
