@@ -153,8 +153,10 @@ def process_experiment(experiment_name, exclude_features=None):
     # plt.title(f'SHAP Summary Plot for Individual Features for {time_period.capitalize()}time')
     summary_output_path = f"post_process_{time_period}_shap_summary_plot.png"
     plt.gcf().set_size_inches(15, 10)  # Adjust figure size
-    mlflow.log_figure(plt.gcf(), os.path.join(post_process_shap_dir, summary_output_path))
-    plt.clf()  # Clear the current figure
+    plt.savefig(os.path.join(post_process_shap_dir, summary_output_path))
+    mlflow.log_artifact(os.path.join(post_process_shap_dir, importance_output_path))
+    plt.clf()
+    plt.close()
 
 
     # Generate SHAP value-based importance plot
