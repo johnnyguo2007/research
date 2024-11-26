@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import shap
 import mlflow
 import logging
+import matplotlib.ticker as mtick  # Added import for ticker
 
 # Configure logging to display information, warnings, and errors with timestamps
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -235,19 +236,34 @@ def process_experiment(experiment_name, exclude_features=None):
     # Create and log SHAP waterfall plot by feature group
     logging.info(f"Creating SHAP waterfall plot by feature group for {time_period}time...")
     plt.figure(figsize=(12, 0.5 * len(shap_feature_importance_by_group)))
+    
+    # Convert importance values to percentages
+    waterfall_values = shap_feature_importance_by_group['Percentage'].values
+    base_value = 0  # Start from 0% since we're showing percentages
+    
+    # Create waterfall plot
     shap.waterfall_plot(
         shap.Explanation(
-            values=shap_feature_importance_by_group['Importance'].values,
-            base_values=group_shap_values[:, -1].mean(),
+            values=waterfall_values,
+            base_values=base_value,
             data=None,
             feature_names=shap_feature_importance_by_group['Feature Group'].tolist()
         ),
         show=False,
         max_display=len(shap_feature_importance_by_group)
     )
+    
+    # Format x-axis to show percentage signs
+    ax = plt.gca()
+    # ax.xaxis.set_major_formatter(mtick.PercentFormatter())
+    
     plt.title(f'SHAP Waterfall Plot by Feature Group for {time_period.capitalize()}time')
+    plt.xlabel('Percentage Contribution')
+    
     waterfall_output_path = f"post_process_{time_period}_shap_waterfall_plot_by_group.png"
     save_and_log_artifact(waterfall_output_path, feature_group_shap_dir)
+    
+    plt.clf()
 
     # Create and log SHAP summary plot by feature group
     logging.info(f"Creating SHAP summary plot by feature group for {time_period}time...")
