@@ -68,10 +68,10 @@ def get_feature_group(feature_name):
             return feature_name.replace(prefix, '')
     return feature_name
 
-def process_experiment(experiment_name):
+def process_experiment(experiment_name, exclude_features=None):
     """
     Process a single experiment by loading the necessary data, calculating SHAP feature importance,
-    and generating plots and CSV files for the results.
+    and generating plots and CSV files for the results. Allows excluding certain features from the SHAP summary plot.
     """
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
@@ -130,8 +130,51 @@ def process_experiment(experiment_name):
         logging.warning(f"X_data file not found at {X_path}. Continuing without it.")
         X = None
 
+    # Create directory for post-process SHAP plots
+    post_process_shap_dir = 'post_process_shap'  # Remove the full path
+    os.makedirs(post_process_shap_dir, exist_ok=True)
+
     # Calculate SHAP feature importance
     shap_feature_importance = get_shap_feature_importance(shap_values, feature_names, df_daily_vars)
+
+    # Exclude specified features from the SHAP summary plot
+    if exclude_features:
+        shap_feature_importance = shap_feature_importance[~shap_feature_importance['Feature'].isin(exclude_features)]
+        logging.info(f"Excluding features from SHAP summary plot: {exclude_features}")
+
+    # Generate SHAP summary plot for individual features
+    logging.info(f"Creating SHAP summary plot for individual features for {time_period}time...")
+    shap.summary_plot(
+        shap_values[:, shap_feature_importance.index],
+        X.iloc[:, shap_feature_importance.index] if X is not None else None,
+        feature_names=shap_feature_importance['Feature'].tolist(),
+        show=False
+    )
+    # plt.title(f'SHAP Summary Plot for Individual Features for {time_period.capitalize()}time')
+    summary_output_path = f"post_process_{time_period}_shap_summary_plot.png"
+    plt.gcf().set_size_inches(15, 10)  # Adjust figure size
+    mlflow.log_figure(plt.gcf(), os.path.join(post_process_shap_dir, summary_output_path))
+    plt.clf()  # Clear the current figure
+
+
+    # Generate SHAP value-based importance plot
+    logging.info(f"Creating SHAP value-based importance plot for {time_period}time...")
+    plt.figure(figsize=(10, 8))
+    shap.waterfall_plot(
+        shap.Explanation(
+            values=shap_feature_importance['Importance'].values,
+            base_values=shap_values[:, -1].mean(),
+            feature_names=shap_feature_importance['Feature'].tolist()
+        ),
+        show=False
+    )
+    plt.title(f'SHAP Value-based Importance Plot for {time_period.capitalize()}time')
+    importance_output_path = f"post_process_{time_period}_shap_importance_plot.png"
+    plt.gcf().set_size_inches(15, 10)
+    plt.savefig(os.path.join(post_process_shap_dir, importance_output_path), dpi=300, bbox_inches='tight')
+    mlflow.log_artifact(os.path.join(post_process_shap_dir, importance_output_path))
+    plt.clf()
+    plt.close()
 
     # Calculate SHAP feature importance by group
     shap_feature_importance['Feature Group'] = shap_feature_importance['Feature'].apply(lambda x: get_feature_group(x))
@@ -180,14 +223,13 @@ def process_experiment(experiment_name):
         group_feature_values = None
 
     # Create directory for feature group SHAP plots
-    feature_group_shap_dir = os.path.join(artifact_uri, 'feature_group_shap')
+    feature_group_shap_dir = 'feature_group_shap'  # Remove the full path
     os.makedirs(feature_group_shap_dir, exist_ok=True)
 
     # Save SHAP feature importance by group
-    shap_feature_importance_by_group_path = os.path.join(feature_group_shap_dir, f'{time_period}_shap_feature_importance_by_group.csv')
-    shap_feature_importance_by_group.to_csv(shap_feature_importance_by_group_path, index=False)
-    mlflow.log_artifact(shap_feature_importance_by_group_path)
-    logging.info(f"SHAP feature importance by group data saved to {shap_feature_importance_by_group_path}")
+    group_csv_path = f'{time_period}_shap_feature_importance_by_group.csv'
+    shap_feature_importance_by_group.to_csv(os.path.join(feature_group_shap_dir, group_csv_path), index=False)
+    mlflow.log_artifact(os.path.join(feature_group_shap_dir, group_csv_path))
 
     # Create and log SHAP waterfall plot by feature group
     logging.info(f"Creating SHAP waterfall plot by feature group for {time_period}time...")
@@ -203,10 +245,9 @@ def process_experiment(experiment_name):
         max_display=len(shap_feature_importance_by_group)
     )
     plt.title(f'SHAP Waterfall Plot by Feature Group for {time_period.capitalize()}time')
-    waterfall_group_output_path = os.path.join(feature_group_shap_dir, f"post_process_{time_period}_shap_waterfall_plot_by_group.png")
-    plt.savefig(waterfall_group_output_path, dpi=300, bbox_inches='tight')
-    mlflow.log_artifact(waterfall_group_output_path)
-    logging.info(f"SHAP waterfall plot by feature group saved to {waterfall_group_output_path}")
+    waterfall_output_path = f"post_process_{time_period}_shap_waterfall_plot_by_group.png"
+    plt.savefig(os.path.join(feature_group_shap_dir, waterfall_output_path), dpi=300, bbox_inches='tight')
+    mlflow.log_artifact(os.path.join(feature_group_shap_dir, waterfall_output_path))
     plt.close()
 
     # Create and log SHAP summary plot by feature group
@@ -227,10 +268,9 @@ def process_experiment(experiment_name):
             show=False
         )
     plt.title(f'SHAP Summary Plot by Feature Group for {time_period.capitalize()}time')
-    summary_group_output_path = os.path.join(feature_group_shap_dir, f"post_process_{time_period}_shap_summary_plot_by_group.png")
-    plt.savefig(summary_group_output_path, dpi=300, bbox_inches='tight')
-    mlflow.log_artifact(summary_group_output_path)
-    logging.info(f"SHAP summary plot by feature group saved to {summary_group_output_path}")
+    summary_group_output_path = f"post_process_{time_period}_shap_summary_plot_by_group.png"
+    plt.savefig(os.path.join(feature_group_shap_dir, summary_group_output_path), dpi=300, bbox_inches='tight')
+    mlflow.log_artifact(os.path.join(feature_group_shap_dir, summary_group_output_path))
     plt.close()
 
     # Create and save percentage contribution plot
@@ -246,9 +286,9 @@ def process_experiment(experiment_name):
         plt.text(percentage, i, f' {percentage:.1f}%', va='center')
 
     plt.tight_layout()
-    percentage_output_path = os.path.join(artifact_uri, f"post_process_{time_period}_percentage_contribution_plot.png")
+    percentage_output_path = f"post_process_{time_period}_percentage_contribution_plot.png"
     plt.savefig(percentage_output_path, dpi=300, bbox_inches='tight')
-    logging.info(f"Percentage contribution plot for {time_period}time saved to {percentage_output_path}")
+    mlflow.log_artifact(percentage_output_path)
     plt.close()
 
     # Save SHAP feature importance data to CSV
@@ -258,7 +298,7 @@ def process_experiment(experiment_name):
 
     return shap_feature_importance, shap_feature_importance_by_group
 
-def main(prefix, hw_pct):
+def main(prefix, hw_pct, exclude_features):
     """
     Main function to process multiple experiments based on the given prefix and hw_pct.
     Combines the SHAP feature importance data from all processed experiments and saves it to an Excel file.
@@ -275,7 +315,7 @@ def main(prefix, hw_pct):
         experiment_name = experiment.name
         logging.info(f"Processing experiment: {experiment_name}")
 
-        shap_feature_importance, shap_feature_importance_by_group = process_experiment(experiment_name)
+        shap_feature_importance, shap_feature_importance_by_group = process_experiment(experiment_name, exclude_features)
         if shap_feature_importance is not None:
             shap_feature_importance['ExperimentName'] = experiment_name
             all_shap_feature_importance.append(shap_feature_importance)
@@ -312,6 +352,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process SHAP feature importance for multiple experiments.')
     parser.add_argument('--prefix', type=str, default='KG_SHAP', help='Prefix for filtering experiments (default: KG_SHAP)')
     parser.add_argument('--hw_pct', type=str, default='HW98', help='hw_pct name for filtering experiments (default: HW98)')
+    parser.add_argument('--exclude_features', nargs='*', default=[], help='List of features to exclude from SHAP summary plot')
     args = parser.parse_args()
 
-    main(prefix=args.prefix, hw_pct=args.hw_pct)
+    main(prefix=args.prefix, hw_pct=args.hw_pct, exclude_features=args.exclude_features)
