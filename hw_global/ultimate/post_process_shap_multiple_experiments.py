@@ -131,7 +131,7 @@ def process_experiment(experiment_name, exclude_features=None):
         X = None
 
     # Create directory for post-process SHAP plots
-    post_process_shap_dir = 'post_process_shap'  # Remove the full path
+    post_process_shap_dir = os.path.join(artifact_uri, 'post_process_shap')  
     os.makedirs(post_process_shap_dir, exist_ok=True)
 
     # Calculate SHAP feature importance
@@ -150,14 +150,12 @@ def process_experiment(experiment_name, exclude_features=None):
         feature_names=shap_feature_importance['Feature'].tolist(),
         show=False
     )
-    # plt.title(f'SHAP Summary Plot for Individual Features for {time_period.capitalize()}time')
     summary_output_path = f"post_process_{time_period}_shap_summary_plot.png"
     plt.gcf().set_size_inches(15, 10)  # Adjust figure size
     plt.savefig(os.path.join(post_process_shap_dir, summary_output_path))
-    mlflow.log_artifact(os.path.join(post_process_shap_dir, importance_output_path))
+    mlflow.log_artifact(os.path.join(post_process_shap_dir, summary_output_path))
     plt.clf()
     plt.close()
-
 
     # Generate SHAP value-based importance plot
     logging.info(f"Creating SHAP value-based importance plot for {time_period}time...")
@@ -225,7 +223,7 @@ def process_experiment(experiment_name, exclude_features=None):
         group_feature_values = None
 
     # Create directory for feature group SHAP plots
-    feature_group_shap_dir = 'feature_group_shap'  # Remove the full path
+    feature_group_shap_dir = os.path.join(artifact_uri, 'feature_group_shap')
     os.makedirs(feature_group_shap_dir, exist_ok=True)
 
     # Save SHAP feature importance by group
