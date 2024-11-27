@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="Positive_No_Hour_full_group"
+BASE_RUN_TYPE="DD_R_HW_NOHW"
 
 
 # Function to run the experiment
@@ -45,15 +45,13 @@ run_experiment() {
 
 # Run experiments for HW95 and HW90, for day and night
 for hw_percentile in 98; do
-    merged_file="updated_local_hour_adjusted_variables_HW${hw_percentile}.feather"
-    
+    merged_file="updated_local_hour_adjusted_variables_HW${hw_percentile}.feather"    
     # for time_period in "day" "night"; do
     for time_period in "day"; do
-
         echo "Running experiment for ${time_period}, HW${hw_percentile}"
         run_experiment "${time_period}" $hw_percentile $merged_file
-
     done
 done
+
 # run_experiment "day" 95 "local_hour_adjusted_variables_HW95.feather"
 echo "All experiments completed."

@@ -70,19 +70,22 @@ if __name__ == "__main__":
 
     print("Starting image combination process...")
     
-    # Get unique variables from filenames
-    variables = set()
-    print("Extracting variables from filenames...")
-    for filename in os.listdir(args.input_dir):
-        if filename.endswith(".png"):
-            var = extract_variable(filename)
-            if not (var.endswith("U") or var.endswith("R")):
-                variables.add(var)
+    # # Get unique variables from filenames
+    # variables = set()
+    # print("Extracting variables from filenames...")
+    # for filename in os.listdir(args.input_dir):
+    #     if filename.endswith(".png"):
+    #         var = extract_variable(filename)
+    #         if not (var.endswith("U") or var.endswith("R")):
+    #             variables.add(var)
 
-    print(f"Found {len(variables)} unique variables: {', '.join(variables)}\n")
+    # print(f"Found {len(variables)} unique variables: {', '.join(variables)}\n")
 
-    # Combine images for each variable
-    for var in variables:
-        combine_images(var, args.input_dir, args.output_dir, args.time_of_day)
+    # # Combine images for each variable
+    # for var in variables:
+    #     combine_images(var, args.input_dir, args.output_dir, args.time_of_day)
+
+    var = "total_available_energy"
+    combine_images(var, args.input_dir, args.output_dir, args.time_of_day)
 
     print("Image combination process completed.")
