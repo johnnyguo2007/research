@@ -599,12 +599,19 @@ if args.shap_calculation:
     shap_values_df = pd.DataFrame(shap_values, columns=full_pool.get_feature_names())
 
     # Select the desired columns from uhi_diff
-    additional_columns = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass']
+    additional_columns = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'UHI_diff']
     if not all(col in uhi_diff.columns for col in additional_columns):
         missing_cols = list(set(additional_columns) - set(uhi_diff.columns))
         raise ValueError(f"The following columns are missing in uhi_diff: {missing_cols}")
 
     uhi_diff_selected = uhi_diff[additional_columns].reset_index(drop=True)
+
+    # Calculate estimation error
+    y_pred = model.predict(X_selected)
+    estimation_error = y_pred - uhi_diff_selected['UHI_diff']
+
+    # Add estimation error to the DataFrame
+    uhi_diff_selected['Estimation_Error'] = estimation_error
 
     # Concatenate the SHAP values with the additional columns
     combined_df = pd.concat([shap_values_df, uhi_diff_selected], axis=1)
