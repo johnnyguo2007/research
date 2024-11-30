@@ -591,6 +591,32 @@ if args.shap_calculation:
     mlflow.log_artifact(shap_values_path)
     print(f"Saved SHAP values to {shap_values_path}")
 
+    # Ensure that the length of shap_values matches the number of rows in uhi_diff
+    if shap_values.shape[0] != uhi_diff.shape[0]:
+        raise ValueError("The number of SHAP values does not match the number of rows in uhi_diff.")
+
+    # Create a DataFrame from shap_values
+    shap_values_df = pd.DataFrame(shap_values, columns=full_pool.get_feature_names())
+
+    # Select the desired columns from uhi_diff
+    additional_columns = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass']
+    if not all(col in uhi_diff.columns for col in additional_columns):
+        missing_cols = list(set(additional_columns) - set(uhi_diff.columns))
+        raise ValueError(f"The following columns are missing in uhi_diff: {missing_cols}")
+
+    uhi_diff_selected = uhi_diff[additional_columns].reset_index(drop=True)
+
+    # Concatenate the SHAP values with the additional columns
+    combined_df = pd.concat([shap_values_df, uhi_diff_selected], axis=1)
+
+    # Define the path to save the combined DataFrame
+    combined_feather_path = os.path.join(figure_dir, 'shap_values_with_additional_columns.feather')
+
+    # Save the combined DataFrame as a Feather file
+    combined_df.reset_index(drop=True).to_feather(combined_feather_path)
+    mlflow.log_artifact(combined_feather_path)
+    print(f"Saved combined SHAP values and additional columns to {combined_feather_path}")
+
     feature_names_path = os.path.join(figure_dir, 'feature_names.txt')
     with open(feature_names_path, 'w') as f:
         for feature in full_pool.get_feature_names():
