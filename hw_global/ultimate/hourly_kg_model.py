@@ -755,66 +755,65 @@ def create_figure_directory(args):
 def main():
     args = parse_arguments()
     logging.info("Starting UHI model script...")
-
-    # Set up MLflow experiment
+    
+    logging.info("Setting up MLflow experiment...")
     setup_mlflow_experiment(args)
-
-    # Create directory for figures and artifacts
+    
+    logging.info("Creating directory for figures and artifacts...")
     figure_dir = create_figure_directory(args)
     
-    # Load data
+    logging.info("Loading data...")
     merged_feather_path = os.path.join(args.summary_dir, args.merged_feather_file)
     local_hour_adjusted_df = load_data(merged_feather_path)
-
-    # Apply filters
+    
+    logging.info("Applying filters...")
     local_hour_adjusted_df = apply_filters(local_hour_adjusted_df, args.filters)
-
+    
     # Load feature list from Excel file
     df_daily_vars = pd.read_excel('/home/jguo/research/hw_global/Data/hourlyDataSchema.xlsx')
-
-    # Select features
+    
+    logging.info("Selecting features...")
     daily_var_lst, delta_var_lst = select_features(df_daily_vars, args)
-
-    # Calculate delta variables
+    
+    logging.info("Calculating delta variables...")
     local_hour_adjusted_df = calculate_delta_variables(
         local_hour_adjusted_df, delta_var_lst, args.delta_mode
     )
-
-    # Calculate Double Differencing variables
+    
+    logging.info("Calculating Double Differencing variables...")
     local_hour_adjusted_df = calculate_double_differencing(
         local_hour_adjusted_df, df_daily_vars.loc[
             df_daily_vars[args.double_diff_column] == 'Y', 'Variable'
         ].tolist()
     )
-
-    # Prepare data
+    
+    logging.info("Preparing data...")
     X, y, uhi_diff = prepare_data(
         local_hour_adjusted_df, daily_var_lst, args.time_period, args.daily_freq
     )
-
-    # Train and evaluate model
+    
+    logging.info("Training and evaluating the model...")
     model = train_model(X, y, args)
-
-    # Calculate SHAP values
+    
+    logging.info("Calculating SHAP values...")
     shap_values, shap_df_additional_columns = calculate_shap_values(model, X, y, uhi_diff)
-
-    # Save SHAP values and combined dataframe
+    
+    logging.info("Saving SHAP values and combined dataframe...")
     save_shap_values(shap_values, figure_dir)
     save_combined_shap_dataframe(shap_values, shap_df_additional_columns, figure_dir)
-
-    # Process SHAP values and generate plots
+    
     logging.info("Processing SHAP values and generating plots...")
     process_shap_values(
         shap_values, X.columns.tolist(), X, shap_df_additional_columns,
         args.time_period, df_daily_vars, figure_dir, exclude_features=args.exclude_features
     )
-
-    # Process SHAP values by KGMajorClass
+    
+    logging.info("Processing SHAP values by KGMajorClass...")
     process_shap_values_by_kg_major_class(
         shap_values, X.columns.tolist(), X, shap_df_additional_columns,
         args.time_period, df_daily_vars, figure_dir, exclude_features=args.exclude_features
     )
-
+    
     logging.info("Script execution completed.")
     mlflow.end_run()
 
