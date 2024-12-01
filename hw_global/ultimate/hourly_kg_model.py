@@ -304,6 +304,12 @@ def process_shap_values(shap_values, feature_names, X, shap_df_additional_column
     mlflow.log_artifact(shap_importance_path)
     logging.info(f"Saved SHAP feature importance data to {shap_importance_path}")
 
+    # Log the entire post_process_shap directory as an artifact
+    mlflow.log_artifact(post_process_shap_dir, artifact_path='post_process_shap')
+    
+    # Log the entire feature_group_shap directory as an artifact
+    mlflow.log_artifact(feature_group_shap_dir, artifact_path='feature_group_shap')
+
     # Return the shap_feature_importance and shap_feature_importance_by_group if needed
     return shap_feature_importance, shap_feature_importance_by_group
 
@@ -469,6 +475,9 @@ def process_shap_values_by_kg_major_class(shap_values, feature_names, X, shap_df
         shap_importance_path_class = os.path.join(class_dir, f"{kg_major_class}_{time_period}_shap_feature_importance.csv")
         shap_feature_importance_class.to_csv(shap_importance_path_class, index=False)
         logging.info(f"SHAP feature importance data for {kg_major_class} saved to {shap_importance_path_class}")
+
+        # Log the entire KGMajor directory as an artifact after processing all classes
+        mlflow.log_artifact(kg_major_dir, artifact_path='KGMajor')
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Run UHI model for day, night, or hourly data.")
