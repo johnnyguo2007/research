@@ -308,9 +308,9 @@ def process_shap_values(shap_values, feature_names, X, shap_df_additional_column
     return shap_feature_importance, shap_feature_importance_by_group
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Run UHI model for day or night data.")
-    parser.add_argument("--time_period", choices=["day", "night"], required=True,
-                        help="Specify whether to run for day or night data.")
+    parser = argparse.ArgumentParser(description="Run UHI model for day, night, or hourly data.")
+    parser.add_argument("--time_period", choices=["day", "night", "hourly"], required=True,
+                        help="Specify whether to run for day, night, or hourly data.")
     parser.add_argument("--summary_dir", type=str, required=True, help="Directory for saving summary files and artifacts.")
     parser.add_argument("--merged_feather_file", type=str, required=True,
                         help="File name of the merged feather file containing the dataset.")
@@ -477,8 +477,11 @@ def main():
     logging.info(f"Separating {args.time_period} data...")
     if args.time_period == "day":
         uhi_diff = local_hour_adjusted_df[daytime_mask]
-    else:
+    elif args.time_period == "night":
         uhi_diff = local_hour_adjusted_df[nighttime_mask]
+    elif args.time_period == "hourly":
+        uhi_diff = local_hour_adjusted_df  # No mask applied
+        logging.info("Using all data without applying any time mask for 'hourly' time period.")
     
     # Calculate daily average if daily_freq argument is set
     if args.daily_freq:
@@ -498,7 +501,7 @@ def main():
     # Log mean UHI_diff
     mean_uhi_diff = y.mean()
     mlflow.log_metric(f"{args.time_period}_mean_uhi_diff", mean_uhi_diff)
-    logging.info(f"Logged mean value of UHI_diff for {args.time_period}time: {mean_uhi_diff:.4f}")
+    logging.info(f"Logged mean value of UHI_diff for {args.time_period} time period: {mean_uhi_diff:.4f}")
     
     clear_gpu_memory()
     
@@ -559,11 +562,26 @@ def main():
     additional_columns = [col for col in additional_columns if col in uhi_diff.columns]
     shap_df_additional_columns = uhi_diff[additional_columns].reset_index(drop=True)
     
+    # Calculate estimation error
+    y_pred = model.predict(X)
+    estimation_error = y_pred - shap_df_additional_columns['UHI_diff']
+    shap_df_additional_columns['Estimation_Error'] = estimation_error
+    
     # Save SHAP values and additional columns if needed
     shap_values_path = os.path.join(figure_dir, 'shap_values.npy')
     np.save(shap_values_path, shap_values)
     mlflow.log_artifact(shap_values_path)
     logging.info(f"Saved SHAP values to {shap_values_path}")
+    
+    # Combine SHAP values with additional columns
+    shap_values_df = pd.DataFrame(shap_values, columns=feature_names)
+    combined_df = pd.concat([shap_values_df, shap_df_additional_columns], axis=1)
+    
+    # Save the combined DataFrame as a Feather file
+    combined_feather_path = os.path.join(figure_dir, 'shap_values_with_additional_columns.feather')
+    combined_df.reset_index(drop=True).to_feather(combined_feather_path)
+    mlflow.log_artifact(combined_feather_path)
+    logging.info(f"Saved combined SHAP values and additional columns to {combined_feather_path}")
     
     # Now process SHAP values
     logging.info("Processing SHAP values and generating plots...")
