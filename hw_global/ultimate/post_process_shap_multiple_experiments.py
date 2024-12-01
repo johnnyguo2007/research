@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import shap
 import mlflow
 import logging
-# import matplotlib.ticker as mtick  # Removed unnecessary import
 
 # Configure logging to display information, warnings, and errors with timestamps
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -112,29 +111,42 @@ def process_experiment(experiment_name, exclude_features=None):
     else:
         raise ValueError("Experiment name should contain either 'day' or 'night' to determine the time period.")
 
-    shap_values_path = os.path.join(artifact_uri, "shap_values.npy")
-    if os.path.exists(shap_values_path):
-        shap_values = np.load(shap_values_path)
-        logging.info(f"Loaded shap_values from {shap_values_path}")
+    shap_values_feather_path = os.path.join(artifact_uri, "shap_values_with_additional_columns.feather")
+    if os.path.exists(shap_values_feather_path):
+        shap_df = pd.read_feather(shap_values_feather_path)
+        logging.info(f"Loaded shap_values from {shap_values_feather_path}")
     else:
-        logging.error(f"shap_values file not found at {shap_values_path}")
+        logging.error(f"shap_values_with_additional_columns.feather file not found at {shap_values_feather_path}")
         return None, None
 
-    feature_names_path = os.path.join(artifact_uri, "feature_names.txt")
-    if os.path.exists(feature_names_path):
-        with open(feature_names_path, 'r') as f:
-            feature_names = [line.strip() for line in f]
-        logging.info(f"Loaded feature_names from {feature_names_path}")
-    else:
-        logging.error(f"feature_names file not found at {feature_names_path}")
-        return None, None
+    # Define non-SHAP columns to exclude
+    non_shap_columns = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'UHI_diff', 'Estimation_Error']
+    non_shap_columns = [col for col in non_shap_columns if col in shap_df.columns]
 
+    # Extract KGMajorClass for partitioning before dropping non-SHAP columns
+    if 'KGMajorClass' in shap_df.columns:
+        kg_major_classes = shap_df['KGMajorClass'].unique()
+    else:
+        logging.error("KGMajorClass column not found in shap_values DataFrame.")
+        kg_major_classes = []
+
+    # Store KGMajorClass and other non-SHAP columns separately
+    additional_columns_df = shap_df[non_shap_columns]
+
+    # Extract SHAP values and feature names
+    shap_values_df = shap_df.drop(columns=non_shap_columns)
+    shap_values = shap_values_df.values
+    feature_names = shap_values_df.columns.tolist()
+
+    # Extract feature values from shap_df (assuming they are stored in the same columns)
+    # If feature values are not available in shap_df, you may need to load them from another source
+    # For this code, we'll assume that we need to load X_data.feather for feature values
     X_path = os.path.join(artifact_uri, "X_data.feather")
     if os.path.exists(X_path):
         X = pd.read_feather(X_path)
         logging.info(f"Loaded X data from {X_path}")
     else:
-        logging.warning(f"X_data file not found at {X_path}. Continuing without it.")
+        logging.warning(f"X_data file not found at {X_path}. Cannot proceed with feature values.")
         X = None
 
     # Modify how we save and log artifacts to ensure they're in the correct directory
@@ -169,7 +181,7 @@ def process_experiment(experiment_name, exclude_features=None):
     shap.waterfall_plot(
         shap.Explanation(
             values=shap_feature_importance['Importance'].values,
-            base_values=shap_values[:, -1].mean(),
+            base_values=0,  # Base value is not meaningful in this context
             feature_names=shap_feature_importance['Feature'].tolist()
         ),
         show=False
@@ -225,10 +237,6 @@ def process_experiment(experiment_name, exclude_features=None):
     else:
         group_feature_values = None
 
-    # Create directory for feature group SHAP plots
-    feature_group_shap_dir = os.path.join(artifact_uri, 'feature_group_shap')
-    os.makedirs(feature_group_shap_dir, exist_ok=True)
-
     # Save SHAP feature importance by group
     group_csv_path = f'{time_period}_shap_feature_importance_by_group.csv'
     shap_feature_importance_by_group.to_csv(os.path.join(feature_group_shap_dir, group_csv_path), index=False)
@@ -253,15 +261,10 @@ def process_experiment(experiment_name, exclude_features=None):
         max_display=len(shap_feature_importance_by_group)
     )
     
-    # Format x-axis to show percentage signs and remove f(x)
-    ax = plt.gca()
     plt.xlabel('Percentage Contribution')
-    
     plt.title(f'SHAP Waterfall Plot by Feature Group for {time_period.capitalize()}time')
-    
     waterfall_output_path = f"post_process_{time_period}_shap_waterfall_plot_by_group.png"
     save_and_log_artifact(waterfall_output_path, feature_group_shap_dir)
-    
     plt.clf()
 
     # Create and log SHAP summary plot by feature group
@@ -275,7 +278,6 @@ def process_experiment(experiment_name, exclude_features=None):
             show=False
         )
     else:
-        # Fallback to plot without feature values if X is not available
         shap.summary_plot(
             group_shap_values,
             feature_names=shap_feature_importance_by_group['Feature Group'].tolist(),
@@ -305,6 +307,178 @@ def process_experiment(experiment_name, exclude_features=None):
     shap_importance_path = os.path.join(post_process_shap_dir, f'{time_period}_shap_feature_importance.csv')
     shap_feature_importance.to_csv(shap_importance_path, index=False)
     logging.info(f"SHAP feature importance data saved to {shap_importance_path}")
+
+    # Now process by KGMajorClass
+    kg_major_dir = os.path.join(artifact_uri, 'KGMajor')
+    os.makedirs(kg_major_dir, exist_ok=True)
+
+    for kg_major_class in kg_major_classes:
+        class_indices = shap_df.index[shap_df['KGMajorClass'] == kg_major_class].tolist()
+        if not class_indices:
+            continue
+
+        class_shap_values = shap_values[class_indices]
+        if X is not None:
+            class_X = X.iloc[class_indices]
+        else:
+            class_X = None
+
+        # Calculate SHAP feature importance for the class
+        shap_feature_importance_class = get_shap_feature_importance(class_shap_values, feature_names, df_daily_vars)
+
+        # Exclude specified features from the SHAP summary plot
+        if exclude_features:
+            shap_feature_importance_class = shap_feature_importance_class[~shap_feature_importance_class['Feature'].isin(exclude_features)]
+            logging.info(f"Excluding features from SHAP summary plot for KGMajorClass '{kg_major_class}': {exclude_features}")
+
+        # Create directories for the class
+        class_dir = os.path.join(kg_major_dir, kg_major_class)
+        os.makedirs(class_dir, exist_ok=True)
+
+        # Generate SHAP summary plot for individual features
+        logging.info(f"Creating SHAP summary plot for individual features for {time_period}time and KGMajorClass '{kg_major_class}'...")
+        shap.summary_plot(
+            class_shap_values[:, shap_feature_importance_class.index],
+            class_X.iloc[:, shap_feature_importance_class.index] if class_X is not None else None,
+            feature_names=shap_feature_importance_class['Feature'].tolist(),
+            show=False
+        )
+        summary_output_path = f"{kg_major_class}_{time_period}_shap_summary_plot.png"
+        save_and_log_artifact(summary_output_path, class_dir)
+        plt.clf()
+
+        # Generate SHAP value-based importance plot for the class
+        logging.info(f"Creating SHAP value-based importance plot for {time_period}time and KGMajorClass '{kg_major_class}'...")
+        plt.figure(figsize=(10, 8))
+        shap.waterfall_plot(
+            shap.Explanation(
+                values=shap_feature_importance_class['Importance'].values,
+                base_values=0,  # Base value is not meaningful here
+                feature_names=shap_feature_importance_class['Feature'].tolist()
+            ),
+            show=False
+        )
+        plt.title(f'SHAP Value-based Importance Plot for {kg_major_class} ({time_period.capitalize()}time)')
+        importance_output_path = f"{kg_major_class}_{time_period}_shap_importance_plot.png"
+        save_and_log_artifact(importance_output_path, class_dir)
+        plt.clf()
+
+        # Calculate SHAP feature importance by group for the class
+        shap_feature_importance_class['Feature Group'] = shap_feature_importance_class['Feature'].apply(lambda x: get_feature_group(x))
+        shap_feature_importance_by_group_class = shap_feature_importance_class.groupby('Feature Group')['Importance'].sum().reset_index()
+        total_importance_class = shap_feature_importance_by_group_class['Importance'].sum()
+        shap_feature_importance_by_group_class['Percentage'] = (shap_feature_importance_by_group_class['Importance'] / total_importance_class) * 100
+        shap_feature_importance_by_group_class.sort_values(by='Importance', ascending=False, inplace=True)
+
+        # Normalize feature values for the class
+        if class_X is not None:
+            class_X_normalized = class_X.copy()
+            for col in class_X.columns:
+                max_val = class_X[col].max()
+                min_val = class_X[col].min()
+                range_val = max_val - min_val
+                if range_val == 0:
+                    range_val = 1e-8  # Avoid division by zero
+                class_X_normalized[col] = (class_X[col] - min_val) / range_val
+            logging.info(f"Feature values normalized for KGMajorClass '{kg_major_class}' using min-max scaling.")
+        else:
+            class_X_normalized = None
+
+        # Calculate group-level SHAP values and normalized feature values for the class
+        group_shap_values_class = []
+        group_feature_values_class = []
+        for group in shap_feature_importance_by_group_class['Feature Group']:
+            # Get features in this group
+            group_features = shap_feature_importance_class['Feature'][shap_feature_importance_class['Feature Group'] == group].tolist()
+            group_indices = [feature_names.index(feat) for feat in group_features]
+            
+            # Sum SHAP values for all features in the group
+            group_shap_class = class_shap_values[:, group_indices].sum(axis=1)
+            group_shap_values_class.append(group_shap_class)
+            
+            # Sum normalized feature values for all features in the group
+            if class_X_normalized is not None:
+                group_feature_value_class = class_X_normalized.iloc[:, group_indices].sum(axis=1).values
+                group_feature_values_class.append(group_feature_value_class)
+            else:
+                group_feature_values_class.append(None)
+
+        group_shap_values_class = np.array(group_shap_values_class).T  # Transform to shape (n_samples, n_groups)
+        if class_X_normalized is not None:
+            group_feature_values_class = np.array(group_feature_values_class).T  # Transform to shape (n_samples, n_groups)
+        else:
+            group_feature_values_class = None
+
+        # Save SHAP feature importance by group for the class
+        group_csv_path_class = f"{kg_major_class}_{time_period}_shap_feature_importance_by_group.csv"
+        shap_feature_importance_by_group_class.to_csv(os.path.join(class_dir, group_csv_path_class), index=False)
+
+        # Create and log SHAP waterfall plot by feature group for the class
+        logging.info(f"Creating SHAP waterfall plot by feature group for {kg_major_class} ({time_period}time)...")
+        plt.figure(figsize=(12, 0.5 * len(shap_feature_importance_by_group_class)))
+        
+        # Convert importance values to percentages
+        waterfall_values_class = shap_feature_importance_by_group_class['Percentage'].values
+        base_value_class = 0  # Start from 0% since we're showing percentages
+        
+        # Create waterfall plot
+        shap.waterfall_plot(
+            shap.Explanation(
+                values=waterfall_values_class,
+                base_values=base_value_class,
+                data=None,
+                feature_names=shap_feature_importance_by_group_class['Feature Group'].tolist()
+            ),
+            show=False,
+            max_display=len(shap_feature_importance_by_group_class)
+        )
+        
+        plt.xlabel('Percentage Contribution')
+        plt.title(f'SHAP Waterfall Plot by Feature Group for {kg_major_class} ({time_period.capitalize()}time)')
+        waterfall_output_path_class = f"{kg_major_class}_{time_period}_shap_waterfall_plot_by_group.png"
+        save_and_log_artifact(waterfall_output_path_class, class_dir)
+        plt.clf()
+
+        # Create and log SHAP summary plot by feature group for the class
+        logging.info(f"Creating SHAP summary plot by feature group for {kg_major_class} ({time_period}time)...")
+        plt.figure(figsize=(10, 8))
+        if group_feature_values_class is not None:
+            shap.summary_plot(
+                group_shap_values_class,
+                group_feature_values_class,
+                feature_names=shap_feature_importance_by_group_class['Feature Group'].tolist(),
+                show=False
+            )
+        else:
+            shap.summary_plot(
+                group_shap_values_class,
+                feature_names=shap_feature_importance_by_group_class['Feature Group'].tolist(),
+                show=False
+            )
+        plt.title(f'SHAP Summary Plot by Feature Group for {kg_major_class} ({time_period.capitalize()}time)')
+        summary_group_output_path_class = f"{kg_major_class}_{time_period}_shap_summary_plot_by_group.png"
+        save_and_log_artifact(summary_group_output_path_class, class_dir)
+
+        # Create and save percentage contribution plot for the class
+        logging.info(f"Creating percentage contribution plot for {kg_major_class} ({time_period}time)...")
+        plt.figure(figsize=(12, 0.5 * len(shap_feature_importance_class)))
+        plt.barh(shap_feature_importance_class['Long Name'], shap_feature_importance_class['Percentage'], 
+                 align='center', color='#ff0051')
+        plt.title(f'Feature Importance (%) for {kg_major_class} ({time_period.capitalize()}time)')
+        plt.xlabel('Percentage Contribution')
+        plt.gca().invert_yaxis()
+        
+        for i, percentage in enumerate(shap_feature_importance_class['Percentage']):
+            plt.text(percentage, i, f' {percentage:.1f}%', va='center')
+
+        plt.tight_layout()
+        percentage_output_path_class = f"{kg_major_class}_{time_period}_percentage_contribution_plot.png"
+        save_and_log_artifact(percentage_output_path_class, class_dir)
+
+        # Save SHAP feature importance data to CSV for the class
+        shap_importance_path_class = os.path.join(class_dir, f"{kg_major_class}_{time_period}_shap_feature_importance.csv")
+        shap_feature_importance_class.to_csv(shap_importance_path_class, index=False)
+        logging.info(f"SHAP feature importance data for {kg_major_class} saved to {shap_importance_path_class}")
 
     return shap_feature_importance, shap_feature_importance_by_group
 

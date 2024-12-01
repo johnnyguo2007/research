@@ -232,13 +232,43 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, feature_groups, model_name,
         optimal_num_features = len(daily_var_lst)
         selected_features = daily_var_lst
 
-    # Split data into training and validation sets
-    X_train, X_val, y_train, y_val = train_test_split(X_selected, y, test_size=0.1, random_state=42)
+        # 10-fold Cross-validation
+        print("Performing 10-fold cross-validation...")
+        cv = KFold(n_splits=10, shuffle=True, random_state=42)
+        cv_model = CatBoostRegressor(
+            iterations=iterations,
+            learning_rate=learning_rate,
+            depth=depth,
+            loss_function='RMSE',
+            eval_metric='RMSE',
+            random_seed=42,
+            task_type='GPU',
+            devices='0',
+            verbose=False
+        )
 
+        cv_scores = cross_val_score(cv_model, X_selected, y, scoring='neg_mean_squared_error', cv=cv, n_jobs=1)
+        rmse_scores = np.sqrt(-cv_scores)  # Convert negative MSE to RMSE
+
+        avg_rmse = np.mean(rmse_scores)
+        std_rmse = np.std(rmse_scores)
+        min_rmse = np.min(rmse_scores)
+        max_rmse = np.max(rmse_scores)
+
+        mlflow.log_metric(f"{model_name}_avg_cv_rmse", avg_rmse)
+        mlflow.log_metric(f"{model_name}_std_cv_rmse", std_rmse)
+        mlflow.log_metric(f"{model_name}_min_cv_rmse", min_rmse)
+        mlflow.log_metric(f"{model_name}_max_cv_rmse", max_rmse)
+
+        print(f"Average CV RMSE: {avg_rmse:.4f}")
+        print(f"Standard Deviation of CV RMSE: {std_rmse:.4f}")
+        print(f"Min CV RMSE: {min_rmse:.4f}")
+        print(f"Max CV RMSE: {max_rmse:.4f}")
+
+    # Train on the full dataset after cross-validation
+    print("Training the final model on the full dataset...")
     clear_gpu_memory()
-
-    # Initialize and train the final model
-    final_model = model if num_features is not None else CatBoostRegressor(
+    final_model = CatBoostRegressor(
         iterations=iterations,
         learning_rate=learning_rate,
         depth=depth,
@@ -249,11 +279,7 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, feature_groups, model_name,
         devices='0',
         verbose=False
     )
-
-    final_model.fit(X_train, y_train, eval_set=(X_val, y_val), use_best_model=True, early_stopping_rounds=50,
-                    verbose=False)
-
-    # Log model parameters and selected features
+    final_model.fit(X_selected, y, verbose=False)
     mlflow.log_param(f"{model_name}_iterations", final_model.get_param('iterations'))
     mlflow.log_param(f"{model_name}_learning_rate", final_model.get_param('learning_rate'))
     mlflow.log_param(f"{model_name}_depth", final_model.get_param('depth'))
@@ -266,26 +292,74 @@ def train_and_evaluate(time_uhi_diff, daily_var_lst, feature_groups, model_name,
 
 
     # Evaluate the model and log metrics
-    y_pred_train = final_model.predict(X_train)
-    y_pred_val = final_model.predict(X_val)
-    train_rmse = mean_squared_error(y_train, y_pred_train, squared=False)
-    val_rmse = mean_squared_error(y_val, y_pred_val, squared=False)
-    train_mae = mean_absolute_error(y_train, y_pred_train)
-    val_mae = mean_absolute_error(y_val, y_pred_val)
-    train_r2 = r2_score(y_train, y_pred_train)
-    val_r2 = r2_score(y_val, y_pred_val)
+    y_pred = final_model.predict(X_selected)
 
-    mlflow.log_metric(f"{model_name}_train_rmse", train_rmse)
-    mlflow.log_metric(f"{model_name}_val_rmse", val_rmse)
-    mlflow.log_metric(f"{model_name}_train_mae", train_mae)
-    mlflow.log_metric(f"{model_name}_val_mae", val_mae)
-    mlflow.log_metric(f"{model_name}_train_r2", train_r2)
-    mlflow.log_metric(f"{model_name}_val_r2", val_r2)
+    train_rmse = mean_squared_error(y, y_pred, squared=False)
+    train_r2 = r2_score(y, y_pred)
+
+
+    mlflow.log_metric(f"{model_name}_whole_rmse", train_rmse)
+    mlflow.log_metric(f"{model_name}_whole_r2", train_r2)
 
     print(f"Model {model_name} metrics:")
-    print(f"Train RMSE: {train_rmse:.4f}, Validation RMSE: {val_rmse:.4f}")
-    print(f"Train MAE: {train_mae:.4f}, Validation MAE: {val_mae:.4f}")
-    print(f"Train R2: {train_r2:.4f}, Validation R2: {val_r2:.4f}")
+    print(f"Whole RMSE: {train_rmse:.4f}")
+    print(f"Whole R2: {train_r2:.4f}")
+    
+    if False:
+        # Split data into training and validation sets
+        X_train, X_val, y_train, y_val = train_test_split(X_selected, y, test_size=0.1, random_state=42)
+
+        clear_gpu_memory()
+
+        # Initialize and train the final model
+        final_model = model if num_features is not None else CatBoostRegressor(
+            iterations=iterations,
+            learning_rate=learning_rate,
+            depth=depth,
+            loss_function='RMSE',
+            eval_metric='RMSE',
+            random_seed=42,
+            task_type='GPU',
+            devices='0',
+            verbose=False
+        )
+
+        final_model.fit(X_train, y_train, eval_set=(X_val, y_val), use_best_model=True, early_stopping_rounds=50,
+                        verbose=False)
+
+        # Log model parameters and selected features
+        mlflow.log_param(f"{model_name}_iterations", final_model.get_param('iterations'))
+        mlflow.log_param(f"{model_name}_learning_rate", final_model.get_param('learning_rate'))
+        mlflow.log_param(f"{model_name}_depth", final_model.get_param('depth'))
+        mlflow.log_param(f"{model_name}_optimal_num_features", optimal_num_features)
+
+        if isinstance(selected_features[0], str):
+            mlflow.log_param(f"{model_name}_selected_features", ", ".join(selected_features))
+        else:
+            mlflow.log_param(f"{model_name}_selected_features", ", ".join([daily_var_lst[idx] for idx in selected_features]))
+
+
+        # Evaluate the model and log metrics
+        y_pred_train = final_model.predict(X_train)
+        y_pred_val = final_model.predict(X_val)
+        train_rmse = mean_squared_error(y_train, y_pred_train, squared=False)
+        val_rmse = mean_squared_error(y_val, y_pred_val, squared=False)
+        train_mae = mean_absolute_error(y_train, y_pred_train)
+        val_mae = mean_absolute_error(y_val, y_pred_val)
+        train_r2 = r2_score(y_train, y_pred_train)
+        val_r2 = r2_score(y_val, y_pred_val)
+
+        mlflow.log_metric(f"{model_name}_train_rmse", train_rmse)
+        mlflow.log_metric(f"{model_name}_val_rmse", val_rmse)
+        mlflow.log_metric(f"{model_name}_train_mae", train_mae)
+        mlflow.log_metric(f"{model_name}_val_mae", val_mae)
+        mlflow.log_metric(f"{model_name}_train_r2", train_r2)
+        mlflow.log_metric(f"{model_name}_val_r2", val_r2)
+
+        print(f"Model {model_name} metrics:")
+        print(f"Train RMSE: {train_rmse:.4f}, Validation RMSE: {val_rmse:.4f}")
+        print(f"Train MAE: {train_mae:.4f}, Validation MAE: {val_mae:.4f}")
+        print(f"Train R2: {train_r2:.4f}, Validation R2: {val_r2:.4f}")
 
     return final_model, selected_features, X_selected
 
