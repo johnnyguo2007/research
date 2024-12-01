@@ -719,6 +719,30 @@ def save_combined_shap_dataframe(shap_values, shap_df_additional_columns, figure
     mlflow.log_artifact(combined_feather_path)
     logging.info(f"Saved combined SHAP values and additional columns to {combined_feather_path}")
 
+def setup_mlflow_experiment(args):
+    """
+    Sets up the MLflow experiment with the given arguments.
+    """
+    experiment_name = f'{args.run_type}_{args.time_period.capitalize()}_{args.exp_name_extra}'
+    logging.info(f"Setting up MLflow experiment: {experiment_name}")
+    mlflow.set_tracking_uri(uri="http://192.168.4.85:8080")  # Replace with your MLflow tracking URI
+    mlflow.set_experiment(experiment_name)
+    mlflow.start_run()
+    # Log command line arguments and the full command line
+    for arg, value in vars(args).items():
+        mlflow.log_param(arg, value)
+    command_line = f"python {' '.join(sys.argv)}"
+    mlflow.log_param("command_line", command_line)
+
+def create_figure_directory(args):
+    """
+    Creates a directory for saving figures and artifacts.
+    """
+    figure_dir = os.path.join(args.summary_dir, 'mlflow', f"{args.run_type}_{args.time_period.capitalize()}_{args.exp_name_extra}")
+    os.makedirs(figure_dir, exist_ok=True)
+    logging.info(f"Created figure directory: {figure_dir}")
+    return figure_dir
+
 def main():
     args = parse_arguments()
     logging.info("Starting UHI model script...")
