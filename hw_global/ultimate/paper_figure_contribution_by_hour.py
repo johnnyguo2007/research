@@ -110,23 +110,26 @@ def report_shap_contribution_from_feather(local_hour_adjusted_df_path, shap_valu
     return df_feature_group
 
 
-def plot_stacked_bar(plot_df, title, output_path=None):
-    """Plots a stacked bar chart of contributions per hour.
+def plot_stacked_bar(plot_df, title, output_path=None, total_series=None):
+    """Plots a stacked bar chart of contributions per hour with an optional total value curve.
 
     This function plots either percentage contributions or absolute contributions based on the provided DataFrame.
+    For absolute contributions, an optional total value curve can be overlaid.
 
     Args:
         plot_df (pd.DataFrame): DataFrame where each row corresponds to a local_hour and each column to a Feature Group,
                                  containing either percentage values that sum to 100% per local_hour or absolute values.
         title (str): Title of the plot.
         output_path (str, optional): Path to save the plot image. If None, the plot is displayed.
+        total_series (pd.Series, optional): Series containing total values per hour to plot as a curve.
     """
     ax = plot_df.plot(
         kind='bar', 
         stacked=True, 
         figsize=(15, 8), 
         colormap='tab20',
-        width=0.8
+        width=0.8,
+        ax=None
     )
     
     plt.xlabel('Hour of Day')
@@ -134,6 +137,13 @@ def plot_stacked_bar(plot_df, title, output_path=None):
     plt.ylabel(ylabel)
     plt.title(title)
     plt.legend(title='Feature Group', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    if total_series is not None:
+        ax2 = ax.twinx()
+        ax2.plot(plot_df.index, total_series, color='black', marker='o', linestyle='-', label='Total Value')
+        ax2.set_ylabel('Total Value')
+        ax2.legend(loc='upper right')
+    
     plt.tight_layout()
     
     if output_path:
@@ -154,13 +164,13 @@ def main():
     parser.add_argument(
         '--local-hour-adjusted-df-path',
         type=str,
-        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/updated_local_hour_adjusted_variables_HW98.feather',
+        required=True,
         help='Path to the local_hour_adjusted_df file.'
     )
     parser.add_argument(
         '--shap-values-feather-path',
         type=str,
-        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/Hourly_kg_model_Hourly_HW98_no_filter/shap_values_with_additional_columns.feather',
+        required=True,
         help='Path to the shap_values_with_additional_columns.feather file.'
     )
     parser.add_argument(
@@ -208,19 +218,21 @@ def main():
             if plot_type == 'percentage':
                 # Calculate percentages
                 plot_df = pivot_df.div(pivot_df.sum(axis=1), axis=0) * 100
+                total_series = None  # Total not needed for percentage plots
             else:
                 # Use absolute values
                 plot_df = pivot_df
-
+                total_series = plot_df.sum(axis=1)
+    
             # Define the plot title
-            title = f'ΔUHI Contribution by Hour - {kg_class} ({plot_type.capitalize()})'
-
+            title = f'ΔUHI Contribution by Hour - {kg_class}' + (f' ({plot_type.capitalize()})' if plot_type == 'percentage' else f' ({plot_type.capitalize()})')
+    
             # Define the output path
             output_filename = f'feature_group_contribution_by_hour_{kg_class}_{plot_type}.png'
             output_path = os.path.join(output_dir, output_filename)
-
+    
             # Plot stacked bar chart for the current KGMajorClass and plot type
-            plot_stacked_bar(plot_df, title, output_path=output_path)
+            plot_stacked_bar(plot_df, title, output_path=output_path, total_series=total_series if plot_type == 'absolute' else None)
             print(f"Stacked bar chart saved as '{output_path}' for KGMajorClass '{kg_class}' ({plot_type}).")
 
     # Generate total plots by aggregating across all KGMajorClasses
@@ -233,19 +245,21 @@ def main():
         if plot_type == 'percentage':
             # Calculate percentages
             total_plot_df = total_pivot_df.div(total_pivot_df.sum(axis=1), axis=0) * 100
+            total_series = None  # Total not needed for percentage plots
         else:
             # Use absolute values
             total_plot_df = total_pivot_df
+            total_series = total_plot_df.sum(axis=1)
         
         # Define the plot title for the total plot
-        total_title = f'ΔUHI Contribution by Hour - Global ({plot_type.capitalize()})'
+        total_title = f'ΔUHI Contribution by Hour - Global' + (f' ({plot_type.capitalize()})' if plot_type == 'percentage' else f' ({plot_type.capitalize()})')
         
         # Define the output path
         total_output_filename = f'feature_group_contribution_by_hour_total_{plot_type}.png'
         total_output_path = os.path.join(output_dir, total_output_filename)
 
         # Plot total stacked bar chart
-        plot_stacked_bar(total_plot_df, total_title, output_path=total_output_path)
+        plot_stacked_bar(total_plot_df, total_title, output_path=total_output_path, total_series=total_series if plot_type == 'absolute' else None)
         print(f"Total stacked bar chart saved as '{total_output_path}' ({plot_type}).")
 
 if __name__ == "__main__":
