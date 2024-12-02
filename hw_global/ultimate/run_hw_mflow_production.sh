@@ -7,7 +7,7 @@ HW_COUNT_THRESHOLD=60
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="DD_R_HW_NOHW"
+BASE_RUN_TYPE="Hourly_kg_model"
 
 
 # Function to run the experiment
@@ -26,7 +26,10 @@ run_experiment() {
     run_type="${BASE_RUN_TYPE}"
     exp_name_extra="HW${hw_percentile}_no_filter"
 
-    python /home/jguo/research/hw_global/ultimate/mlflow_feature_selection.py \
+# --filters "filter_by_year,1985" \
+
+    # python /home/jguo/research/hw_global/ultimate/mlflow_feature_selection.py \
+    python /home/jguo/research/hw_global/ultimate/hourly_ke_model.py \
         --summary_dir /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary \
         --merged_feather_file $merged_file \
         --time_period "${time_period}" \
@@ -40,14 +43,15 @@ run_experiment() {
         --delta_column "${delta_column}" \
         --hw_nohw_diff_column "${hw_nohw_diff_column}" \
         --double_diff_column "${double_diff_column}" \
-        --delta_mode "include"
+        --delta_mode "include" \
+        --exclude_features "local_hour"
 }
 
 # Run experiments for HW95 and HW90, for day and night
 for hw_percentile in 98; do
     merged_file="updated_local_hour_adjusted_variables_HW${hw_percentile}.feather"    
     # for time_period in "day" "night"; do
-    for time_period in "day"; do
+    for time_period in "hourly"; do
         echo "Running experiment for ${time_period}, HW${hw_percentile}"
         run_experiment "${time_period}" $hw_percentile $merged_file
     done
