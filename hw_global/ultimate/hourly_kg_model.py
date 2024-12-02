@@ -752,6 +752,37 @@ def create_figure_directory(args):
     logging.info(f"Created figure directory: {figure_dir}")
     return figure_dir
 
+def report_shap_contribution(shap_values, X, shap_df_additional_columns, df_daily_vars, figure_dir):
+    """
+    Reports SHAP value contributions from each feature group by hour and by KGMajorClass.
+    Outputs the results as CSV files instead of generating plots.
+    """
+    # Add feature groups to the dataframe
+    shap_importance_df = get_shap_feature_importance(shap_values, X.columns.tolist(), df_daily_vars)
+    shap_importance_df['Feature Group'] = shap_importance_df['Feature'].apply(get_feature_group)
+    
+    # Combine with additional columns
+    combined_df = shap_importance_df.merge(shap_df_additional_columns, left_on='Feature', right_index=True)
+    
+    # Report by Hour
+    hourly_contribution = combined_df.groupby(['local_hour', 'Feature Group'])['Importance'].sum().reset_index()
+    hourly_contribution['Group_Type'] = 'Hour'
+    hourly_contribution = hourly_contribution.rename(columns={'local_hour': 'Group_Value'})
+    
+    # Report by KGMajorClass
+    kg_contribution = combined_df.groupby(['KGMajorClass', 'Feature Group'])['Importance'].sum().reset_index()
+    kg_contribution['Group_Type'] = 'KGMajorClass'
+    kg_contribution = kg_contribution.rename(columns={'KGMajorClass': 'Group_Value'})
+    
+    # Combine both contributions into a single DataFrame
+    combined_contribution = pd.concat([hourly_contribution, kg_contribution], ignore_index=True)
+    
+    # Save the combined contributions to a single CSV file
+    combined_csv_path = os.path.join(figure_dir, 'shap_contribution_combined.csv')
+    combined_contribution.to_csv(combined_csv_path, index=False)
+    mlflow.log_artifact(combined_csv_path)
+    logging.info(f"Saved combined SHAP contribution to {combined_csv_path}")
+
 def main():
     args = parse_arguments()
     logging.info("Starting UHI model script...")
@@ -813,6 +844,9 @@ def main():
         shap_values, X.columns.tolist(), X, shap_df_additional_columns,
         args.time_period, df_daily_vars, figure_dir, exclude_features=args.exclude_features
     )
+    
+    # New step: Report SHAP value contribution from each feature group by hour and by KGMajorClass
+    report_shap_contribution(shap_values, X, shap_df_additional_columns, df_daily_vars, figure_dir)
     
     logging.info("Script execution completed.")
     mlflow.end_run()
