@@ -111,8 +111,20 @@ def report_shap_contribution_from_feather(local_hour_adjusted_df_path, shap_valu
 
 
 def plot_stacked_bar(percentage_df, output_path=None):
-    """Plots a stacked bar chart of percentage contributions per hour."""
-    ax = percentage_df.plot(kind='bar', stacked=True, figsize=(15, 8), colormap='tab20')
+    """Plots a stacked bar chart of percentage contributions per hour.
+
+    Args:
+        percentage_df (pd.DataFrame): DataFrame where each row corresponds to a local_hour and each column to a Feature Group,
+                                      containing percentage values that sum to 100% per local_hour.
+        output_path (str, optional): Path to save the plot image. If None, the plot is displayed.
+    """
+    ax = percentage_df.plot(
+        kind='bar', 
+        stacked=True, 
+        figsize=(15, 8), 
+        colormap='tab20',
+        width=0.8
+    )
     
     plt.xlabel('Hour of Day')
     plt.ylabel('Percentage Contribution')
@@ -135,13 +147,47 @@ def main():
     output_pivot = os.path.join(output_dir, 'shap_pivot.feather') 
 
     # Report SHAP contribution
-    df_feature_group = report_shap_contribution_from_feather(local_hour_adjusted_df_path, shap_values_feather_path, output_dir, output_feature_group, output_pivot)
+    df_feature_group = report_shap_contribution_from_feather(
+        local_hour_adjusted_df_path, 
+        shap_values_feather_path, 
+        output_dir, 
+        output_feature_group, 
+        output_pivot
+    )
     print("SHAP contribution by hour generated.")
 
+    # Generate plots for each KGMajorClass
+    kg_major_classes = df_feature_group['KGMajorClass'].unique()
+    for kg_class in kg_major_classes:
+        df_subset = df_feature_group[df_feature_group['KGMajorClass'] == kg_class]
+        
+        # Group by local_hour and Feature Group, then sum the values
+        grouped = df_subset.groupby(['local_hour', 'Feature Group'])['Value'].sum().reset_index()
+        
+        # Pivot to have Feature Groups as columns
+        pivot_df = grouped.pivot(index='local_hour', columns='Feature Group', values='Value').fillna(0)
+        
+        # Calculate percentages
+        percentage_df = pivot_df.div(pivot_df.sum(axis=1), axis=0) * 100
+        
+        # Plot stacked bar chart for the current KGMajorClass
+        output_path = os.path.join(output_dir, f'feature_group_contribution_by_hour_{kg_class}.png')
+        plot_stacked_bar(percentage_df, output_path=output_path)
+        print(f"Stacked bar chart saved as '{output_path}' for KGMajorClass '{kg_class}'.")
 
-    # Plot stacked bar chart based on the saved output_csv_path
-    plot_stacked_bar(df_feature_group, output_path='feature_group_contribution_by_hour.png')
-    print("Stacked bar chart saved as 'feature_group_contribution_by_hour.png'.")
+    # Generate total plot by aggregating across all KGMajorClasses
+    total_grouped = df_feature_group.groupby(['local_hour', 'Feature Group'])['Value'].sum().reset_index()
+    
+    # Pivot to have Feature Groups as columns
+    total_pivot_df = total_grouped.pivot(index='local_hour', columns='Feature Group', values='Value').fillna(0)
+    
+    # Calculate percentages
+    total_percentage_df = total_pivot_df.div(total_pivot_df.sum(axis=1), axis=0) * 100
+    
+    # Plot total stacked bar chart
+    total_output_path = os.path.join(output_dir, 'feature_group_contribution_by_hour_total.png')
+    plot_stacked_bar(total_percentage_df, output_path=total_output_path)
+    print(f"Total stacked bar chart saved as '{total_output_path}'.")
 
 if __name__ == "__main__":
     main()
