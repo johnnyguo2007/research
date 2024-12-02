@@ -110,12 +110,13 @@ def report_shap_contribution_from_feather(local_hour_adjusted_df_path, shap_valu
     return df_feature_group
 
 
-def plot_stacked_bar(percentage_df, output_path=None):
+def plot_stacked_bar(percentage_df, title, output_path=None):
     """Plots a stacked bar chart of percentage contributions per hour.
 
     Args:
         percentage_df (pd.DataFrame): DataFrame where each row corresponds to a local_hour and each column to a Feature Group,
                                       containing percentage values that sum to 100% per local_hour.
+        title (str): Title of the plot.
         output_path (str, optional): Path to save the plot image. If None, the plot is displayed.
     """
     ax = percentage_df.plot(
@@ -128,7 +129,7 @@ def plot_stacked_bar(percentage_df, output_path=None):
     
     plt.xlabel('Hour of Day')
     plt.ylabel('Percentage Contribution')
-    plt.title('Feature Group Contribution by Hour')
+    plt.title(title)
     plt.legend(title='Feature Group', bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout()
     
@@ -170,9 +171,12 @@ def main():
         # Calculate percentages
         percentage_df = pivot_df.div(pivot_df.sum(axis=1), axis=0) * 100
         
+        # Define the plot title
+        title = f'UHI Contribution by Hour - {kg_class}'
+        
         # Plot stacked bar chart for the current KGMajorClass
         output_path = os.path.join(output_dir, f'feature_group_contribution_by_hour_{kg_class}.png')
-        plot_stacked_bar(percentage_df, output_path=output_path)
+        plot_stacked_bar(percentage_df, title, output_path=output_path)
         print(f"Stacked bar chart saved as '{output_path}' for KGMajorClass '{kg_class}'.")
 
     # Generate total plot by aggregating across all KGMajorClasses
@@ -184,9 +188,12 @@ def main():
     # Calculate percentages
     total_percentage_df = total_pivot_df.div(total_pivot_df.sum(axis=1), axis=0) * 100
     
+    # Define the plot title for the total plot
+    total_title = 'Feature Group Contribution by Hour - Global'
+    
     # Plot total stacked bar chart
     total_output_path = os.path.join(output_dir, 'feature_group_contribution_by_hour_total.png')
-    plot_stacked_bar(total_percentage_df, output_path=total_output_path)
+    plot_stacked_bar(total_percentage_df, total_title, output_path=total_output_path)
     print(f"Total stacked bar chart saved as '{total_output_path}'.")
 
 if __name__ == "__main__":
