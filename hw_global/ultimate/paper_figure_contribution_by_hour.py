@@ -31,7 +31,7 @@ def calculate_percentage_contribution(df):
     return percentage
 
 
-def report_shap_contribution_from_feather(local_hour_adjusted_df_path, shap_values_feather_path, output_dir):
+def report_shap_contribution_from_feather(local_hour_adjusted_df_path, shap_values_feather_path, output_dir, output_feature_group, output_pivot):
     """
     Reports SHAP value contributions from each feature group by hour and by KGMajorClass
     using data from a Feather file and a local_hour_adjusted_df file.
@@ -51,36 +51,63 @@ def report_shap_contribution_from_feather(local_hour_adjusted_df_path, shap_valu
     shap_df = shap_df.drop(columns=['local_hour'])
     shap_df['local_hour'] = local_hour_adjusted_df['local_hour']
     
-    # Add feature groups to the dataframe
-    # Assuming you want to categorize the columns themselves
-    feature_columns = shap_df.columns.difference(['local_hour', 'global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'UHI_diff', 'Estimation_Error'])
-    feature_groups = {col: get_feature_group(col) for col in feature_columns}
+    """
+    Processes the dataframe by performing the following steps:
     
-    # Create a new DataFrame to store feature group contributions
-    feature_group_contributions = pd.DataFrame()
+    1. Drops specified columns.
+    2. Groups by 'local_hour' and 'KGMajorClass' and sums all double float columns.
+    3. Adds columns indicating feature groups with summed feature columns.
+    4. Pivots the dataframe.
+    5. Saves the processed dataframe as a Feather file.
+    6. Drops 'UHI_diff', 'Estimation_Error', and all SHAP columns.
+    
+    Args:
+        input_feather_path (str): Path to the input Feather file.
+        output_feather_path (str): Path to save the processed Feather file.
+    """
 
-    for feature, group in feature_groups.items():
-        temp_df = shap_df[['local_hour', feature]].copy()
-        temp_df['Feature Group'] = group
-        temp_df['Contribution'] = temp_df[feature]
-        temp_df['Group_Type'] = 'Hour'
-        temp_df = temp_df.drop(columns=[feature])
-        feature_group_contributions = pd.concat([feature_group_contributions, temp_df], ignore_index=True)
+    # Step 1: Drop specified columns
+    columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass']
+    shap_df = shap_df.drop(columns=columns_to_drop, errors='ignore')
+    logging.info(f"Dropped columns: {columns_to_drop}")
+    
+    # Step 2: Group by 'local_hour' and 'KGMajorClass' and sum all double float columns
+    group_cols = ['local_hour', 'KGMajorClass']
+    numeric_cols = shap_df.select_dtypes(include=['float', 'int']).columns
+    #print numeric_cols
+    print(numeric_cols)
+    #remove local_hour from numeric_cols
+    numeric_cols = [col for col in numeric_cols if col != 'local_hour'] 
+    df_grouped = shap_df.groupby(group_cols)[numeric_cols].sum().reset_index()
+    logging.info("Grouped by 'local_hour' and 'KGMajorClass' and summed numeric columns.")
+    
+    # Step 3: Add columns indicating feature groups with summed feature columns
+    feature_group_mapping = {col: get_feature_group(col) for col in numeric_cols if col not in ['UHI_diff', 'Estimation_Error']}
+    
+    # Create a DataFrame for feature groups
+    feature_groups = pd.DataFrame({
+        'Feature': list(feature_group_mapping.keys()),
+        'Feature Group': list(feature_group_mapping.values())
+    })
+    
+    # Merge to get feature groups
+    df_melted = df_grouped.melt(id_vars=group_cols, value_vars=feature_group_mapping.keys(),
+                                var_name='Feature', value_name='Value')
+    df_melted = df_melted.merge(feature_groups, on='Feature', how='left')
+    
+    # Sum values by feature group
+    df_feature_group = df_melted.groupby(group_cols + ['Feature Group'])['Value'].sum().reset_index()
+    
+    # Pivot the dataframe
+    df_pivot = df_feature_group.pivot_table(index=group_cols, columns='Feature Group', values='Value', fill_value=0).reset_index()
+    
+    # Step 4: Save the processed dataframe as a Feather file
+    df_feature_group.to_feather(output_feature_group)
+    logging.info(f"Saved processed dataframe to Feather file at {output_feature_group}")
+    df_pivot.to_feather(output_pivot)
 
-    # Report by Hour
-    hourly_contribution = feature_group_contributions[feature_group_contributions['Group_Type'] == 'Hour'].reset_index(drop=True)
-    
-    # Report by KGMajorClass
-    feature_group_contributions['Group_Type'] = 'KGMajorClass'
-    kg_contribution = feature_group_contributions[feature_group_contributions['Group_Type'] == 'KGMajorClass'].reset_index(drop=True)
-    
-    # Combine both contributions into a single DataFrame
-    combined_contribution = pd.concat([hourly_contribution, kg_contribution], ignore_index=True)
-    
-    # Save the combined contributions to a single CSV file
-    combined_csv_path = os.path.join(output_dir, 'shap_contribution_combined.csv')
-    combined_contribution.to_csv(combined_csv_path, index=False)
-    logging.info(f"Saved combined SHAP contribution to {combined_csv_path}")
+    logging.info(f"Saved processed dataframe to Feather file at {output_pivot}")
+    return df_feature_group
 
 
 def plot_stacked_bar(percentage_df, output_path=None):
@@ -104,23 +131,16 @@ def main():
     shap_values_feather_path = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/Hourly_kg_model_Hourly_HW98_no_filter/shap_values_with_additional_columns.feather'
     local_hour_adjusted_df_path = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/updated_local_hour_adjusted_variables_HW98.feather'
     output_dir = './'  # Update this path as needed
+    output_feature_group = os.path.join(output_dir, 'shap_feature_group.feather') 
+    output_pivot = os.path.join(output_dir, 'shap_pivot.feather') 
 
     # Report SHAP contribution
-    report_shap_contribution_from_feather(local_hour_adjusted_df_path, shap_values_feather_path, output_dir)
-    print("SHAP contribution report generated.")
+    df_feature_group = report_shap_contribution_from_feather(local_hour_adjusted_df_path, shap_values_feather_path, output_dir, output_feature_group, output_pivot)
+    print("SHAP contribution by hour generated.")
 
-    # Load the combined contribution CSV
-    combined_csv_path = os.path.join(output_dir, 'shap_contribution_combined.csv')
-    combined_contribution_df = pd.read_csv(combined_csv_path)
 
-    # Filter for hourly contributions
-    hourly_contribution_df = combined_contribution_df[combined_contribution_df['Group_Type'] == 'Hour']
-
-    # Pivot the DataFrame for plotting
-    percentage_df = hourly_contribution_df.pivot(index='Group_Value', columns='Feature Group', values='value_column')  # Replace 'value_column' with the actual column name for values
-
-    # Plot stacked bar chart
-    plot_stacked_bar(percentage_df, output_path='feature_group_contribution_by_hour.png')
+    # Plot stacked bar chart based on the saved output_csv_path
+    plot_stacked_bar(df_feature_group, output_path='feature_group_contribution_by_hour.png')
     print("Stacked bar chart saved as 'feature_group_contribution_by_hour.png'.")
 
 if __name__ == "__main__":
