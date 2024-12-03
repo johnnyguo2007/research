@@ -138,10 +138,17 @@ def plot_stacked_bar(plot_df, title, output_path=None, total_series=None):
     plt.title(title)
     plt.legend(title='Feature Group', bbox_to_anchor=(1.05, 1), loc='upper left')
     
+    # Plot the total curve
     if total_series is not None:
         ax2 = ax.twinx()
         ax2.plot(plot_df.index, total_series, color='black', marker='o', linestyle='-', label='Total Value')
         ax2.set_ylabel('Total Value')
+        ax2.legend(loc='upper right')
+    else:
+        # For percentage plots, plot a flat line at 100%
+        ax2 = ax.twinx()
+        ax2.plot(plot_df.index, [100] * len(plot_df.index), color='black', linestyle='--', label='Total 100%')
+        ax2.set_ylabel('Total Percentage')
         ax2.legend(loc='upper right')
     
     plt.tight_layout()
@@ -164,13 +171,13 @@ def main():
     parser.add_argument(
         '--local-hour-adjusted-df-path',
         type=str,
-        required=True,
+        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/updated_local_hour_adjusted_variables_HW98.feather',
         help='Path to the local_hour_adjusted_df file.'
     )
     parser.add_argument(
         '--shap-values-feather-path',
         type=str,
-        required=True,
+        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/Hourly_kg_model_Hourly_HW98_no_filter/shap_values_with_additional_columns.feather',
         help='Path to the shap_values_with_additional_columns.feather file.'
     )
     parser.add_argument(
