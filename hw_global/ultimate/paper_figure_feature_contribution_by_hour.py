@@ -443,6 +443,44 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
                 color_mapping=color_mapping
             )
 
+# Define the function with 'Value' instead of 'Importance'
+def plot_feature_group_stacked_bar(df, group_by_column, output_path, title):
+    """
+    Plots a stacked bar chart of feature group contributions.
+
+    Parameters:
+    - df: DataFrame containing 'local_hour', 'Feature Group', and 'Value'.
+    - group_by_column: Column name to group by ('local_hour').
+    - output_path: Path to save the output plot.
+    - title: Title of the plot.
+    """
+    # Pivot the data to have feature groups as columns
+    pivot_df = df.pivot_table(
+        index=group_by_column,
+        columns='Feature Group',
+        values='Value',
+        aggfunc='sum',
+        fill_value=0  # Replace NaNs with zeros
+    )
+
+    # Sort the index if necessary
+    pivot_df = pivot_df.sort_index()
+
+    # Plot the stacked bar chart
+    pivot_df.plot(
+        kind='bar',
+        stacked=True,
+        figsize=(12, 8)
+    )
+
+    plt.title(title)
+    plt.xlabel(group_by_column.replace('_', ' ').title())
+    plt.ylabel('SHAP Value Contribution')
+    plt.legend(title='Feature Group', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
 def main():
     import argparse
     import mlflow
@@ -453,7 +491,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Report and plot SHAP value contributions by feature group and hour."
     )
-    
+
     # Add command-line arguments
     parser.add_argument(
         '--experiment-name',
@@ -467,16 +505,16 @@ def main():
         default=None,
         help='Number of top features to plot. If None, plot all features.'
     )
-    
+
     # Parse the arguments
     args = parser.parse_args()
 
     mlflow.set_tracking_uri(uri="http://192.168.4.85:8080")
-    
+
     # Extract arguments
     experiment_name = args.experiment_name
     top_features = args.top_features
-    
+
     # Process a single experiment by loading the necessary data
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
@@ -532,13 +570,34 @@ def main():
         feature_values_melted = feature_values_melted[feature_values_melted['Feature'].isin(top_features_list)]
 
     # Generate plots for global data and each KGMajorClass
-    kg_major_classes = df_feature['KGMajorClass'].unique().tolist()
-    plot_shap_and_feature_values(
-        df_feature,
-        feature_values_melted,
-        kg_major_classes,
-        output_dir
+    # kg_major_classes = df_feature['KGMajorClass'].unique().tolist()
+    # plot_shap_and_feature_values(
+    #     df_feature,
+    #     feature_values_melted,
+    #     kg_major_classes,
+    #     output_dir
+    # )
+
+    # Generate stacked bar plot for global data grouped by 'local_hour'
+    output_path_global = os.path.join(output_dir, 'feature_group_contribution_by_hour_global.png')
+    plot_feature_group_stacked_bar(
+        df_feature_group,
+        group_by_column='local_hour',
+        output_path=output_path_global,
+        title='Global Feature Group Contribution by Hour'
     )
+
+    # Generate stacked bar plot for each KGMajorClass grouped by 'local_hour'
+    kg_classes = df_feature_group['KGMajorClass'].unique()
+    for kg_major_class in kg_classes:
+        kg_hourly_data = df_feature_group[df_feature_group['KGMajorClass'] == kg_major_class]
+        output_path_kg = os.path.join(output_dir, f'feature_group_contribution_by_hour_{kg_major_class}.png')
+        plot_feature_group_stacked_bar(
+            kg_hourly_data,
+            group_by_column='local_hour',
+            output_path=output_path_kg,
+            title=f'Feature Group Contribution by Hour for {kg_major_class}'
+        )
 
 if __name__ == "__main__":
     main()
