@@ -734,6 +734,12 @@ def save_combined_shap_dataframe(shap_values, base_values, shap_df_additional_co
     # Reset index for X to ensure alignment
     X = X.reset_index(drop=True)
     
+    # Identify overlapping columns between shap_df_additional_columns and X
+    overlapping_cols = set(shap_df_additional_columns.columns).intersection(X.columns)
+    if overlapping_cols:
+        logging.warning(f"Removing overlapping columns from shap_df_additional_columns to avoid conflicts: {overlapping_cols}")
+        shap_df_additional_columns = shap_df_additional_columns.drop(columns=list(overlapping_cols))
+    
     # Combine SHAP values, base values, feature values (X), target variable (y), and additional columns
     combined_df = pd.concat([
         shap_values_df,
