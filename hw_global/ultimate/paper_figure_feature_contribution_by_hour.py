@@ -1,12 +1,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from hourly_kg_model import get_feature_group  # Ensure this import path is correct
-
+import numpy as np
 import os
 import sys
 import argparse
 import logging
 import mlflow
+
+from hourly_kg_model import get_feature_group  # Ensure this import path is correct
 
 def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, output_feature_group, output_pivot, output_feature):
     """
@@ -166,9 +167,33 @@ def get_top_features(df, top_n):
     top_features_list = feature_totals.sort_values(ascending=False).head(top_n).index.tolist()
     return top_features_list
 
+def get_feature_groups(feature_names):
+    """
+    Assign features to groups based on specified rules.
+
+    Args:
+        feature_names (list): List of feature names.
+
+    Returns:
+        dict: Mapping from feature names to group names.
+    """
+    prefixes = ('delta_', 'hw_nohw_diff_', 'Double_Differencing_')
+    feature_groups = {}
+    for feature in feature_names:
+        group = feature
+        for prefix in prefixes:
+            if feature.startswith(prefix):
+                group = feature[len(prefix):]
+                break
+        # If feature does not start with any prefix, it is its own group, but name the group feature + "Level"
+        if group == feature:
+            group = feature + "_Level"
+        feature_groups[feature] = group
+    return feature_groups
+
 def plot_shap_and_feature_values(shap_df, feature_values_df, kg_class, output_dir):
     """
-    Plots SHAP value contributions and feature values side by side.
+    Plots SHAP value contributions and feature values grouped by feature groups, stacked vertically.
 
     Args:
         shap_df (pd.DataFrame): DataFrame of SHAP values prepared for plotting.
@@ -178,31 +203,52 @@ def plot_shap_and_feature_values(shap_df, feature_values_df, kg_class, output_di
     """
     import matplotlib.pyplot as plt
 
-    # Define the plot title
-    title = f'ΔUHI Contribution and Feature Values by Hour - {kg_class}'
+    # Get feature groups based on specified rules
+    feature_names = feature_values_df.columns.tolist()
+    feature_groups = get_feature_groups(feature_names)
 
-    # Create a figure with subplots side by side
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8), sharex=True)
+    # Create a mapping from group names to features
+    group_to_features = {}
+    for feature, group in feature_groups.items():
+        group_to_features.setdefault(group, []).append(feature)
 
-    # Plot SHAP contributions
+    # Total number of plots: one for SHAP values and one for each feature group
+    total_plots = 1 + len(group_to_features)
+    fig_height = 6 * total_plots  # Adjust height per plot as needed
+    fig, axes = plt.subplots(nrows=total_plots, ncols=1, figsize=(12, fig_height), sharex=True)
+
+    # Ensure axes is a list even if there's only one subplot
+    if total_plots == 1:
+        axes = [axes]
+    elif total_plots > 1:
+        axes = axes.flatten()
+
+    # Plot SHAP contributions on the first subplot
     shap_df.plot(kind='bar', stacked=True, ax=axes[0], colormap='tab20')
     axes[0].set_title('SHAP Value Contributions')
     axes[0].set_xlabel('Hour of Day')
     axes[0].set_ylabel('Contribution')
+    axes[0].legend(bbox_to_anchor=(1.05, 1), loc='upper left')  # Move legend outside the plot area
 
-    # Plot feature values
-    feature_values_df.plot(kind='line', ax=axes[1], colormap='tab20')
-    axes[1].set_title('Feature Values')
-    axes[1].set_xlabel('Hour of Day')
-    axes[1].set_ylabel('Feature Value')
+    # Plot feature values for each group
+    for i, (group_name, features) in enumerate(group_to_features.items(), start=1):
+        ax = axes[i]
+        group_df = feature_values_df[features]
+
+        # Plot feature values for the group
+        group_df.plot(ax=ax)
+        ax.set_title(f'Feature Values - Group: {group_name}')
+        ax.set_xlabel('Hour of Day')
+        ax.set_ylabel('Feature Value')
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')  # Move legend outside the plot area
 
     # Adjust layout and save the figure
-    plt.suptitle(title)
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    title = f'ΔUHI Contribution and Feature Values by Hour - {kg_class}'
+    plt.suptitle(title, y=1.02)
+    plt.tight_layout()
     output_path = os.path.join(output_dir, f'shap_and_feature_values_{kg_class}.png')
-    plt.savefig(output_path)
+    plt.savefig(output_path, bbox_inches='tight')
     plt.close()
-
     print(f"Plots saved as '{output_path}' for KGMajorClass '{kg_class}'.")
 
 def main():
@@ -285,15 +331,20 @@ def main():
     print("SHAP contribution by hour generated.")
 
     # Load the feature values from shap_values_feather_path
-    feature_values_df = load_feature_values(shap_values_feather_path)
+    feature_values_melted = load_feature_values(shap_values_feather_path)
 
-    # Generate plots for each KGMajorClass and each plot type
+    # Pivot feature values for plotting
+    feature_values_pivot = feature_values_melted.pivot_table(
+        index='local_hour',
+        columns='Feature',
+        values='FeatureValue',
+        aggfunc='mean'  # Adjust aggregation if necessary
+    )
+
+    # Generate plots for each KGMajorClass
     kg_major_classes = df_feature['KGMajorClass'].unique()
     for kg_class in kg_major_classes:
         df_shap_subset = df_feature[df_feature['KGMajorClass'] == kg_class]
-        df_feature_values_subset = feature_values_df[feature_values_df['KGMajorClass'] == kg_class]
-
-        # Group and pivot the SHAP values
         shap_plot_df = prepare_plot_df(
             df_shap_subset, 
             feature_col='Feature', 
@@ -301,12 +352,12 @@ def main():
             group_cols=['local_hour']
         )
 
-        # Group and pivot the feature values
-        feature_values_plot_df = prepare_plot_df(
-            df_feature_values_subset, 
-            feature_col='Feature', 
-            value_col='FeatureValue', 
-            group_cols=['local_hour']
+        feature_values_subset = feature_values_melted[feature_values_melted['KGMajorClass'] == kg_class]
+        feature_values_plot_df = feature_values_subset.pivot_table(
+            index='local_hour',
+            columns='Feature',
+            values='FeatureValue',
+            aggfunc='mean'  # Adjust aggregation if necessary
         )
 
         # Optionally select top features
@@ -315,7 +366,7 @@ def main():
             shap_plot_df = shap_plot_df[top_features_list]
             feature_values_plot_df = feature_values_plot_df[top_features_list]
 
-        # Plot side by side
+        # Plot SHAP and feature values, with feature values plotted per group
         plot_shap_and_feature_values(
             shap_plot_df, 
             feature_values_plot_df, 
