@@ -230,6 +230,9 @@ def plot_shap_and_feature_values(shap_df, feature_values_df, kg_class, output_di
         axes[1].set_xlabel('Hour of Day')
         axes[1].set_ylabel('Feature Value')
 
+        # Add a light dotted horizontal line at y=0 in the feature plot
+        axes[1].axhline(0, linestyle='--', color='lightgray', linewidth=1)
+
         # Adjust legends
         axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
         axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
@@ -238,7 +241,13 @@ def plot_shap_and_feature_values(shap_df, feature_values_df, kg_class, output_di
         title = f'ΔUHI Contribution and Feature Values by Hour - {kg_class} - Group: {group_name}'
         plt.suptitle(title, y=1.02)
         plt.tight_layout()
-        output_path = os.path.join(output_dir, f'shap_and_feature_values_{kg_class}_{group_name}.png')
+
+        # Create a subdirectory for the current kg_class if it doesn't exist
+        kg_class_dir = os.path.join(output_dir, kg_class)
+        if not os.path.exists(kg_class_dir):
+            os.makedirs(kg_class_dir)
+
+        output_path = os.path.join(kg_class_dir, f'shap_and_feature_values_{kg_class}_{group_name}.png')
         plt.savefig(output_path, bbox_inches='tight')
         plt.close()
         print(f"Plot saved as '{output_path}' for KGMajorClass '{kg_class}' and Feature Group '{group_name}'.")
