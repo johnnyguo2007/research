@@ -6,6 +6,7 @@ import sys
 import argparse
 import logging
 import mlflow
+import seaborn as sns
 
 from hourly_kg_model import get_feature_group  # Ensure this import path is correct
 
@@ -203,7 +204,7 @@ def get_feature_groups(feature_names):
         feature_groups[feature] = group
     return feature_groups
 
-def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_name, output_dir, kg_class):
+def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_name, output_dir, kg_class, color_mapping):
     """
     Plots SHAP value contributions and feature group's values side by side.
     Saves each plot as a separate image file with the legend at the bottom.
@@ -216,37 +217,54 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
         print(f"No data available for group '{group_name}' in KGMajorClass '{kg_class}'. Skipping.")
         return
 
-    # Plot SHAP contributions and feature values side by side
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(18, 8), sharex=True)
+    # Define colors based on the color mapping
+    shap_colors = [color_mapping.get(feature, '#333333') for feature in shap_df.columns]
+    feature_colors = [color_mapping.get(feature, '#333333') for feature in feature_values_df.columns]
 
     # Plot SHAP contributions on the first subplot
-    shap_df.plot(kind='bar', stacked=True, ax=axes[0], colormap='tab20')
+    ax_shap = shap_df.plot(kind='bar', stacked=True, figsize=(12, 6), color=shap_colors, ax=None)
+    ax_shap.set_title('SHAP Value Contributions')
+    ax_shap.set_xlabel('Hour of Day')
+    ax_shap.set_ylabel('Contribution')
+    ax_shap.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
+
+    # Plot feature values for the specific group on the second subplot
+    ax_feat = feature_values_df.plot(kind='bar', figsize=(12, 6), color=feature_colors, ax=None)
+    ax_feat.set_title(f'Feature Values - Group: {group_name}')
+    ax_feat.set_xlabel('Hour of Day')
+    ax_feat.set_ylabel('Feature Value')
+    ax_feat.axhline(0, linestyle='--', color='lightgray', linewidth=1)
+    ax_feat.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
+
+    # Create a single figure with two subplots
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(24, 8), sharex=False)
+    
+    # Plot SHAP contributions
+    shap_df.plot(kind='bar', stacked=True, ax=axes[0], color=shap_colors)
     axes[0].set_title('SHAP Value Contributions')
     axes[0].set_xlabel('Hour of Day')
     axes[0].set_ylabel('Contribution')
-
-    # Plot feature values for the specific group on the second subplot
-    feature_values_df.plot(ax=axes[1])
+    
+    # Plot feature values
+    feature_values_df.plot(ax=axes[1], color=feature_colors)
     axes[1].set_title(f'Feature Values - Group: {group_name}')
     axes[1].set_xlabel('Hour of Day')
     axes[1].set_ylabel('Feature Value')
-
-    # Add a light dotted horizontal line at y=0 in the feature plot
     axes[1].axhline(0, linestyle='--', color='lightgray', linewidth=1)
-
+    
     # Adjust legends
     axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
     axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
-
+    
     # Adjust layout and save the figure
     title = f'ΔUHI Contribution and Feature Values by Hour - {group_name} - KGMajorClass {kg_class}'
     plt.suptitle(title, y=1.02)
     plt.tight_layout()
-
+    
     # Create a subdirectory for the current feature group if it doesn't exist
     group_dir = os.path.join(output_dir, group_name)
     os.makedirs(group_dir, exist_ok=True)
-
+    
     # Construct the output path with kg_class and group_name
     output_filename = f'shap_and_feature_values_{group_name}_{kg_class}.png'
     output_path = os.path.join(group_dir, output_filename)
@@ -255,37 +273,60 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
     print(f"Plot saved as '{output_path}' for group '{group_name}' and KGMajorClass '{kg_class}'.")
 
     # Plot separate SHAP stacked bar plot and save as a separate file
-    fig_shap, ax_shap = plt.subplots(figsize=(10, 6))
-    shap_df.plot(kind='bar', stacked=True, ax=ax_shap, colormap='tab20')
-    ax_shap.set_title(f'SHAP Value Contributions - {group_name} - KGMajorClass {kg_class}')
-    ax_shap.set_xlabel('Hour of Day')
-    ax_shap.set_ylabel('Contribution')
-    ax_shap.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
+    fig_shap, ax_shap_sep = plt.subplots(figsize=(10, 6))
+    shap_df.plot(kind='bar', stacked=True, ax=ax_shap_sep, color=shap_colors, colormap=None)
+    ax_shap_sep.set_title(f'SHAP Value Contributions - {group_name} - KGMajorClass {kg_class}')
+    ax_shap_sep.set_xlabel('Hour of Day')
+    ax_shap_sep.set_ylabel('Contribution')
+    ax_shap_sep.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
     plt.tight_layout()
-
+    
     shap_output_filename = f'shap_contributions_{group_name}_{kg_class}.png'
     shap_output_path = os.path.join(group_dir, shap_output_filename)
     plt.savefig(shap_output_path, bbox_inches='tight')
     plt.close()
     print(f"Separate SHAP stacked bar plot saved as '{shap_output_path}' for group '{group_name}' and KGMajorClass '{kg_class}'.")
 
-def plot_shap_stacked_bar(shap_df, title, output_path):
+def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None):
     """
-    Plots a standalone SHAP stacked bar plot (all features).
+    Plots a standalone SHAP stacked bar plot (all features) with a total SHAP value curve.
     """
     import matplotlib.pyplot as plt
 
-    # Plot SHAP contributions
     plt.figure(figsize=(12, 8))
-    shap_df.plot(kind='bar', stacked=True, colormap='tab20')
+    
+    ax = plt.gca()
+    
+    if color_mapping:
+        # Ensure columns are sorted to match color mapping
+        sorted_columns = sorted(shap_df.columns, key=lambda x: x)
+        colors = [color_mapping.get(feature, '#333333') for feature in sorted_columns]
+        shap_df = shap_df[sorted_columns]
+        shap_df.plot(kind='bar', stacked=True, color=colors, ax=ax)
+    else:
+        # Default colormap if no color_mapping is provided
+        shap_df.plot(kind='bar', stacked=True, colormap='tab20', ax=ax)
+    
+    # Calculate total SHAP values for each hour
+    total_shap = shap_df.sum(axis=1)
+    
+    # Plot the total SHAP values as a curve on a secondary y-axis
+    ax2 = ax.twinx()
+    total_shap.plot(kind='line', color='black', marker='o', linewidth=2, ax=ax2, label='Total SHAP')
+    ax2.set_ylabel('Total SHAP Value')
+    
+    # Combine legends from both axes
+    handles1, labels1 = ax.get_legend_handles_labels()
+    handles2, labels2 = ax2.get_legend_handles_labels()
+    ax.legend(handles1 + handles2, labels1 + labels2, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
+    
     plt.title(title)
     plt.xlabel('Hour of Day')
-    plt.ylabel('SHAP Value Contribution')
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
+    ax.set_ylabel('SHAP Value Contribution')
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches='tight')
     plt.close()
-    print(f"Standalone SHAP stacked bar plot saved at '{output_path}'.")
+    print(f"Standalone SHAP stacked bar plot with total curve saved at '{output_path}'.")
 
 def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, output_dir):
     """
@@ -294,10 +335,17 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
     Saves each plot as a separate image file with the legend at the bottom.
     Organizes outputs into the global subdirectory and separate subdirectories for each KGMajorClass.
     """
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
     # Prepare a list of all feature groups
     feature_names = df_feature['Feature'].unique().tolist()
     feature_groups = get_feature_groups(feature_names)
     unique_groups = set(feature_groups.values())
+    
+    # Create a color palette
+    palette = sns.color_palette('tab20', n_colors=len(feature_names))
+    color_mapping = dict(zip(sorted(feature_names), palette))
     
     # Create a global subdirectory
     global_dir = os.path.join(output_dir, "global")
@@ -349,7 +397,8 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
             feature_values_df=feature_values_plot_df_group,
             group_name=group_name,
             output_dir=global_dir,  # Save under the global directory
-            kg_class='global'  # Indicate global in the plot filenames
+            kg_class='global',      # Indicate global in the plot filenames
+            color_mapping=color_mapping
         )
     
     # Plot for each KGMajorClass
@@ -411,8 +460,9 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
                 shap_df=shap_plot_df,
                 feature_values_df=feature_values_plot_df,
                 group_name=group_name,
-                output_dir=kg_class_dir,  # Save under the kg_class directory
-                kg_class=kg_class  # Indicate kg_class in the plot filenames
+                output_dir=kg_class_dir,   # Save under the kg_class directory
+                kg_class=kg_class,        # Indicate kg_class in the plot filenames
+                color_mapping=color_mapping
             )
 
 def main():
