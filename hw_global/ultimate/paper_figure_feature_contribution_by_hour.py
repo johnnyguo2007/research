@@ -193,7 +193,8 @@ def get_feature_groups(feature_names):
 
 def plot_shap_and_feature_values(shap_df, feature_values_df, kg_class, output_dir):
     """
-    Plots SHAP value contributions and feature values grouped by feature groups, stacked vertically.
+    Plots SHAP value contributions and a single feature group's values side by side.
+    Saves each plot as a separate image file with the legend at the bottom.
 
     Args:
         shap_df (pd.DataFrame): DataFrame of SHAP values prepared for plotting.
@@ -202,6 +203,7 @@ def plot_shap_and_feature_values(shap_df, feature_values_df, kg_class, output_di
         output_dir (str): Directory to save the plots.
     """
     import matplotlib.pyplot as plt
+    import os
 
     # Get feature groups based on specified rules
     feature_names = feature_values_df.columns.tolist()
@@ -212,44 +214,34 @@ def plot_shap_and_feature_values(shap_df, feature_values_df, kg_class, output_di
     for feature, group in feature_groups.items():
         group_to_features.setdefault(group, []).append(feature)
 
-    # Total number of plots: one for SHAP values and one for each feature group
-    total_plots = 1 + len(group_to_features)
-    fig_height = 6 * total_plots  # Adjust height per plot as needed
-    fig, axes = plt.subplots(nrows=total_plots, ncols=1, figsize=(12, fig_height), sharex=True)
+    for group_name, features in group_to_features.items():
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(18, 8), sharex=True)
 
-    # Ensure axes is a list even if there's only one subplot
-    if total_plots == 1:
-        axes = [axes]
-    elif total_plots > 1:
-        axes = axes.flatten()
+        # Plot SHAP contributions on the first subplot
+        shap_df.plot(kind='bar', stacked=True, ax=axes[0], colormap='tab20')
+        axes[0].set_title('SHAP Value Contributions')
+        axes[0].set_xlabel('Hour of Day')
+        axes[0].set_ylabel('Contribution')
 
-    # Plot SHAP contributions on the first subplot
-    shap_df.plot(kind='bar', stacked=True, ax=axes[0], colormap='tab20')
-    axes[0].set_title('SHAP Value Contributions')
-    axes[0].set_xlabel('Hour of Day')
-    axes[0].set_ylabel('Contribution')
-    axes[0].legend(bbox_to_anchor=(1.05, 1), loc='upper left')  # Move legend outside the plot area
+        # Plot feature values for the specific group on the second subplot
+        group_features = feature_values_df[features]
+        group_features.plot(ax=axes[1])
+        axes[1].set_title(f'Feature Values - Group: {group_name}')
+        axes[1].set_xlabel('Hour of Day')
+        axes[1].set_ylabel('Feature Value')
 
-    # Plot feature values for each group
-    for i, (group_name, features) in enumerate(group_to_features.items(), start=1):
-        ax = axes[i]
-        group_df = feature_values_df[features]
+        # Adjust legends
+        axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
+        axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
 
-        # Plot feature values for the group
-        group_df.plot(ax=ax)
-        ax.set_title(f'Feature Values - Group: {group_name}')
-        ax.set_xlabel('Hour of Day')
-        ax.set_ylabel('Feature Value')
-        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')  # Move legend outside the plot area
-
-    # Adjust layout and save the figure
-    title = f'ΔUHI Contribution and Feature Values by Hour - {kg_class}'
-    plt.suptitle(title, y=1.02)
-    plt.tight_layout()
-    output_path = os.path.join(output_dir, f'shap_and_feature_values_{kg_class}.png')
-    plt.savefig(output_path, bbox_inches='tight')
-    plt.close()
-    print(f"Plots saved as '{output_path}' for KGMajorClass '{kg_class}'.")
+        # Adjust layout and save the figure
+        title = f'ΔUHI Contribution and Feature Values by Hour - {kg_class} - Group: {group_name}'
+        plt.suptitle(title, y=1.02)
+        plt.tight_layout()
+        output_path = os.path.join(output_dir, f'shap_and_feature_values_{kg_class}_{group_name}.png')
+        plt.savefig(output_path, bbox_inches='tight')
+        plt.close()
+        print(f"Plot saved as '{output_path}' for KGMajorClass '{kg_class}' and Feature Group '{group_name}'.")
 
 def main():
     import argparse
