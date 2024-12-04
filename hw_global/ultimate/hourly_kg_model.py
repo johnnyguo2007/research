@@ -561,7 +561,7 @@ def select_features(df_daily_vars, args):
     daily_var_lst = daily_vars.tolist()
 
     delta_vars = df_daily_vars.loc[df_daily_vars[args.delta_column] == 'Y', 'Variable']
-    delta_var_lst = delta_vars.tolist()
+    daily_var_lst.extend([f"delta_{var}" for var in delta_vars])  # Add delta features
 
     hw_nohw_diff_vars = df_daily_vars.loc[df_daily_vars[args.hw_nohw_diff_column] == 'Y', 'Variable']
     daily_var_lst.extend([f"hw_nohw_diff_{var}" for var in hw_nohw_diff_vars])  # Add HW-NoHW diff features
@@ -570,24 +570,22 @@ def select_features(df_daily_vars, args):
     daily_var_lst.extend([f"Double_Differencing_{var}" for var in double_diff_vars])  # Add Double Differencing features
 
     logging.info(f"Initial feature list: {daily_var_lst}")
-    return daily_var_lst, delta_var_lst
+    return daily_var_lst
 
-def calculate_delta_variables(local_hour_adjusted_df, delta_var_lst, delta_mode):
+def calculate_delta_variables(local_hour_adjusted_df, delta_var_lst):
     """
     Calculates delta variables based on the delta mode.
     """
-    if delta_mode in ["include", "only"]:
-        logging.info("Calculating delta variables...")
-        for var in delta_var_lst:
-            var_U = f"{var}_U"
-            var_R = f"{var}_R"
-            delta_var = f"delta_{var}"
-            if var_U in local_hour_adjusted_df.columns and var_R in local_hour_adjusted_df.columns:
-                local_hour_adjusted_df[delta_var] = local_hour_adjusted_df[var_U] - local_hour_adjusted_df[var_R]
-            else:
-                logging.warning(f"{var_U} or {var_R} not found in dataframe columns.")
-    else:
-        logging.info("Using original variables only...")
+    logging.info("Calculating delta variables...")
+    for var in delta_var_lst:
+        var_U = f"{var}_U"
+        var_R = f"{var}_R"
+        delta_var = f"delta_{var}"
+        if var_U in local_hour_adjusted_df.columns and var_R in local_hour_adjusted_df.columns:
+            local_hour_adjusted_df[delta_var] = local_hour_adjusted_df[var_U] - local_hour_adjusted_df[var_R]
+        else:
+            logging.warning(f"{var_U} or {var_R} not found in dataframe columns.")
+
     return local_hour_adjusted_df
 
 def calculate_double_differencing(local_hour_adjusted_df, double_diff_vars):
@@ -693,7 +691,7 @@ def calculate_shap_values(model, X, y, uhi_diff):
     # Extract additional columns for further analysis
     additional_columns = [
         'global_event_ID', 'lon', 'lat', 'time',
-        'KGClass', 'KGMajorClass', 'UHI_diff'
+        'KGClass', 'KGMajorClass', 'UHI_diff', 'local_hour'
     ]
     additional_columns = [col for col in additional_columns if col in uhi_diff.columns]
     shap_df_additional_columns = uhi_diff[additional_columns].reset_index(drop=True)
@@ -714,12 +712,18 @@ def save_shap_values(shap_values, figure_dir):
     mlflow.log_artifact(shap_values_path)
     logging.info(f"Saved SHAP values to {shap_values_path}")
 
-def save_combined_shap_dataframe(shap_values, shap_df_additional_columns, figure_dir):
+def save_combined_shap_dataframe(shap_values, shap_df_additional_columns, feature_names, figure_dir):
     """
     Saves the combined SHAP values and additional columns as a Feather file.
     """
+    # Rename the local_hour column in shap_df_additional_columns
+    # shap_df_additional_columns = shap_df_additional_columns.rename(columns={'local_hour': 'local_hour_value'})
+    
     # Combine SHAP values with additional columns
-    shap_values_df = pd.DataFrame(shap_values, columns=shap_df_additional_columns.columns[:-1])
+    shap_values_df = pd.DataFrame(shap_values, columns=feature_names)
+    #if local_hour is in shap_values_df, rename it to local_hour_shap
+    if 'local_hour' in shap_values_df.columns:
+        shap_values_df = shap_df_additional_columns.rename(columns={'local_hour': 'local_hour_shap'})   
     combined_df = pd.concat([shap_values_df, shap_df_additional_columns], axis=1)
     
     # Save the combined DataFrame as a Feather file
@@ -783,6 +787,7 @@ def report_shap_contribution(shap_values, X, shap_df_additional_columns, df_dail
     mlflow.log_artifact(combined_csv_path)
     logging.info(f"Saved combined SHAP contribution to {combined_csv_path}")
 
+
 def main():
     args = parse_arguments()
     logging.info("Starting UHI model script...")
@@ -801,14 +806,19 @@ def main():
     local_hour_adjusted_df = apply_filters(local_hour_adjusted_df, args.filters)
     
     # Load feature list from Excel file
-    df_daily_vars = pd.read_excel('/home/jguo/research/hw_global/Data/hourlyDataSchema.xlsx')
+    df_daily_vars_path ='/home/jguo/research/hw_global/Data/hourlyDataSchema.xlsx'
+    df_daily_vars = pd.read_excel(df_daily_vars_path)
+    mlflow.log_artifact(df_daily_vars_path)
+    print(f"Saved df_daily_vars to {df_daily_vars_path}")
     
     logging.info("Selecting features...")
-    daily_var_lst, delta_var_lst = select_features(df_daily_vars, args)
+    daily_var_lst = select_features(df_daily_vars, args)
     
     logging.info("Calculating delta variables...")
     local_hour_adjusted_df = calculate_delta_variables(
-        local_hour_adjusted_df, delta_var_lst, args.delta_mode
+        local_hour_adjusted_df, df_daily_vars.loc[
+            df_daily_vars[args.delta_column] == 'Y', 'Variable'
+        ].tolist()
     )
     
     logging.info("Calculating Double Differencing variables...")
@@ -822,6 +832,13 @@ def main():
     X, y, uhi_diff = prepare_data(
         local_hour_adjusted_df, daily_var_lst, args.time_period, args.daily_freq
     )
+
+    daily_var_lst_path = os.path.join(figure_dir, 'daily_var_lst.txt')
+    with open(daily_var_lst_path, 'w') as f:
+        for var in X.columns:
+            f.write(f"{var}\n")
+    mlflow.log_artifact(daily_var_lst_path)
+    print(f"Saved daily_var_lst to {daily_var_lst_path}")
     
     logging.info("Training and evaluating the model...")
     model = train_model(X, y, args)
@@ -831,7 +848,8 @@ def main():
     
     logging.info("Saving SHAP values and combined dataframe...")
     save_shap_values(shap_values, figure_dir)
-    save_combined_shap_dataframe(shap_values, shap_df_additional_columns, figure_dir)
+    feature_names = X.columns.tolist()
+    save_combined_shap_dataframe(shap_values, shap_df_additional_columns, feature_names, figure_dir)
     
     logging.info("Processing SHAP values and generating plots...")
     process_shap_values(
@@ -845,8 +863,8 @@ def main():
         args.time_period, df_daily_vars, figure_dir, exclude_features=args.exclude_features
     )
     
-    # New step: Report SHAP value contribution from each feature group by hour and by KGMajorClass
-    report_shap_contribution(shap_values, X, shap_df_additional_columns, df_daily_vars, figure_dir)
+    # # New step: Report SHAP value contribution from each feature group by hour and by KGMajorClass
+    # report_shap_contribution(shap_values, X, shap_df_additional_columns, df_daily_vars, figure_dir)
     
     logging.info("Script execution completed.")
     mlflow.end_run()
