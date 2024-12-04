@@ -712,19 +712,23 @@ def save_shap_values(shap_values, figure_dir):
     mlflow.log_artifact(shap_values_path)
     logging.info(f"Saved SHAP values to {shap_values_path}")
 
-def save_combined_shap_dataframe(shap_values, shap_df_additional_columns, feature_names, figure_dir):
+def save_combined_shap_dataframe(shap_values, shap_df_additional_columns, feature_names, figure_dir, X, y):
     """
-    Saves the combined SHAP values and additional columns as a Feather file.
+    Saves the combined SHAP values, feature values (X), target variable (y), and additional columns as a Feather file.
+    Before combining, rename the columns of shap_values_df by adding '_shap' to their original column names to avoid conflict with X.
     """
-    # Rename the local_hour column in shap_df_additional_columns
-    # shap_df_additional_columns = shap_df_additional_columns.rename(columns={'local_hour': 'local_hour_value'})
+    # Rename columns in shap_values_df by adding '_shap' suffix
+    shap_column_names = [f"{col}_shap" for col in feature_names]
+    shap_values_df = pd.DataFrame(shap_values, columns=shap_column_names)
     
-    # Combine SHAP values with additional columns
-    shap_values_df = pd.DataFrame(shap_values, columns=feature_names)
-    #if local_hour is in shap_values_df, rename it to local_hour_shap
-    if 'local_hour' in shap_values_df.columns:
-        shap_values_df = shap_df_additional_columns.rename(columns={'local_hour': 'local_hour_shap'})   
-    combined_df = pd.concat([shap_values_df, shap_df_additional_columns], axis=1)
+    # Create DataFrame for target variable y with column name 'UHI_diff'
+    y_df = pd.DataFrame(y, columns=['UHI_diff']).reset_index(drop=True)
+    
+    # Reset index for X to ensure alignment
+    X = X.reset_index(drop=True)
+    
+    # Combine SHAP values, feature values (X), target variable (y), and additional columns
+    combined_df = pd.concat([shap_values_df, X, y_df, shap_df_additional_columns.reset_index(drop=True)], axis=1)
     
     # Save the combined DataFrame as a Feather file
     combined_feather_path = os.path.join(figure_dir, 'shap_values_with_additional_columns.feather')
@@ -849,7 +853,7 @@ def main():
     logging.info("Saving SHAP values and combined dataframe...")
     save_shap_values(shap_values, figure_dir)
     feature_names = X.columns.tolist()
-    save_combined_shap_dataframe(shap_values, shap_df_additional_columns, feature_names, figure_dir)
+    save_combined_shap_dataframe(shap_values, shap_df_additional_columns, feature_names, figure_dir, X, y)
     
     logging.info("Processing SHAP values and generating plots...")
     process_shap_values(
