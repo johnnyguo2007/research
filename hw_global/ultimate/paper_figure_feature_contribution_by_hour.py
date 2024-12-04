@@ -446,7 +446,7 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
 # Define the function with 'Value' instead of 'Importance'
 def plot_feature_group_stacked_bar(df, group_by_column, output_path, title):
     """
-    Plots a stacked bar chart of feature group contributions.
+    Plots a stacked bar chart of feature group contributions with total SHAP value line.
 
     Parameters:
     - df: DataFrame containing 'local_hour', 'Feature Group', and 'Value'.
@@ -466,19 +466,35 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title):
     # Sort the index if necessary
     pivot_df = pivot_df.sort_index()
 
-    # Plot the stacked bar chart
+    # Create figure and primary axis
+    fig, ax1 = plt.subplots(figsize=(12, 8))
+    
+    # Plot stacked bars on primary axis
     pivot_df.plot(
         kind='bar',
         stacked=True,
-        figsize=(12, 8)
+        ax=ax1
     )
 
+    # Calculate and plot total SHAP values on secondary axis
+    ax2 = ax1.twinx()
+    total_shap = pivot_df.sum(axis=1)
+    total_shap.plot(color='black', marker='o', linewidth=2, 
+                    ax=ax2, label='Total SHAP')
+    ax2.set_ylabel('Total SHAP Value')
+
+    # Combine legends from both axes
+    handles1, labels1 = ax1.get_legend_handles_labels()
+    handles2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(handles1 + handles2, labels1 + labels2, 
+              bbox_to_anchor=(1.05, 1), loc='upper left')
+
     plt.title(title)
-    plt.xlabel(group_by_column.replace('_', ' ').title())
-    plt.ylabel('SHAP Value Contribution')
-    plt.legend(title='Feature Group', bbox_to_anchor=(1.05, 1), loc='upper left')
+    ax1.set_xlabel(group_by_column.replace('_', ' ').title())
+    ax1.set_ylabel('SHAP Value Contribution')
+
     plt.tight_layout()
-    plt.savefig(output_path)
+    plt.savefig(output_path, bbox_inches='tight')
     plt.close()
 
 def main():
@@ -570,13 +586,13 @@ def main():
         feature_values_melted = feature_values_melted[feature_values_melted['Feature'].isin(top_features_list)]
 
     # Generate plots for global data and each KGMajorClass
-    # kg_major_classes = df_feature['KGMajorClass'].unique().tolist()
-    # plot_shap_and_feature_values(
-    #     df_feature,
-    #     feature_values_melted,
-    #     kg_major_classes,
-    #     output_dir
-    # )
+    kg_major_classes = df_feature['KGMajorClass'].unique().tolist()
+    plot_shap_and_feature_values(
+        df_feature,
+        feature_values_melted,
+        kg_major_classes,
+        output_dir
+    )
 
     # Generate stacked bar plot for global data grouped by 'local_hour'
     output_path_global = os.path.join(output_dir, 'feature_group_contribution_by_hour_global.png')
