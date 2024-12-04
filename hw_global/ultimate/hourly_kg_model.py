@@ -677,11 +677,15 @@ def train_model(X, y, args):
 
 def calculate_shap_values(model, X, y, uhi_diff):
     """
-    Calculates SHAP values and returns them along with additional columns.
+    Calculates SHAP values and returns them along with base values and additional columns.
     """
     logging.info("Calculating SHAP values...")
     full_pool = Pool(X, y)
-    shap_values = model.get_feature_importance(full_pool, type='ShapValues')[:, :-1]
+    
+    # Get full SHAP values including base values
+    full_shap_values = model.get_feature_importance(full_pool, type='ShapValues')
+    shap_values = full_shap_values[:, :-1]
+    base_values = full_shap_values[:, -1]  # Extract base values separately
     feature_names = X.columns.tolist()
 
     # Ensure that the length of shap_values matches the number of rows in uhi_diff
@@ -701,7 +705,7 @@ def calculate_shap_values(model, X, y, uhi_diff):
     estimation_error = y_pred - shap_df_additional_columns['UHI_diff']
     shap_df_additional_columns['Estimation_Error'] = estimation_error
 
-    return shap_values, shap_df_additional_columns
+    return shap_values, base_values, shap_df_additional_columns
 
 def save_shap_values(shap_values, figure_dir):
     """
@@ -712,14 +716,17 @@ def save_shap_values(shap_values, figure_dir):
     mlflow.log_artifact(shap_values_path)
     logging.info(f"Saved SHAP values to {shap_values_path}")
 
-def save_combined_shap_dataframe(shap_values, shap_df_additional_columns, feature_names, figure_dir, X, y):
+def save_combined_shap_dataframe(shap_values, base_values, shap_df_additional_columns, feature_names, figure_dir, X, y):
     """
-    Saves the combined SHAP values, feature values (X), target variable (y), and additional columns as a Feather file.
+    Saves the combined SHAP values, base values, feature values (X), target variable (y), and additional columns as a Feather file.
     Before combining, rename the columns of shap_values_df by adding '_shap' to their original column names to avoid conflict with X.
     """
     # Rename columns in shap_values_df by adding '_shap' suffix
     shap_column_names = [f"{col}_shap" for col in feature_names]
     shap_values_df = pd.DataFrame(shap_values, columns=shap_column_names)
+    
+    # Create DataFrame for base values
+    base_values_df = pd.DataFrame(base_values, columns=['base_value'])
     
     # Create DataFrame for target variable y with column name 'UHI_diff'
     y_df = pd.DataFrame(y, columns=['UHI_diff']).reset_index(drop=True)
@@ -727,8 +734,13 @@ def save_combined_shap_dataframe(shap_values, shap_df_additional_columns, featur
     # Reset index for X to ensure alignment
     X = X.reset_index(drop=True)
     
-    # Combine SHAP values, feature values (X), target variable (y), and additional columns
-    combined_df = pd.concat([shap_values_df, X, y_df, shap_df_additional_columns.reset_index(drop=True)], axis=1)
+    # Combine SHAP values, base values, feature values (X), target variable (y), and additional columns
+    combined_df = pd.concat([
+        shap_values_df,
+        base_values_df.reset_index(drop=True),
+        X.reset_index(drop=True),
+        shap_df_additional_columns.reset_index(drop=True)
+    ], axis=1)
     
     # Save the combined DataFrame as a Feather file
     combined_feather_path = os.path.join(figure_dir, 'shap_values_with_additional_columns.feather')
@@ -848,12 +860,14 @@ def main():
     model = train_model(X, y, args)
     
     logging.info("Calculating SHAP values...")
-    shap_values, shap_df_additional_columns = calculate_shap_values(model, X, y, uhi_diff)
+    # Unpack base_values returned from calculate_shap_values
+    shap_values, base_values, shap_df_additional_columns = calculate_shap_values(model, X, y, uhi_diff)
     
     logging.info("Saving SHAP values and combined dataframe...")
     save_shap_values(shap_values, figure_dir)
     feature_names = X.columns.tolist()
-    save_combined_shap_dataframe(shap_values, shap_df_additional_columns, feature_names, figure_dir, X, y)
+    # Pass base_values to save_combined_shap_dataframe
+    save_combined_shap_dataframe(shap_values, base_values, shap_df_additional_columns, feature_names, figure_dir, X, y)
     
     logging.info("Processing SHAP values and generating plots...")
     process_shap_values(
