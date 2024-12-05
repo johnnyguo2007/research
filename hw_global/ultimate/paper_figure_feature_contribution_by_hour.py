@@ -601,22 +601,22 @@ def main():
 
     # Generate plots for global data and each KGMajorClass
     kg_major_classes = df_feature['KGMajorClass'].unique().tolist()
-    if False:
-        plot_shap_and_feature_values(
-            df_feature,
+
+    plot_shap_and_feature_values(
+        df_feature,
         feature_values_melted,
         kg_major_classes,
         output_dir
-        )
+    )
 
-        # Generate stacked bar plot for global data grouped by 'local_hour'
-        output_path_global = os.path.join(output_dir, 'feature_group_contribution_by_hour_global.png')
-        plot_feature_group_stacked_bar(
-            df_feature_group,
-            group_by_column='local_hour',
-            output_path=output_path_global,
-            title='Global Feature Group Contribution by Hour'
-        )
+    # Generate stacked bar plot for global data grouped by 'local_hour'
+    output_path_global = os.path.join(output_dir, 'feature_group_contribution_by_hour_global.png')
+    plot_feature_group_stacked_bar(
+        df_feature_group,
+        group_by_column='local_hour',
+        output_path=output_path_global,
+        title='Global Feature Group Contribution by Hour'
+    )
 
     # Generate stacked bar plot for each KGMajorClass grouped by 'local_hour'
     kg_classes = df_feature_group['KGMajorClass'].unique()
