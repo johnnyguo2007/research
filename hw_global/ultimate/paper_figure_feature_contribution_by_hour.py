@@ -8,7 +8,6 @@ import logging
 import mlflow
 import seaborn as sns
 
-from hourly_kg_model import get_feature_group  # Ensure this import path is correct
 
 def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, output_feature_group, output_pivot, output_feature):
     """
@@ -50,17 +49,25 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     # Exclude certain columns if necessary (adjust as per your requirements)
     exclude_cols = ['UHI_diff_shap', 'Estimation_Error_shap']
     feature_group_mapping = {}
-    for col in shap_cols:
-        if col not in exclude_cols:
-            base_col = col_mapping[col]
-            group = get_feature_group(base_col)
-            feature_group_mapping[base_col] = group
+    # for col in shap_cols:
+    #     if col not in exclude_cols:
+    #         base_col = col_mapping[col]
+    #         group = get_feature_groups(base_col)
+    #         feature_group_mapping[base_col] = group
 
-    # Create a DataFrame for feature groups
-    feature_groups = pd.DataFrame({
-        'Feature': list(feature_group_mapping.keys()),
-        'Feature Group': list(feature_group_mapping.values())
-    })
+    # # Create a DataFrame for feature groups
+    # feature_groups = pd.DataFrame({
+    #     'Feature': list(feature_group_mapping.keys()),
+    #     'Feature Group': list(feature_group_mapping.values())
+    # })
+    feature_names = [col.replace('_shap', '') for col in shap_cols]
+    feature_groups = get_feature_groups(feature_names)
+    
+    # Convert feature_groups dictionary to a DataFrame
+    feature_groups_df = pd.DataFrame(
+        list(feature_groups.items()), 
+        columns=['Feature', 'Feature Group']
+    )
     
     # Melt the dataframe to long format with base feature names
     df_melted = df_grouped.melt(
@@ -69,11 +76,12 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
         var_name='Feature', 
         value_name='Value'
     )
+    
     # Replace SHAP column names with base feature names
     df_melted['Feature'] = df_melted['Feature'].map(col_mapping)
     
     # Merge to get feature groups
-    df_melted = df_melted.merge(feature_groups, on='Feature', how='left')
+    df_melted = df_melted.merge(feature_groups_df, on='Feature', how='left')
     
     # Sum values by feature group
     df_feature_group = df_melted.groupby(group_cols + ['Feature Group'])['Value'].sum().reset_index()
@@ -593,21 +601,22 @@ def main():
 
     # Generate plots for global data and each KGMajorClass
     kg_major_classes = df_feature['KGMajorClass'].unique().tolist()
-    plot_shap_and_feature_values(
-        df_feature,
+    if False:
+        plot_shap_and_feature_values(
+            df_feature,
         feature_values_melted,
         kg_major_classes,
         output_dir
-    )
+        )
 
-    # Generate stacked bar plot for global data grouped by 'local_hour'
-    output_path_global = os.path.join(output_dir, 'feature_group_contribution_by_hour_global.png')
-    plot_feature_group_stacked_bar(
-        df_feature_group,
-        group_by_column='local_hour',
-        output_path=output_path_global,
-        title='Global Feature Group Contribution by Hour'
-    )
+        # Generate stacked bar plot for global data grouped by 'local_hour'
+        output_path_global = os.path.join(output_dir, 'feature_group_contribution_by_hour_global.png')
+        plot_feature_group_stacked_bar(
+            df_feature_group,
+            group_by_column='local_hour',
+            output_path=output_path_global,
+            title='Global Feature Group Contribution by Hour'
+        )
 
     # Generate stacked bar plot for each KGMajorClass grouped by 'local_hour'
     kg_classes = df_feature_group['KGMajorClass'].unique()
