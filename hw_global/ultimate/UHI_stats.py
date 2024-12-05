@@ -27,9 +27,8 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 
-# Group by 'lat', 'lon', and 'local_hour', then calculate the mean for 'UHI_diff' and 'UWBI_diff'
-# Ensure the grouped data is sorted by 'lat', 'lon', and 'local_hour' before resetting the index
-var_diff_by_localhour = local_hour_adjusted_df.groupby(['lat', 'lon', 'local_hour'])[['UHI_diff', 'UWBI_diff']].mean().reset_index().sort_values(by=['lat', 'lon', 'local_hour'])
+# Group by 'lat', 'lon', and 'local_hour', then calculate the mean for 'UHI_diff'
+var_diff_by_localhour = local_hour_adjusted_df.groupby(['lat', 'lon', 'local_hour'])[['UHI_diff']].mean().reset_index().sort_values(by=['lat', 'lon', 'local_hour'])
 
 var_diff_by_localhour
 
@@ -40,7 +39,7 @@ var_diff_by_localhour.info()
 # ## 4.1: Visualize UHI_diff and UWBI_diff by Local Hour
 
 # Plot control switches
-PLOT_GLOBAL_MEAN = True
+PLOT_GLOBAL_MEAN = False
 PLOT_KG_CLASS = False
 PLOT_KG_MAIN_GROUP = True
 
@@ -210,15 +209,14 @@ if PLOT_KG_MAIN_GROUP:
     # Add main group to var_diff_by_localhour
     var_diff_by_localhour['KGMainGroup'] = var_diff_by_localhour['KG_ID'].map(kg_main_group_map)
     
-    # Calculate average UHI_diff and UWBI_diff by local_hour for each KG main group
-    avg_diff_by_hour_and_main_group = var_diff_by_localhour.groupby(['KGMainGroup', 'local_hour'])[['UHI_diff', 'UWBI_diff']].agg(['mean', 'std']).reset_index()
+    # Calculate average UHI_diff by local_hour for each KG main group
+    avg_diff_by_hour_and_main_group = var_diff_by_localhour.groupby(['KGMainGroup', 'local_hour'])[['UHI_diff']].agg(['mean', 'std']).reset_index()
     
-    # Find the global minimum and maximum values for UHI_diff and UWBI_diff
-    min_uhi_diff = avg_diff_by_hour_and_main_group['UHI_diff'].min()
-    max_uhi_diff = avg_diff_by_hour_and_main_group['UHI_diff'].max()
-    min_UWBI_diff = avg_diff_by_hour_and_main_group['UWBI_diff'].min()
-    max_UWBI_diff = avg_diff_by_hour_and_main_group['UWBI_diff'].max()
-    
+    # Calculate the global minimum and maximum of the 'mean' UHI_diff
+    # min_uhi_diff = avg_diff_by_hour_and_main_group['UHI_diff']['mean'].min()
+    # max_uhi_diff = avg_diff_by_hour_and_main_group['UHI_diff']['mean'].max()
+    min_uhi_diff = -0.75
+    max_uhi_diff = 1
     # Determine the number of rows needed for subplots
     n_rows = (len(sorted_main_groups) + 3) // 4
     
