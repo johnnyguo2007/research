@@ -195,6 +195,30 @@ def get_feature_groups(feature_names):
         feature_groups[feature] = group
     return feature_groups
 
+def save_plot_data(df, total_values, output_path, plot_type):
+    """
+    Save plot data to CSV files, including both individual values and totals.
+    
+    Args:
+        df: DataFrame containing the plot data
+        total_values: Series containing the total values
+        output_path: Base path for the output file
+        plot_type: String indicating the type of plot ('shap' or 'feature')
+    """
+    # Remove .png extension and add csv
+    base_path = output_path.rsplit('.', 1)[0]
+    
+    # Create a copy of the DataFrame
+    output_df = df.copy()
+    
+    # Add the total values as a new column
+    output_df['Total'] = total_values
+    
+    # Save to CSV
+    output_df.to_csv(f"{base_path}_{plot_type}_data.csv")
+    
+    print(f"Saved {plot_type} data to {base_path}_{plot_type}_data.csv")
+
 def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, return_fig=False):
     """
     Plots a standalone SHAP stacked bar plot (all features) with a total SHAP value curve.
@@ -215,16 +239,12 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
 
     # Calculate total SHAP values for each hour
     total_shap = shap_df.sum(axis=1)
+    
+    # Plot the total SHAP values as a line on the same axis
+    total_shap.plot(kind='line', color='black', marker='o', linewidth=2, ax=ax, label='Total SHAP')
 
-    # Plot the total SHAP values as a curve on a secondary y-axis
-    ax2 = ax.twinx()
-    total_shap.plot(kind='line', color='black', marker='o', linewidth=2, ax=ax2, label='Total SHAP')
-    ax2.set_ylabel('Total SHAP Value')
-
-    # Combine legends from both axes
-    handles1, labels1 = ax.get_legend_handles_labels()
-    handles2, labels2 = ax2.get_legend_handles_labels()
-    ax.legend(handles1 + handles2, labels1 + labels2, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
+    # Single legend for all lines
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
 
     plt.title(title)
     plt.xlabel('Hour of Day')
@@ -238,11 +258,29 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
         plt.close()
         print(f"Standalone SHAP stacked bar plot with total curve saved at '{output_path}'.")
 
-def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_name, output_dir, kg_class, color_mapping):
+    # Calculate total SHAP values before plotting
+    total_shap = shap_df.sum(axis=1)
+    
+    # Save data before plotting
+    save_plot_data(
+        shap_df,
+        total_shap,
+        output_path,
+        'shap'
+    )
+
+def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_name, output_dir, kg_class, color_mapping, show_total_feature_line=True):
     """
     Plots SHAP value contributions and feature group's values side by side.
-    Saves each plot as a separate image file with the legend at the bottom.
-    Calls the plot_shap_stacked_bar function for SHAP plotting.
+    
+    Args:
+        shap_df: DataFrame containing SHAP values
+        feature_values_df: DataFrame containing feature values
+        group_name: Name of the feature group
+        output_dir: Directory to save output
+        kg_class: KGMajorClass name
+        color_mapping: Dictionary mapping features to colors
+        show_total_feature_line: Whether to show total feature value line (default: True)
     """
     import matplotlib.pyplot as plt
     import os
@@ -285,18 +323,13 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
     axes[0].set_xlabel('Hour of Day')
     axes[0].set_ylabel('Contribution')
 
-    # Calculate total SHAP values for each hour
+    # Calculate and plot total SHAP values on the same axis
     total_shap = shap_df.sum(axis=1)
+    total_shap.plot(kind='line', color='black', marker='o', linewidth=2, 
+                    ax=axes[0], label='Total SHAP')
 
-    # Plot the total SHAP values as a curve on a secondary y-axis
-    ax2 = axes[0].twinx()
-    total_shap.plot(kind='line', color='black', marker='o', linewidth=2, ax=ax2, label='Total SHAP')
-    ax2.set_ylabel('Total SHAP Value')
-
-    # Combine legends from both axes
-    handles1, labels1 = axes[0].get_legend_handles_labels()
-    handles2, labels2 = ax2.get_legend_handles_labels()
-    axes[0].legend(handles1 + handles2, labels1 + labels2, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
+    # Single legend for SHAP plot
+    axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
 
     # Plot feature values on axes[1]
     feature_values_df.plot(ax=axes[1], color=feature_colors)
@@ -304,7 +337,18 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
     axes[1].set_xlabel('Hour of Day')
     axes[1].set_ylabel('Feature Value')
     axes[1].axhline(0, linestyle='--', color='lightgray', linewidth=1)
-    axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
+
+    # Add total feature values line if enabled and there are multiple features
+    if show_total_feature_line and len(feature_values_df.columns) > 1:
+        # Calculate and plot total feature values on the same axis
+        total_features = feature_values_df.sum(axis=1)
+        total_features.plot(kind='line', color='black', marker='o', linewidth=2, 
+                          ax=axes[1], label='Total Feature Value')
+
+        # Single legend for feature value plot
+        axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
+    else:
+        axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
 
     # Adjust layout and save the figure
     title = f'ΔUHI Contribution and Feature Values by Hour - {group_name} - KGMajorClass {kg_class}'
@@ -314,12 +358,34 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
     plt.close()
     print(f"Plot saved as '{output_path}' for group '{group_name}' and KGMajorClass '{kg_class}'.")
 
-def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, output_dir):
+    # Calculate totals
+    total_shap = shap_df.sum(axis=1)
+    total_features = feature_values_df.sum(axis=1) if len(feature_values_df.columns) > 1 else pd.Series(0, index=feature_values_df.index)
+
+    # Save data before plotting
+    save_plot_data(
+        shap_df, 
+        total_shap,
+        output_path, 
+        'shap'
+    )
+    save_plot_data(
+        feature_values_df,
+        total_features,
+        output_path,
+        'feature'
+    )
+
+def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, output_dir, show_total_feature_line=True):
     """
     Plots SHAP value contributions and feature group's values side by side.
-    Generates plots for global data and each KGMajorClass filtered data.
-    Saves each plot as a separate image file with the legend at the bottom.
-    Organizes outputs into the global subdirectory and separate subdirectories for each KGMajorClass.
+    
+    Args:
+        df_feature: DataFrame containing feature data
+        feature_values_melted: Melted DataFrame containing feature values
+        kg_classes: List of KGMajorClasses
+        output_dir: Directory to save output
+        show_total_feature_line: Whether to show total feature value line (default: True)
     """
     import matplotlib.pyplot as plt
     import seaborn as sns
@@ -385,9 +451,10 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
             shap_df=shap_plot_df_group,
             feature_values_df=feature_values_plot_df_group,
             group_name=group_name,
-            output_dir=global_dir,  # Save under the global directory
-            kg_class='global',      # Indicate global in the plot filenames
-            color_mapping=color_mapping
+            output_dir=global_dir,
+            kg_class='global',
+            color_mapping=color_mapping,
+            show_total_feature_line=show_total_feature_line
         )
     
     # Plot for each KGMajorClass
@@ -452,9 +519,10 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
                 shap_df=shap_plot_df,
                 feature_values_df=feature_values_plot_df,
                 group_name=group_name,
-                output_dir=kg_class_dir,   # Save under the kg_class directory
-                kg_class=kg_class,        # Indicate kg_class in the plot filenames
-                color_mapping=color_mapping
+                output_dir=kg_class_dir,
+                kg_class=kg_class,
+                color_mapping=color_mapping,
+                show_total_feature_line=show_total_feature_line
             )
 
 # Define the function with 'Value' instead of 'Importance'
@@ -468,44 +536,46 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title):
     - output_path: Path to save the output plot.
     - title: Title of the plot.
     """
-    # Pivot the data to have feature groups as columns
+    # Pivot and prepare data
     pivot_df = df.pivot_table(
         index=group_by_column,
         columns='Feature Group',
         values='Value',
         aggfunc='sum',
-        fill_value=0  # Replace NaNs with zeros
+        fill_value=0
+    )
+    
+    # Calculate totals
+    total_values = pivot_df.sum(axis=1)
+    
+    # Save data before plotting
+    save_plot_data(
+        pivot_df,
+        total_values,
+        output_path,
+        'group'
     )
 
     # Sort the index if necessary
     pivot_df = pivot_df.sort_index()
 
-    # Create figure and primary axis
-    fig, ax1 = plt.subplots(figsize=(12, 8))
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(12, 8))
     
-    # Plot stacked bars on primary axis
-    pivot_df.plot(
-        kind='bar',
-        stacked=True,
-        ax=ax1
-    )
+    # Plot stacked bars
+    pivot_df.plot(kind='bar', stacked=True, ax=ax)
 
-    # Calculate and plot total SHAP values on secondary axis
-    ax2 = ax1.twinx()
-    total_shap = pivot_df.sum(axis=1)
-    total_shap.plot(color='black', marker='o', linewidth=2, 
-                    ax=ax2, label='Total SHAP')
-    ax2.set_ylabel('Total SHAP Value')
+    # Calculate and plot total values on the same axis
+    total_values = pivot_df.sum(axis=1)
+    total_values.plot(color='black', marker='o', linewidth=2, 
+                     ax=ax, label='Total SHAP')
 
-    # Combine legends from both axes
-    handles1, labels1 = ax1.get_legend_handles_labels()
-    handles2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(handles1 + handles2, labels1 + labels2, 
-              bbox_to_anchor=(1.05, 1), loc='upper left')
+    # Single legend for all lines
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 
     plt.title(title)
-    ax1.set_xlabel(group_by_column.replace('_', ' ').title())
-    ax1.set_ylabel('SHAP Value Contribution')
+    ax.set_xlabel(group_by_column.replace('_', ' ').title())
+    ax.set_ylabel('SHAP Value Contribution')
 
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches='tight')
@@ -534,6 +604,11 @@ def main():
         type=int,
         default=None,
         help='Number of top features to plot. If None, plot all features.'
+    )
+    parser.add_argument(
+        '--hide-total-feature-line',
+        action='store_true',
+        help='Hide the total feature value line in feature value plots.'
     )
 
     # Parse the arguments
@@ -606,7 +681,8 @@ def main():
         df_feature,
         feature_values_melted,
         kg_major_classes,
-        output_dir
+        output_dir,
+        show_total_feature_line=not args.hide_total_feature_line
     )
 
     # Generate stacked bar plot for global data grouped by 'local_hour'
