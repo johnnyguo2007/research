@@ -33,8 +33,11 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     # Step 2: Group by 'local_hour' and 'KGMajorClass' and sum all shap value columns
     group_cols = ['local_hour', 'KGMajorClass']
 
-    # Identify SHAP value columns: those ending with '_shap'
-    shap_cols = [col for col in shap_df.columns if col.endswith('_shap')]
+    # Identify SHAP value columns: those ending with '_shap' and not in group_cols
+    shap_cols = [col for col in shap_df.columns if col.endswith('_shap') and col not in [f"{gc}_shap" for gc in group_cols]]
+    
+    if not shap_cols:
+        logging.warning("No SHAP columns found after excluding group-related columns.")
     
     # Group and sum the shap value columns
     df_grouped = shap_df.groupby(group_cols)[shap_cols].sum().reset_index()
@@ -84,7 +87,10 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
         columns='Feature Group', 
         values='Value', 
         fill_value=0
-    ).reset_index()
+    )
+    
+    # Reset index and ensure column names are unique
+    df_pivot = df_pivot.reset_index()
     
     # Step 4: Save the processed dataframes as Feather files
     df_feature_group.to_feather(output_feature_group)
