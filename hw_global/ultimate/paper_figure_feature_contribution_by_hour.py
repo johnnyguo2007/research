@@ -320,19 +320,18 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
     feature_colors = [color_mapping.get(feature, '#333333') for feature in feature_values_df.columns]
 
     # Plot SHAP contributions on axes[0]
-    shap_df.plot(kind='bar', stacked=True, ax=axes[0], color=shap_colors)
+    # Calculate mean SHAP values for each feature at each hour
+    mean_shap_df = shap_df.copy()
+    mean_shap_df.plot(kind='bar', stacked=True, ax=axes[0], color=shap_colors)
 
     axes[0].set_title('Mean SHAP Value Contributions')
     axes[0].set_xlabel('Hour of Day')
     axes[0].set_ylabel('Mean Contribution')
 
     # Calculate and plot mean SHAP values on the same axis
-    mean_shap = shap_df.sum(axis=1)
+    mean_shap = mean_shap_df.sum(axis=1)  # Sum across features for each hour
     mean_shap.plot(kind='line', color='black', marker='o', linewidth=2, 
                     ax=axes[0], label='Mean SHAP')
-
-    # Remove base value line from side-by-side plots
-    # axes[0].axhline(y=base_value, color='red', linestyle='--', label=f'Base Value ({base_value:.3f})')
 
     # Single legend for SHAP plot
     axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
