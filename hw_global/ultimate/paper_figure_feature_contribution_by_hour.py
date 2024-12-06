@@ -587,6 +587,93 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base
     plt.savefig(output_path, bbox_inches='tight')
     plt.close()
 
+def create_day_night_summary(df_feature_group, output_dir):
+    """
+    Creates a summary DataFrame of day and night contributions for each feature group and KGMajorClass.
+    
+    Args:
+        df_feature_group: DataFrame containing feature group data
+        output_dir: Directory to save the output summary
+    """
+    # Create empty lists to store results
+    rows = []
+    
+    # Process global data first
+    for period, hour_mask in [
+        ("Day", lambda x: x.between(6, 19)),  # 6:00 to 19:59
+        ("Night", lambda x: x.between(20, 23) | x.between(0, 5))  # 20:00 to 5:59
+    ]:
+        # Filter data for the current period
+        period_data = df_feature_group[hour_mask(df_feature_group['local_hour'])]
+        
+        # Calculate mean for each feature group
+        group_means = period_data.groupby('Feature Group')['Value'].mean()
+        
+        # Add to rows with 'Global' as KGMajorClass
+        rows.append({
+            'KGMajorClass': 'Global',
+            'Period': f"{period} Sum",
+            **group_means.to_dict(),
+            'Total': group_means.sum()
+        })
+    
+    # Process each KGMajorClass
+    for kg_class in df_feature_group['KGMajorClass'].unique():
+        kg_data = df_feature_group[df_feature_group['KGMajorClass'] == kg_class]
+        
+        for period, hour_mask in [
+            ("Day", lambda x: x.between(6, 19)),  # 6:00 to 19:59
+            ("Night", lambda x: x.between(20, 23) | x.between(0, 5))  # 20:00 to 5:59
+        ]:
+            # Filter data for the current period
+            period_data = kg_data[hour_mask(kg_data['local_hour'])]
+            
+            # Calculate mean for each feature group
+            group_means = period_data.groupby('Feature Group')['Value'].mean()
+            
+            # Add to rows
+            rows.append({
+                'KGMajorClass': kg_class,
+                'Period': f"{period} Sum",
+                **group_means.to_dict(),
+                'Total': group_means.sum()
+            })
+    
+    # Create DataFrame from rows
+    summary_df = pd.DataFrame(rows)
+    
+    # Round all numeric columns to 2 decimal places
+    numeric_cols = summary_df.select_dtypes(include=['float64', 'int64']).columns
+    summary_df[numeric_cols] = summary_df[numeric_cols].round(2)
+    
+    # Reorder columns to put Total at the end
+    cols = ['KGMajorClass', 'Period'] + [col for col in summary_df.columns 
+                                        if col not in ['KGMajorClass', 'Period', 'Total']] + ['Total']
+    summary_df = summary_df[cols]
+    
+    # Sort by KGMajorClass and Period
+    summary_df = summary_df.sort_values(['KGMajorClass', 'Period'])
+    
+    # Save to CSV
+    output_path = os.path.join(output_dir, 'feature_group_day_night_summary.csv')
+    summary_df.to_csv(output_path, index=False)
+    
+    # Create a pivot table for better visualization
+    pivot_df = summary_df.pivot_table(
+        index=['KGMajorClass', 'Period'],
+        values=[col for col in summary_df.columns if col not in ['KGMajorClass', 'Period']],
+        aggfunc='first'
+    )
+    
+    # Save pivot table to CSV
+    pivot_output_path = os.path.join(output_dir, 'feature_group_day_night_summary_pivot.csv')
+    pivot_df.to_csv(pivot_output_path)
+    
+    print(f"Day/night summary saved to {output_path}")
+    print(f"Day/night summary pivot table saved to {pivot_output_path}")
+    
+    return summary_df, pivot_df
+
 def main():
     import argparse
     import mlflow
@@ -615,6 +702,13 @@ def main():
         '--hide-total-feature-line',
         action='store_true',
         help='Hide the total feature value line in feature value plots.'
+    )
+    # Add new argument for day/night summary only
+    parser.add_argument(
+        '--day-night-summary-only',
+        action='store_true',
+        default=False,
+        help='Only generate the day/night summary without creating other plots.'
     )
 
     # Parse the arguments
@@ -670,7 +764,14 @@ def main():
     )
     print("SHAP contribution by hour generated.")
 
-    # Load the feature values from shap_values_feather_path
+    if args.day_night_summary_only:
+        # Only generate the day/night summary
+        summary_df, pivot_df = create_day_night_summary(df_feature_group, output_dir)
+        print("\nFeature Group Day/Night Summary:")
+        print(pivot_df)
+        return
+
+    # Rest of the code for generating plots (only runs if day_night_summary_only is False)
     feature_values_melted = load_feature_values(shap_values_feather_path)
 
     # Optionally select top features
@@ -714,6 +815,13 @@ def main():
             title=f'Feature Group Contribution by Hour for {kg_major_class}',
             base_value=base_value
         )
+
+    # After generating all the plots, create the day/night summary
+    summary_df, pivot_df = create_day_night_summary(df_feature_group, output_dir)
+    
+    # Print the summary to console
+    print("\nFeature Group Day/Night Summary:")
+    print(pivot_df)
 
 if __name__ == "__main__":
     main()
