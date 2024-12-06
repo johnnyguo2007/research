@@ -185,17 +185,8 @@ if PLOT_KG_MAIN_GROUP:
     
     # Create a mapping from KG class IDs to their main climate groups
     kg_main_group_map = dict(zip(kg_legend['ID'], kg_legend['KGMainGroup']))
-    kg_main_group_map
     
-    set(kg_main_group_map.values())
-    
-    # Extract main group from KGClass
-    kg_legend['KGMainGroup'] = kg_legend['KGClass'].apply(lambda x: x.split(',')[0].strip())
-    
-    # Map KG IDs to their main groups
-    kg_main_group_map = dict(zip(kg_legend['ID'], kg_legend['KGMainGroup']))
-    
-    # Create a dictionary to map main group values to their minimum IDs
+    # Get the unique main group values sorted by their minimum IDs
     main_group_min_id = {}
     for kg_id, main_group in kg_main_group_map.items():
         if main_group not in main_group_min_id:
@@ -203,8 +194,20 @@ if PLOT_KG_MAIN_GROUP:
         else:
             main_group_min_id[main_group] = min(main_group_min_id[main_group], kg_id)
     
-    # Get the unique main group values sorted by their minimum IDs
     sorted_main_groups = sorted(set(kg_main_group_map.values()), key=lambda x: main_group_min_id[x])
+    
+    # Remove the 'Polar' group
+    sorted_main_groups = [group for group in sorted_main_groups if group.lower() != 'polar']
+    
+    # Define Koppen-Geiger color convention
+    kg_main_group_colors = {
+        'Tropical': '#e6194b',       # Red
+        'Arid': '#3cb44b',           # Green
+        'Temperate': '#4363d8',      # Blue
+        'Cold': '#f58231',           # Orange
+        'Highland': '#911eb4',       # Purple
+        # Add other main groups and their corresponding colors if they exist
+    }
     
     # Add main group to var_diff_by_localhour
     var_diff_by_localhour['KGMainGroup'] = var_diff_by_localhour['KG_ID'].map(kg_main_group_map)
@@ -213,8 +216,6 @@ if PLOT_KG_MAIN_GROUP:
     avg_diff_by_hour_and_main_group = var_diff_by_localhour.groupby(['KGMainGroup', 'local_hour'])[['UHI_diff']].agg(['mean', 'std']).reset_index()
     
     # Calculate the global minimum and maximum of the 'mean' UHI_diff
-    # min_uhi_diff = avg_diff_by_hour_and_main_group['UHI_diff']['mean'].min()
-    # max_uhi_diff = avg_diff_by_hour_and_main_group['UHI_diff']['mean'].max()
     min_uhi_diff = -0.75
     max_uhi_diff = 1
     # Determine the number of rows needed for subplots
@@ -230,13 +231,13 @@ if PLOT_KG_MAIN_GROUP:
     
         subset = avg_diff_by_hour_and_main_group[avg_diff_by_hour_and_main_group['KGMainGroup'] == main_group]
     
-        axs[row, col].plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', label='UHI_diff Mean')
+        axs[row, col].plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label='UHI_diff Mean')
         
         axs[row, col].fill_between(
             subset['local_hour'],
             subset[('UHI_diff', 'mean')] - subset[('UHI_diff', 'std')],
             subset[('UHI_diff', 'mean')] + subset[('UHI_diff', 'std')],
-            color='blue',
+            color=kg_main_group_colors.get(main_group, 'gray'),
             alpha=0.2,
             label='±1 Std Dev'
         )
@@ -267,6 +268,22 @@ if PLOT_KG_MAIN_GROUP:
         fig.delaxes(axs[row, col])
     
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust the top spacing
-    plt.suptitle('Average Hourly UHI_diff diff by KG Main Group', size=20, weight='bold', y=0.99)  # Add an overall title
+    plt.suptitle('Average Hourly UHI_diff by KG Main Group', size=20, weight='bold', y=0.99)  # Add an overall title
     plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'kg_main_group_uhi_diff.png'), dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    # ### Additional Plot: Combined Chart of All Main Groups without Std Dev
+    plt.figure(figsize=(10, 6))
+    for main_group in sorted_main_groups:
+        subset = avg_diff_by_hour_and_main_group[avg_diff_by_hour_and_main_group['KGMainGroup'] == main_group]
+        plt.plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label=main_group)
+    
+    plt.title('Average Hourly UHI_diff by KG Main Groups')
+    plt.xlabel('Local Hour')
+    plt.ylabel('Average UHI_diff')
+    plt.grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.6)
+    plt.xticks(range(0, 24))
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'kg_main_group_uhi_diff_combined.png'), dpi=300, bbox_inches='tight')
     plt.close()

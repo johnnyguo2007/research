@@ -24,8 +24,11 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     # Load the shap values with additional columns
     shap_df = pd.read_feather(shap_values_feather_path)
     
+    # Extract base_value before dropping columns
+    base_value = shap_df['base_value'].iloc[0] if 'base_value' in shap_df.columns else 0
+    
     # Step 1: Drop specified columns
-    columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass']
+    columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'base_value']
     shap_df = shap_df.drop(columns=columns_to_drop, errors='ignore')
     logging.info(f"Dropped columns: {columns_to_drop}")
     
@@ -110,7 +113,7 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     df_feature.to_feather(output_feature)
     logging.info(f"Saved per-feature dataframe to Feather file at {output_feature}")
     
-    return df_feature_group, df_feature
+    return df_feature_group, df_feature, base_value
 
 def load_feature_values(shap_values_feather_path):
     """
@@ -219,29 +222,31 @@ def save_plot_data(df, total_values, output_path, plot_type):
     
     print(f"Saved {plot_type} data to {base_path}_{plot_type}_data.csv")
 
-def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, return_fig=False):
+def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, return_fig=False, base_value=0):
     """
     Plots a standalone SHAP stacked bar plot (all features) with a total SHAP value curve.
+    Now includes base_value in the plot.
     """
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(12, 8))
 
     if color_mapping:
-        # Ensure columns are sorted to match color mapping
         sorted_columns = sorted(shap_df.columns, key=lambda x: x)
         colors = [color_mapping.get(feature, '#333333') for feature in sorted_columns]
         shap_df = shap_df[sorted_columns]
         shap_df.plot(kind='bar', stacked=True, color=colors, ax=ax)
     else:
-        # Default colormap if no color_mapping is provided
         shap_df.plot(kind='bar', stacked=True, colormap='tab20', ax=ax)
 
-    # Calculate total SHAP values for each hour
-    total_shap = shap_df.sum(axis=1)
+    # Calculate total SHAP values and add base_value
+    total_shap = shap_df.sum(axis=1) + base_value
     
     # Plot the total SHAP values as a line on the same axis
-    total_shap.plot(kind='line', color='black', marker='o', linewidth=2, ax=ax, label='Total SHAP')
+    total_shap.plot(kind='line', color='black', marker='o', linewidth=2, ax=ax, label='Total SHAP + Base Value')
+
+    # Add base value line
+    ax.axhline(y=base_value, color='red', linestyle='--', label=f'Base Value ({base_value:.3f})')
 
     # Single legend for all lines
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
@@ -258,9 +263,6 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
         plt.close()
         print(f"Standalone SHAP stacked bar plot with total curve saved at '{output_path}'.")
 
-    # Calculate total SHAP values before plotting
-    total_shap = shap_df.sum(axis=1)
-    
     # Save data before plotting
     save_plot_data(
         shap_df,
@@ -526,15 +528,10 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
             )
 
 # Define the function with 'Value' instead of 'Importance'
-def plot_feature_group_stacked_bar(df, group_by_column, output_path, title):
+def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base_value=0):
     """
     Plots a stacked bar chart of feature group contributions with total SHAP value line.
-
-    Parameters:
-    - df: DataFrame containing 'local_hour', 'Feature Group', and 'Value'.
-    - group_by_column: Column name to group by ('local_hour').
-    - output_path: Path to save the output plot.
-    - title: Title of the plot.
+    Now includes base_value in the plot.
     """
     # Pivot and prepare data
     pivot_df = df.pivot_table(
@@ -545,8 +542,8 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title):
         fill_value=0
     )
     
-    # Calculate totals
-    total_values = pivot_df.sum(axis=1)
+    # Calculate totals including base_value
+    total_values = pivot_df.sum(axis=1) + base_value
     
     # Save data before plotting
     save_plot_data(
@@ -565,10 +562,12 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title):
     # Plot stacked bars
     pivot_df.plot(kind='bar', stacked=True, ax=ax)
 
-    # Calculate and plot total values on the same axis
-    total_values = pivot_df.sum(axis=1)
+    # Plot total values including base_value
     total_values.plot(color='black', marker='o', linewidth=2, 
-                     ax=ax, label='Total SHAP')
+                     ax=ax, label='Total SHAP + Base Value')
+
+    # Add base value line
+    ax.axhline(y=base_value, color='red', linestyle='--', label=f'Base Value ({base_value:.3f})')
 
     # Single legend for all lines
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -655,7 +654,7 @@ def main():
     output_feature = os.path.join(output_dir, 'shap_feature.feather')
 
     # Report SHAP contribution
-    df_feature_group, df_feature = report_shap_contribution_from_feather(
+    df_feature_group, df_feature, base_value = report_shap_contribution_from_feather(
         shap_values_feather_path,
         output_dir,
         output_feature_group,
@@ -691,7 +690,8 @@ def main():
         df_feature_group,
         group_by_column='local_hour',
         output_path=output_path_global,
-        title='Global Feature Group Contribution by Hour'
+        title='Global Feature Group Contribution by Hour',
+        base_value=base_value
     )
 
     # Generate stacked bar plot for each KGMajorClass grouped by 'local_hour'
@@ -703,7 +703,8 @@ def main():
             kg_hourly_data,
             group_by_column='local_hour',
             output_path=output_path_kg,
-            title=f'Feature Group Contribution by Hour for {kg_major_class}'
+            title=f'Feature Group Contribution by Hour for {kg_major_class}',
+            base_value=base_value
         )
 
 if __name__ == "__main__":
