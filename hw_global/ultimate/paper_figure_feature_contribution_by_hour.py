@@ -234,10 +234,10 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
         sorted_columns = sorted(shap_df.columns, key=lambda x: x)
         colors = [color_mapping.get(feature, '#333333') for feature in sorted_columns]
         shap_df = shap_df[sorted_columns]
-        shap_df.plot(kind='bar', stacked=True, color=colors, ax=ax)
+        shap_df.plot(kind='bar', stacked=True, color=colors, ax=ax, bottom=base_value)  # Add bottom=base_value
     else:
-        shap_df.plot(kind='bar', stacked=True, colormap='tab20', ax=ax)
-
+        shap_df.plot(kind='bar', stacked=True, colormap='tab20', ax=ax, bottom=base_value)  # Add bottom=base_value
+    
     # Calculate mean SHAP values and add base_value
     mean_shap = shap_df.sum(axis=1) + base_value
     
@@ -264,13 +264,13 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
 
     # Save data before plotting
     save_plot_data(
-        shap_df,
+        shap_df,  # Save original values without base_value adjustment
         mean_shap,
         output_path,
         'shap'
     )
 
-def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_name, output_dir, kg_class, color_mapping, show_total_feature_line=True):
+def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_name, output_dir, kg_class, color_mapping, base_value=0, show_total_feature_line=True):
     """
     Plots SHAP value contributions and feature group's values side by side.
     
@@ -281,6 +281,7 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
         output_dir: Directory to save output
         kg_class: KGMajorClass name
         color_mapping: Dictionary mapping features to colors
+        base_value: Base value for SHAP contributions (default: 0)
         show_total_feature_line: Whether to show total feature value line (default: True)
     """
     import matplotlib.pyplot as plt
@@ -320,6 +321,7 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
 
     # Plot SHAP contributions on axes[0]
     shap_df.plot(kind='bar', stacked=True, ax=axes[0], color=shap_colors)
+
     axes[0].set_title('Mean SHAP Value Contributions')
     axes[0].set_xlabel('Hour of Day')
     axes[0].set_ylabel('Mean Contribution')
@@ -328,6 +330,9 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
     mean_shap = shap_df.sum(axis=1)
     mean_shap.plot(kind='line', color='black', marker='o', linewidth=2, 
                     ax=axes[0], label='Mean SHAP')
+
+    # Remove base value line from side-by-side plots
+    # axes[0].axhline(y=base_value, color='red', linestyle='--', label=f'Base Value ({base_value:.3f})')
 
     # Single legend for SHAP plot
     axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
@@ -377,7 +382,7 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
         'feature'
     )
 
-def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, output_dir, show_total_feature_line=True):
+def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, output_dir, base_value=0, show_total_feature_line=True):
     """
     Plots SHAP value contributions and feature group's values side by side.
     
@@ -386,6 +391,7 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
         feature_values_melted: Melted DataFrame containing feature values
         kg_classes: List of KGMajorClasses
         output_dir: Directory to save output
+        base_value: Base value for SHAP contributions (default: 0)
         show_total_feature_line: Whether to show total feature value line (default: True)
     """
     import matplotlib.pyplot as plt
@@ -455,6 +461,7 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
             output_dir=global_dir,
             kg_class='global',
             color_mapping=color_mapping,
+            base_value=base_value,
             show_total_feature_line=show_total_feature_line
         )
     
@@ -523,6 +530,7 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
                 output_dir=kg_class_dir,
                 kg_class=kg_class,
                 color_mapping=color_mapping,
+                base_value=base_value,
                 show_total_feature_line=show_total_feature_line
             )
 
@@ -536,7 +544,7 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base
         index=group_by_column,
         columns='Feature Group',
         values='Value',
-        aggfunc='mean',  # Changed from 'sum' to 'mean'
+        aggfunc='mean',
         fill_value=0
     )
     
@@ -557,10 +565,12 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base
     # Create figure and axis
     fig, ax = plt.subplots(figsize=(12, 8))
     
-    # Plot stacked bars
-    pivot_df.plot(kind='bar', stacked=True, ax=ax)
+    # Plot stacked bars starting from base_value - keep bottom=base_value here
+    # since this is a feature group report
+    pivot_df.plot(kind='bar', stacked=True, ax=ax, bottom=base_value)
 
-    # Plot total values including base_value
+    # Plot mean values including base_value for feature group reports
+    mean_values = pivot_df.sum(axis=1) + base_value
     mean_values.plot(color='black', marker='o', linewidth=2, 
                      ax=ax, label='Mean SHAP + Base Value')
 
@@ -572,7 +582,7 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base
 
     plt.title(title)
     ax.set_xlabel(group_by_column.replace('_', ' ').title())
-    ax.set_ylabel('Mean SHAP Value Contribution')  # Updated ylabel
+    ax.set_ylabel('Mean SHAP Value Contribution')
 
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches='tight')
@@ -679,6 +689,7 @@ def main():
         feature_values_melted,
         kg_major_classes,
         output_dir,
+        base_value=base_value,
         show_total_feature_line=not args.hide_total_feature_line
     )
 
