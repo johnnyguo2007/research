@@ -32,18 +32,18 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     shap_df = shap_df.drop(columns=columns_to_drop, errors='ignore')
     logging.info(f"Dropped columns: {columns_to_drop}")
     
-    # Step 2: Group by 'local_hour' and 'KGMajorClass' and sum all shap value columns
+    # Step 2: Group by 'local_hour' and 'KGMajorClass' and calculate mean (instead of sum) of all shap value columns
     group_cols = ['local_hour', 'KGMajorClass']
-
+    
     # Identify SHAP value columns: those ending with '_shap' and not in group_cols
     shap_cols = [col for col in shap_df.columns if col.endswith('_shap') and col not in [f"{gc}_shap" for gc in group_cols]]
     
     if not shap_cols:
         logging.warning("No SHAP columns found after excluding group-related columns.")
     
-    # Group and sum the shap value columns
-    df_grouped = shap_df.groupby(group_cols)[shap_cols].sum().reset_index()
-    logging.info("Grouped by 'local_hour' and 'KGMajorClass' and summed SHAP value columns.")
+    # Group and calculate mean (instead of sum) of the shap value columns
+    df_grouped = shap_df.groupby(group_cols)[shap_cols].mean().reset_index()
+    logging.info("Grouped by 'local_hour' and 'KGMajorClass' and calculated mean SHAP value columns.")
     
     # Step 3: Prepare feature group mapping with base feature names
     # Create a mapping from SHAP columns to base feature names
@@ -224,8 +224,7 @@ def save_plot_data(df, total_values, output_path, plot_type):
 
 def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, return_fig=False, base_value=0):
     """
-    Plots a standalone SHAP stacked bar plot (all features) with a total SHAP value curve.
-    Now includes base_value in the plot.
+    Plots a standalone SHAP stacked bar plot (all features) with a mean SHAP value curve.
     """
     import matplotlib.pyplot as plt
 
@@ -239,11 +238,11 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
     else:
         shap_df.plot(kind='bar', stacked=True, colormap='tab20', ax=ax)
 
-    # Calculate total SHAP values and add base_value
-    total_shap = shap_df.sum(axis=1) + base_value
+    # Calculate mean SHAP values and add base_value
+    mean_shap = shap_df.sum(axis=1) + base_value
     
-    # Plot the total SHAP values as a line on the same axis
-    total_shap.plot(kind='line', color='black', marker='o', linewidth=2, ax=ax, label='Total SHAP + Base Value')
+    # Plot the mean SHAP values as a line on the same axis
+    mean_shap.plot(kind='line', color='black', marker='o', linewidth=2, ax=ax, label='Mean SHAP + Base Value')
 
     # Add base value line
     ax.axhline(y=base_value, color='red', linestyle='--', label=f'Base Value ({base_value:.3f})')
@@ -253,7 +252,7 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
 
     plt.title(title)
     plt.xlabel('Hour of Day')
-    ax.set_ylabel('SHAP Value Contribution')
+    ax.set_ylabel('Mean SHAP Value Contribution')
     plt.tight_layout()
 
     if return_fig:
@@ -261,12 +260,12 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
     else:
         plt.savefig(output_path, bbox_inches='tight')
         plt.close()
-        print(f"Standalone SHAP stacked bar plot with total curve saved at '{output_path}'.")
+        print(f"Standalone SHAP stacked bar plot with mean curve saved at '{output_path}'.")
 
     # Save data before plotting
     save_plot_data(
         shap_df,
-        total_shap,
+        mean_shap,
         output_path,
         'shap'
     )
@@ -321,14 +320,14 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
 
     # Plot SHAP contributions on axes[0]
     shap_df.plot(kind='bar', stacked=True, ax=axes[0], color=shap_colors)
-    axes[0].set_title('SHAP Value Contributions')
+    axes[0].set_title('Mean SHAP Value Contributions')
     axes[0].set_xlabel('Hour of Day')
-    axes[0].set_ylabel('Contribution')
+    axes[0].set_ylabel('Mean Contribution')
 
-    # Calculate and plot total SHAP values on the same axis
-    total_shap = shap_df.sum(axis=1)
-    total_shap.plot(kind='line', color='black', marker='o', linewidth=2, 
-                    ax=axes[0], label='Total SHAP')
+    # Calculate and plot mean SHAP values on the same axis
+    mean_shap = shap_df.sum(axis=1)
+    mean_shap.plot(kind='line', color='black', marker='o', linewidth=2, 
+                    ax=axes[0], label='Mean SHAP')
 
     # Single legend for SHAP plot
     axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
@@ -530,25 +529,24 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
 # Define the function with 'Value' instead of 'Importance'
 def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base_value=0):
     """
-    Plots a stacked bar chart of feature group contributions with total SHAP value line.
-    Now includes base_value in the plot.
+    Plots a stacked bar chart of mean feature group contributions with mean SHAP value line.
     """
-    # Pivot and prepare data
+    # Pivot and prepare data - calculate mean instead of sum
     pivot_df = df.pivot_table(
         index=group_by_column,
         columns='Feature Group',
         values='Value',
-        aggfunc='sum',
+        aggfunc='mean',  # Changed from 'sum' to 'mean'
         fill_value=0
     )
     
-    # Calculate totals including base_value
-    total_values = pivot_df.sum(axis=1) + base_value
+    # Calculate means including base_value
+    mean_values = pivot_df.sum(axis=1) + base_value
     
     # Save data before plotting
     save_plot_data(
         pivot_df,
-        total_values,
+        mean_values,
         output_path,
         'group'
     )
@@ -563,8 +561,8 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base
     pivot_df.plot(kind='bar', stacked=True, ax=ax)
 
     # Plot total values including base_value
-    total_values.plot(color='black', marker='o', linewidth=2, 
-                     ax=ax, label='Total SHAP + Base Value')
+    mean_values.plot(color='black', marker='o', linewidth=2, 
+                     ax=ax, label='Mean SHAP + Base Value')
 
     # Add base value line
     ax.axhline(y=base_value, color='red', linestyle='--', label=f'Base Value ({base_value:.3f})')
@@ -574,7 +572,7 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base
 
     plt.title(title)
     ax.set_xlabel(group_by_column.replace('_', ' ').title())
-    ax.set_ylabel('SHAP Value Contribution')
+    ax.set_ylabel('Mean SHAP Value Contribution')  # Updated ylabel
 
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches='tight')
