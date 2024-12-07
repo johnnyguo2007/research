@@ -608,9 +608,9 @@ def prepare_data(local_hour_adjusted_df, daily_var_lst, time_period, daily_freq)
     Prepares the dataset based on the time period and returns the features and target variable.
     """
     logging.info("Defining day and night masks...")
-    daytime_mask = local_hour_adjusted_df['local_hour'].between(7, 16)
+    daytime_mask = local_hour_adjusted_df['local_hour'].between(6, 19)
     nighttime_mask = (
-            local_hour_adjusted_df['local_hour'].between(20, 24) | local_hour_adjusted_df['local_hour'].between(0, 6))
+            local_hour_adjusted_df['local_hour'].between(20, 23) | local_hour_adjusted_df['local_hour'].between(0, 5))
 
     local_hour_adjusted_df['date'] = pd.to_datetime(local_hour_adjusted_df['local_time']).dt.date
 

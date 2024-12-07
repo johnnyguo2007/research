@@ -118,6 +118,58 @@ var_diff_by_localhour['KG_ID'] = vec_find_nearest_non_zero_kg_class(var_diff_by_
 var_diff_by_localhour.head()
 
 # ###  4.2.3: Plot Average UHI_diff by Local Hour for Each Koppen Geiger Class
+
+def get_kg_color_from_xls(kg_main_group):
+    """
+    Get the color code for a Koppen-Geiger main group by looking up its representative class
+    and corresponding color in the legend file.
+    
+    Args:
+        kg_main_group (str): Main group name (e.g., 'Tropical', 'Arid', etc.)
+    
+    Returns:
+        str: Hex color code (e.g., '#3cb44b')
+    """
+    # Define representative class for each main group
+    kg_main_group_map = {
+        'Tropical': 'Am',       # Red
+        'Arid': 'BWk',         # Green
+        'Temperate': 'Cwa',    # Blue
+        'Cold': 'Dsa',         # Orange
+    }
+    
+    try:
+        # Read the legend file
+        kg_legend = pd.read_excel('/home/jguo/research/hw_global/Data/KoppenGeigerLegend.xlsx', 
+                                engine='openpyxl')
+        
+        # Get the representative class for the main group
+        kg_short = kg_main_group_map.get(kg_main_group)
+        if not kg_short:
+            raise ValueError(f"Unknown main group: {kg_main_group}")
+            
+        # Look up the color code
+        color_row = kg_legend[kg_legend['KGShort'] == kg_short]
+        if color_row.empty:
+            raise ValueError(f"No color found for KGShort: {kg_short}")
+            
+        # Get the color values and convert to hex
+        color_str = color_row['Color'].iloc[0]
+        rgb_values = [int(x) for x in color_str.strip('[]').split()]
+        hex_color = '#{:02x}{:02x}{:02x}'.format(*rgb_values)
+        
+        return hex_color
+        
+    except Exception as e:
+        print(f"Error getting color for {kg_main_group}: {e}")
+        return '#000000'  # Return black as fallback color
+
+#now I already have the kg_main_group_colors values {'Tropical': '#0078ff', 'Arid': '#ff9696', 'Temperate': '#96ff96', 'Cold': '#ff00ff'}
+#function to get the color for a given kg_main_group
+def get_kg_color(kg_main_group):
+    kg_main_group_colors = {'Tropical': '#0078ff', 'Arid': '#ff9696', 'Temperate': '#96ff96', 'Cold': '#ff00ff'}
+    return kg_main_group_colors.get(kg_main_group, '#000000')
+
 if PLOT_KG_CLASS:
     # Calculate average UHI_diff by local_hour for each Koppen-Geiger class
     avg_uhi_by_hour_and_kg = var_diff_by_localhour.groupby(['KG_ID', 'local_hour'])['UHI_diff'].mean().reset_index()
@@ -199,15 +251,15 @@ if PLOT_KG_MAIN_GROUP:
     # Remove the 'Polar' group
     sorted_main_groups = [group for group in sorted_main_groups if group.lower() != 'polar']
     
-    # Define Koppen-Geiger color convention
+    # Define Koppen-Geiger color convention using the new function
     kg_main_group_colors = {
-        'Tropical': '#e6194b',       # Red
-        'Arid': '#3cb44b',           # Green
-        'Temperate': '#4363d8',      # Blue
-        'Cold': '#f58231',           # Orange
-        'Highland': '#911eb4',       # Purple
-        # Add other main groups and their corresponding colors if they exist
+        main_group: get_kg_color(main_group)
+        for main_group in ['Tropical', 'Arid', 'Temperate', 'Cold']
     }
+    print(kg_main_group_colors)
+    #save the kg_main_group_colors to a csv  file
+    kg_main_group_colors_df = pd.DataFrame(list(kg_main_group_colors.items()), columns=['KGMainGroup', 'Color'])
+    kg_main_group_colors_df.to_csv('/home/jguo/research/hw_global/Data/kg_main_group_colors.csv', index=False)
     
     # Add main group to var_diff_by_localhour
     var_diff_by_localhour['KGMainGroup'] = var_diff_by_localhour['KG_ID'].map(kg_main_group_map)
