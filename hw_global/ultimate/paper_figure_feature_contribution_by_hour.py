@@ -371,7 +371,7 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
     save_plot_data(
         shap_df, 
         total_shap,
-        output_path, 
+        output_path,
         'shap'
     )
     save_plot_data(
@@ -612,7 +612,7 @@ def create_day_night_summary(df_feature_group, output_dir):
         # Add to rows with 'Global' as KGMajorClass
         rows.append({
             'KGMajorClass': 'Global',
-            'Period': f"{period} Sum",
+            'Period': f"{period} Avg",
             **group_means.to_dict(),
             'Total': group_means.sum()
         })
@@ -634,7 +634,7 @@ def create_day_night_summary(df_feature_group, output_dir):
             # Add to rows
             rows.append({
                 'KGMajorClass': kg_class,
-                'Period': f"{period} Sum",
+                'Period': f"{period} Avg",
                 **group_means.to_dict(),
                 'Total': group_means.sum()
             })
@@ -642,14 +642,18 @@ def create_day_night_summary(df_feature_group, output_dir):
     # Create DataFrame from rows
     summary_df = pd.DataFrame(rows)
     
-    # Round all numeric columns to 2 decimal places
+    # Round all numeric columns to 6 decimal places
     numeric_cols = summary_df.select_dtypes(include=['float64', 'int64']).columns
-    summary_df[numeric_cols] = summary_df[numeric_cols].round(2)
+    summary_df[numeric_cols] = summary_df[numeric_cols].round(6)
     
     # Reorder columns to put Total at the end
     cols = ['KGMajorClass', 'Period'] + [col for col in summary_df.columns 
                                         if col not in ['KGMajorClass', 'Period', 'Total']] + ['Total']
     summary_df = summary_df[cols]
+    
+    # Custom sort order for KGMajorClass to put Global first
+    kg_class_order = ['Global'] + sorted([x for x in summary_df['KGMajorClass'].unique() if x != 'Global'])
+    summary_df['KGMajorClass'] = pd.Categorical(summary_df['KGMajorClass'], categories=kg_class_order, ordered=True)
     
     # Sort by KGMajorClass and Period
     summary_df = summary_df.sort_values(['KGMajorClass', 'Period'])
@@ -664,6 +668,10 @@ def create_day_night_summary(df_feature_group, output_dir):
         values=[col for col in summary_df.columns if col not in ['KGMajorClass', 'Period']],
         aggfunc='first'
     )
+    
+    # Reorder columns to put Total at the end in pivot_df
+    cols = [col for col in pivot_df.columns if col != 'Total'] + ['Total']
+    pivot_df = pivot_df[cols]
     
     # Save pivot table to CSV
     pivot_output_path = os.path.join(output_dir, 'feature_group_day_night_summary_pivot.csv')
