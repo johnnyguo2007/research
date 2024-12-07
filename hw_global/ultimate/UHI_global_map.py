@@ -2,14 +2,24 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 import os
+import argparse
+
+def setup_output_dir(output_dir):
+    """Create output directory if it doesn't exist"""
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    return output_dir
+
+def save_plot(plt, filename, output_dir):
+    """Save plot to specified output directory"""
+    output_path = os.path.join(output_dir, filename)
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
 THRESHOLD: int = 98
 # #  Step 1: Load the data
 summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
-
-
-# merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables.feather')
-merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables_with_location_ID_event_ID.feather')
-merged_feather_path  = os.path.join(summary_dir, f'local_hour_adjusted_variables_HW{THRESHOLD}.feather')
+merged_feather_path  = os.path.join(summary_dir, f'updated_local_hour_adjusted_variables_HW{THRESHOLD}.feather')
 
 local_hour_adjusted_df = pd.read_feather(merged_feather_path)
 local_hour_adjusted_df.info()
@@ -230,7 +240,41 @@ uhi_diff_summary
 # # Next, assign the data from uhi_diff_ds to the corresponding location_ID in the template arrays
 # # Using vectorized operations to map values to their corresponding indices
 # for name, template in template_arrays.items():
-
+#     # Map the values from uhi_diff_ds to the locations in hw_diff_ds based on 'location_ID'
+#     indices = np.isin(hw_diff_ds['location_ID'].values.ravel(), uhi_diff_ds['location_ID'].values).reshape(hw_diff_ds['location_ID'].shape)
+#     template.values[indices] = uhi_diff_ds[name].values
+# 
+#     # Add to hw_diff_ds
+#     hw_diff_ds[name] = template
+# 
+# print(hw_diff_ds)
+# 
+# import xarray as xr
+# import pandas as pd
+# import numpy as np
+# 
+# 
+# # Convert the DataFrame to an xarray dataset
+# uhi_diff_ds = uhi_diff_summary[['location_ID', 'Daytime_UHI_diff_avg', 'Nighttime_UHI_diff_avg', 'Overall_UHI_diff_avg']].set_index('location_ID').to_xarray()
+# 
+# # Create a copy of the location_ID_ds to avoid modifying the original dataset
+# hw_diff_ds = location_ID_ds.copy()
+# 
+# # Broadcast the uhi_diff_summary data onto the hw_diff_ds dimensions
+# # First, create a template array with NaN values for each variable
+# template_arrays = {name: xr.full_like(hw_diff_ds['location_ID'], fill_value=np.nan, dtype='float32') for name in uhi_diff_ds.data_vars}
+# 
+# # Next, assign the data from uhi_diff_ds to the corresponding location_ID in the template arrays
+# # Using vectorized operations to map values to their corresponding indices
+# for name, template in template_arrays.items():
+#     # Map the values from uhi_diff_ds to the locations in hw_diff_ds based on 'location_ID'
+#     indices = np.isin(hw_diff_ds['location_ID'].values.ravel(), uhi_diff_ds['location_ID'].values).reshape(hw_diff_ds['location_ID'].shape)
+#     template.values[indices] = uhi_diff_ds[name].values
+# 
+#     # Add to hw_diff_ds
+#     hw_diff_ds[name] = template
+# 
+# print(hw_diff_ds)
 
 # # Step 4: Data Analysis
 # ##  Step 4.1: Create a global map showing the UHI_diff values for each grid cell, color-coded by the UHI_diff category
@@ -243,8 +287,8 @@ def normalize_longitude(lon):
     return ((lon + 180) % 360) - 180
 
 # Function to draw the map with categories
-def draw_map_subplot(data, title):
-    fig, ax = plt.subplots(figsize=(10, 6), dpi=300)  # Adjust figure size and DPI for high resolution
+def draw_map_subplot(data, title, output_dir=None):
+    fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
     if data.empty:
         print(f"No data available for {title}. Skipping plot.")
         ax.set_title(title + " - No Data Available")
@@ -268,11 +312,15 @@ def draw_map_subplot(data, title):
     sc = m.scatter(x, y, c=data['UHI_diff'], cmap='coolwarm', marker='o', edgecolor='none', s=10, alpha=0.75, vmin=vmin, vmax=vmax)
     plt.colorbar(sc, ax=ax, orientation='vertical', pad=0.02)
     ax.set_title(title)
-    # plt.savefig(f"{title.replace(' ', '_')}.png")  # Save each figure as a PNG file
-    # plt.close()  # Close the plot to free memory
+
+    if output_dir:
+        filename = f"{title.replace(' ', '_')}.png"
+        save_plot(plt, filename, output_dir)
+    else:
+        plt.show()
 
 # Main function to create plots
-def plot_uhi_maps(df):
+def plot_uhi_maps(df, output_dir=None):
     categories = ['Positive', 'Insignificant', 'Negative']
     variables = [
         ('Daytime_UHI_diff_avg', 'Daytime UHI'),
@@ -284,8 +332,34 @@ def plot_uhi_maps(df):
         for cat in categories:
             filtered_data = df[df['Daytime_UHI_Category'] == cat]
             filtered_data = filtered_data[['location_ID', 'lon', 'lat', var[0]]].rename(columns={var[0]: 'UHI_diff'})
-            draw_map_subplot(filtered_data, f"{var[1]} - {cat}")
+            draw_map_subplot(filtered_data, f"{var[1]} - {cat}", output_dir)
 
-# Assuming 'lon' and 'lat' have already been merged into uhi_diff_summary
-plot_uhi_maps(uhi_diff_summary)
+def main():
+    parser = argparse.ArgumentParser(description='Generate UHI global maps')
+    parser.add_argument('--output_dir', default='/home/jguo/tmp/output',
+                      help='Directory for output files')
+    parser.add_argument('--no_output', action='store_true',
+                      help='Display plots instead of saving them')
+    args = parser.parse_args()
+
+    # Setup output directory if saving plots
+    output_dir = None if args.no_output else setup_output_dir(args.output_dir)
+
+    # Load and process data
+    THRESHOLD = 98
+    summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
+    merged_feather_path = os.path.join(summary_dir, f'local_hour_adjusted_variables_HW{THRESHOLD}.feather')
+    
+    # Load data and perform analysis
+    local_hour_adjusted_df = pd.read_feather(merged_feather_path)
+    location_ID_path = os.path.join(summary_dir, 'location_IDs.nc')
+    location_ID_ds = xr.open_dataset(location_ID_path)
+
+    # ... (keep existing data processing code) ...
+
+    # Generate plots with output control
+    plot_uhi_maps(uhi_diff_summary, output_dir)
+
+if __name__ == "__main__":
+    main()
 
