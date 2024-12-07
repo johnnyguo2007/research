@@ -344,6 +344,71 @@ def plot_uhi_distributions(uhi_diff_summary, output_dir):
     save_plot(plt, "uhi_distributions.png", output_dir)
 
 
+def plot_all_uhi_maps(df, output_dir=None):
+    """Plot all UHI values for day and night with synchronized color scales"""
+    # Prepare data for day and night
+    day_data = df[["location_ID", "lon", "lat", "Daytime_UHI_diff_avg"]].rename(
+        columns={"Daytime_UHI_diff_avg": "UHI_diff"}
+    )
+    night_data = df[["location_ID", "lon", "lat", "Nighttime_UHI_diff_avg"]].rename(
+        columns={"Nighttime_UHI_diff_avg": "UHI_diff"}
+    )
+
+    # Find global min and max for consistent color scaling
+    vmin = min(day_data["UHI_diff"].min(), night_data["UHI_diff"].min())
+    vmax = max(day_data["UHI_diff"].max(), night_data["UHI_diff"].max())
+
+    # Create figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=300)
+
+    # Function to create map on a given axis
+    def create_map(ax, data, title):
+        m = Basemap(
+            projection="cyl",
+            lon_0=0,
+            ax=ax,
+            fix_aspect=False,
+            llcrnrlat=-44.94133,
+            urcrnrlat=65.12386,
+        )
+        m.drawcoastlines(color="0.15", linewidth=0.5, zorder=3)
+        m.drawcountries(linewidth=0.1)
+        m.fillcontinents(color="white", lake_color="lightcyan")
+        m.drawmapboundary(fill_color="lightcyan")
+        m.drawparallels(np.arange(-90.0, 91.0, 30.0), labels=[1, 0, 0, 0], fontsize=10)
+        m.drawmeridians(np.arange(-180.0, 181.0, 60.0), labels=[0, 0, 0, 1], fontsize=10)
+
+        normalized_lons = normalize_longitude(data["lon"].values)
+        x, y = m(normalized_lons, data["lat"].values)
+
+        sc = m.scatter(
+            x,
+            y,
+            c=data["UHI_diff"],
+            cmap="coolwarm",
+            marker="o",
+            edgecolor="none",
+            s=10,
+            alpha=0.75,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        plt.colorbar(sc, ax=ax, orientation="vertical", pad=0.02)
+        ax.set_title(title)
+        return sc
+
+    # Create both maps
+    create_map(ax1, day_data, "All Daytime UHI")
+    create_map(ax2, night_data, "All Nighttime UHI")
+
+    plt.tight_layout()
+
+    if output_dir:
+        save_plot(plt, "all_uhi_day_night_comparison.png", output_dir)
+    else:
+        plt.show()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate UHI global maps")
     parser.add_argument(
@@ -373,6 +438,9 @@ def main():
 
     # Generate and save map plots
     plot_uhi_maps(uhi_diff_summary, output_dir)
+    
+    # Add the new day/night comparison plot
+    plot_all_uhi_maps(uhi_diff_summary, output_dir)
 
 
 if __name__ == "__main__":
