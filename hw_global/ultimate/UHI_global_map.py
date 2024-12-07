@@ -5,6 +5,8 @@ import os
 import argparse
 import matplotlib.pyplot as plt
 import seaborn as sns
+from mpl_toolkits.basemap import Basemap
+from matplotlib.colors import BoundaryNorm
 
 
 def setup_output_dir(output_dir):
@@ -17,7 +19,7 @@ def setup_output_dir(output_dir):
 def save_plot(plt, filename, output_dir):
     """Save plot to specified output directory"""
     output_path = os.path.join(output_dir, filename)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.savefig(output_path, dpi=600, bbox_inches="tight")
     plt.close()
 
 
@@ -141,7 +143,6 @@ hw_freq_by_location = pd.DataFrame(
 )
 hw_freq_by_location.head()
 
-
 hw_freq_by_location
 hw_freq_by_location.info()
 # show % of rows that has Duration_avg < 3.0
@@ -241,7 +242,7 @@ def normalize_longitude(lon):
 
 # Function to draw the map with categories
 def draw_map_subplot(data, title, output_dir=None):
-    fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
+    fig, ax = plt.subplots(figsize=(10, 6), dpi=600)
     if data.empty:
         print(f"No data available for {title}. Skipping plot.")
         ax.set_title(title + " - No Data Available")
@@ -359,7 +360,7 @@ def plot_all_uhi_maps(df, output_dir=None):
     vmax = max(day_data["UHI_diff"].max(), night_data["UHI_diff"].max())
 
     # Create figure with two subplots
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=300)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=600)
 
     # Function to create map on a given axis
     def create_map(ax, data, title):
@@ -376,7 +377,9 @@ def plot_all_uhi_maps(df, output_dir=None):
         m.fillcontinents(color="white", lake_color="lightcyan")
         m.drawmapboundary(fill_color="lightcyan")
         m.drawparallels(np.arange(-90.0, 91.0, 30.0), labels=[1, 0, 0, 0], fontsize=10)
-        m.drawmeridians(np.arange(-180.0, 181.0, 60.0), labels=[0, 0, 0, 1], fontsize=10)
+        m.drawmeridians(
+            np.arange(-180.0, 181.0, 60.0), labels=[0, 0, 0, 1], fontsize=10
+        )
 
         normalized_lons = normalize_longitude(data["lon"].values)
         x, y = m(normalized_lons, data["lat"].values)
@@ -409,6 +412,106 @@ def plot_all_uhi_maps(df, output_dir=None):
         plt.show()
 
 
+def plot_all_uhi_maps_figure3_style(df, output_dir=None):
+    """
+    Plot all UHI values for day and night with synchronized color scales
+    using the style of Figure3.py
+    """
+    # Prepare data for day and night
+    day_data = df[["location_ID", "lon", "lat", "Daytime_UHI_diff_avg"]].rename(
+        columns={"Daytime_UHI_diff_avg": "UHI_diff"}
+    )
+    night_data = df[["location_ID", "lon", "lat", "Nighttime_UHI_diff_avg"]].rename(
+        columns={"Nighttime_UHI_diff_avg": "UHI_diff"}
+    )
+
+    # Find global min and max for consistent color scaling
+    vmin = min(day_data["UHI_diff"].min(), night_data["UHI_diff"].min())
+    vmax = max(day_data["UHI_diff"].max(), night_data["UHI_diff"].max())
+
+    # set color levels and color scheme
+    clevsVPDif = np.arange(vmin, vmax, 0.1)
+    cmap = plt.get_cmap("RdBu_r")
+    norm = BoundaryNorm(clevsVPDif, ncolors=cmap.N, clip=True)
+
+    # Create figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=600)
+    plt.rcParams.update({"font.sans-serif": "Arial"})
+
+    # Function to create map on a given axis
+    def create_map(ax, data, title):
+        m = Basemap(
+            projection="cyl",
+            lon_0=0,
+            ax=ax,
+            fix_aspect=False,
+            llcrnrlat=-56.0733,
+            urcrnrlat=84.34555,
+            rsphere=6371200.0,
+            resolution="l",
+            area_thresh=10000,
+        )
+
+        m.drawmapboundary(fill_color="lightcyan")
+        m.fillcontinents(color="white", lake_color="lightcyan")
+        m.drawcoastlines(linewidth=0.3, zorder=3)
+
+        # draw parallels.
+        parallels = np.arange(-90.0, 100.0, 30.0)
+        m.drawparallels(parallels, labels=[1, 0, 0, 0], fontsize=10, linewidth=0.3)
+        # draw meridians
+        meridians = np.arange(0.0, 360.0, 60.0)
+        m.drawmeridians(meridians, labels=[0, 0, 0, 1], fontsize=10, linewidth=0.3)
+
+        # Adjust longitude to match the -180 to 180 range
+        data["lon"] = np.where(data["lon"] > 180, data["lon"] - 360, data["lon"])
+
+        lons, lats = np.meshgrid(np.linspace(-180, 180, 288), np.linspace(-90, 90, 192))
+        x, y = m(lons, lats)
+
+        # Create a mask for land areas
+        # this mask will be used to filter out ocean points
+        # we assume that if a location_ID exists, it's a land point
+        land_mask = np.zeros_like(lons, dtype=bool)
+        for lon, lat in zip(data["lon"], data["lat"]):
+            lon_idx = np.argmin(np.abs(lons[0, :] - lon))
+            lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
+            land_mask[lat_idx, lon_idx] = True
+
+        # Prepare the data for plotting
+        data_to_plot = np.full_like(lons, np.nan)
+        for lon, lat, uhi in zip(data["lon"], data["lat"], data["UHI_diff"]):
+            lon_idx = np.argmin(np.abs(lons[0, :] - lon))
+            lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
+            data_to_plot[lat_idx, lon_idx] = uhi
+
+        # Mask out ocean points
+        data_to_plot[~land_mask] = np.nan
+
+        # Plot the data
+        cs = m.pcolormesh(
+            x, y, data_to_plot, cmap=cmap, norm=norm, zorder=2, shading="auto"
+        )
+
+        # sc = m.scatter(x, y, c=data["UHI_diff"], cmap=cmap, marker="o",
+        #               edgecolor="none", s=10, alpha=0.75, vmin=vmin, vmax=vmax, norm=norm)
+
+        plt.colorbar(cs, ax=ax, orientation="vertical", pad=0.02, extend="both")
+        ax.set_title(title, fontsize=14, fontweight="bold", pad=-1)
+        return cs
+
+    # Create both maps
+    create_map(ax1, day_data, "Daytime ΔUHI")
+    create_map(ax2, night_data, "Nighttime ΔUHI")
+
+    plt.tight_layout()
+
+    if output_dir:
+        save_plot(plt, "all_uhi_day_night_comparison_figure3_style.png", output_dir)
+    else:
+        plt.show()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate UHI global maps")
     parser.add_argument(
@@ -417,6 +520,9 @@ def main():
         help="Directory for output files",
     )
     args = parser.parse_args()
+    import matplotlib.font_manager
+
+    matplotlib.font_manager.findfont("Arial", rebuild_if_missing=True)
 
     # Setup output directory
     output_dir = setup_output_dir(args.output_dir)
@@ -433,14 +539,17 @@ def main():
     location_ID_path = os.path.join(summary_dir, "location_IDs.nc")
     location_ID_ds = xr.open_dataset(location_ID_path)
 
-    # Save distribution plots
-    plot_uhi_distributions(uhi_diff_summary, output_dir)
+    # # Save distribution plots
+    # plot_uhi_distributions(uhi_diff_summary, output_dir)
 
-    # Generate and save map plots
-    plot_uhi_maps(uhi_diff_summary, output_dir)
-    
+    # # Generate and save map plots
+    # plot_uhi_maps(uhi_diff_summary, output_dir)
+
     # Add the new day/night comparison plot
     plot_all_uhi_maps(uhi_diff_summary, output_dir)
+
+    # Add the new day/night comparison plot using Figure3.py style
+    plot_all_uhi_maps_figure3_style(uhi_diff_summary, output_dir)
 
 
 if __name__ == "__main__":
