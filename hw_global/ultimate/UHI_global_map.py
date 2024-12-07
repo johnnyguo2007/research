@@ -290,6 +290,43 @@ def draw_map_subplot(data, title, output_dir=None):
         plt.show()
 
 
+# Moved create_map out of plot_all_uhi_maps
+def create_map(ax, data, title, vmin=None, vmax=None, cmap="coolwarm"):
+    m = Basemap(
+        projection="cyl",
+        lon_0=0,
+        ax=ax,
+        fix_aspect=False,
+        llcrnrlat=-44.94133,
+        urcrnrlat=65.12386,
+    )
+    m.drawcoastlines(color="0.15", linewidth=0.5, zorder=3)
+    m.drawcountries(linewidth=0.1)
+    m.fillcontinents(color="white", lake_color="lightcyan")
+    m.drawmapboundary(fill_color="lightcyan")
+    m.drawparallels(np.arange(-90.0, 91.0, 30.0), labels=[1, 0, 0, 0], fontsize=10)
+    m.drawmeridians(np.arange(-180.0, 181.0, 60.0), labels=[0, 0, 0, 1], fontsize=10)
+
+    normalized_lons = normalize_longitude(data["lon"].values)
+    x, y = m(normalized_lons, data["lat"].values)
+
+    sc = m.scatter(
+        x,
+        y,
+        c=data["UHI_diff"],
+        cmap=cmap,
+        marker="o",
+        edgecolor="none",
+        s=10,
+        alpha=0.75,
+        vmin=vmin,
+        vmax=vmax,
+    )
+    plt.colorbar(sc, ax=ax, orientation="vertical", pad=0.02)
+    ax.set_title(title)
+    return sc
+
+
 # Main function to create plots
 def plot_uhi_maps(df, output_dir=None):
     categories = ["Positive", "Insignificant", "Negative"]
@@ -362,47 +399,9 @@ def plot_all_uhi_maps(df, output_dir=None):
     # Create figure with two subplots
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=600)
 
-    # Function to create map on a given axis
-    def create_map(ax, data, title):
-        m = Basemap(
-            projection="cyl",
-            lon_0=0,
-            ax=ax,
-            fix_aspect=False,
-            llcrnrlat=-44.94133,
-            urcrnrlat=65.12386,
-        )
-        m.drawcoastlines(color="0.15", linewidth=0.5, zorder=3)
-        m.drawcountries(linewidth=0.1)
-        m.fillcontinents(color="white", lake_color="lightcyan")
-        m.drawmapboundary(fill_color="lightcyan")
-        m.drawparallels(np.arange(-90.0, 91.0, 30.0), labels=[1, 0, 0, 0], fontsize=10)
-        m.drawmeridians(
-            np.arange(-180.0, 181.0, 60.0), labels=[0, 0, 0, 1], fontsize=10
-        )
-
-        normalized_lons = normalize_longitude(data["lon"].values)
-        x, y = m(normalized_lons, data["lat"].values)
-
-        sc = m.scatter(
-            x,
-            y,
-            c=data["UHI_diff"],
-            cmap="coolwarm",
-            marker="o",
-            edgecolor="none",
-            s=10,
-            alpha=0.75,
-            vmin=vmin,
-            vmax=vmax,
-        )
-        plt.colorbar(sc, ax=ax, orientation="vertical", pad=0.02)
-        ax.set_title(title)
-        return sc
-
-    # Create both maps
-    create_map(ax1, day_data, "All Daytime UHI")
-    create_map(ax2, night_data, "All Nighttime UHI")
+    # Create both maps using the top-level create_map
+    create_map(ax1, day_data, "All Daytime UHI", vmin=vmin, vmax=vmax, cmap="coolwarm")
+    create_map(ax2, night_data, "All Nighttime UHI", vmin=vmin, vmax=vmax, cmap="coolwarm")
 
     plt.tight_layout()
 
@@ -410,6 +409,55 @@ def plot_all_uhi_maps(df, output_dir=None):
         save_plot(plt, "all_uhi_day_night_comparison.png", output_dir)
     else:
         plt.show()
+
+
+# Moved create_map_figure3_style out of plot_all_uhi_maps_figure3_style
+def create_map_figure3_style(ax, data, title, vmin, vmax, cmap):
+    m = Basemap(
+        projection="cyl",
+        lon_0=0,
+        ax=ax,
+        fix_aspect=False,
+        llcrnrlat=-56.0733,
+        urcrnrlat=84.34555,
+        rsphere=6371200.0,
+        resolution="l",
+        area_thresh=10000,
+    )
+    m.drawmapboundary(fill_color="lightcyan")
+    m.fillcontinents(color="white", lake_color="lightcyan")
+    m.drawcoastlines(linewidth=0.3, zorder=3)
+
+    parallels = np.arange(-90., 100., 30.)
+    m.drawparallels(parallels, labels=[1, 0, 0, 0], fontsize=10, linewidth=0.3)
+    meridians = np.arange(0., 360., 60.)
+    m.drawmeridians(meridians, labels=[0, 0, 0, 1], fontsize=10, linewidth=0.3)
+
+    data["lon"] = np.where(data["lon"] > 180, data["lon"] - 360, data["lon"])
+
+    lons, lats = np.meshgrid(np.linspace(-180, 180, 288), np.linspace(-90, 90, 192))
+    x, y = m(lons, lats)
+
+    land_mask = np.zeros_like(lons, dtype=bool)
+    for lon, lat in zip(data["lon"], data["lat"]):
+        lon_idx = np.argmin(np.abs(lons[0, :] - lon))
+        lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
+        land_mask[lat_idx, lon_idx] = True
+
+    data_to_plot = np.full_like(lons, np.nan)
+    for lon, lat, uhi in zip(data["lon"], data["lat"], data["UHI_diff"]):
+        lon_idx = np.argmin(np.abs(lons[0, :] - lon))
+        lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
+        data_to_plot[lat_idx, lon_idx] = uhi
+
+    data_to_plot[~land_mask] = np.nan
+
+    cs = m.pcolormesh(
+        x, y, data_to_plot, cmap=cmap, norm=BoundaryNorm(np.arange(vmin, vmax, 0.1), ncolors=plt.get_cmap(cmap).N, clip=True), zorder=2, shading='auto'
+    )
+    plt.colorbar(cs, ax=ax, orientation="vertical", pad=0.02, extend="both")
+    ax.set_title(title, fontsize=14, fontweight="bold", pad=-1)
+    return cs
 
 
 def plot_all_uhi_maps_figure3_style(df, output_dir=None):
@@ -429,80 +477,13 @@ def plot_all_uhi_maps_figure3_style(df, output_dir=None):
     vmin = min(day_data["UHI_diff"].min(), night_data["UHI_diff"].min())
     vmax = max(day_data["UHI_diff"].max(), night_data["UHI_diff"].max())
 
-    # set color levels and color scheme
-    clevsVPDif = np.arange(vmin, vmax, 0.1)
-    cmap = plt.get_cmap("RdBu_r")
-    norm = BoundaryNorm(clevsVPDif, ncolors=cmap.N, clip=True)
-
     # Create figure with two subplots
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=600)
     plt.rcParams.update({"font.sans-serif": "Arial"})
 
-    # Function to create map on a given axis
-    def create_map(ax, data, title):
-        m = Basemap(
-            projection="cyl",
-            lon_0=0,
-            ax=ax,
-            fix_aspect=False,
-            llcrnrlat=-56.0733,
-            urcrnrlat=84.34555,
-            rsphere=6371200.0,
-            resolution="l",
-            area_thresh=10000,
-        )
-
-        m.drawmapboundary(fill_color="lightcyan")
-        m.fillcontinents(color="white", lake_color="lightcyan")
-        m.drawcoastlines(linewidth=0.3, zorder=3)
-
-        # draw parallels.
-        parallels = np.arange(-90.0, 100.0, 30.0)
-        m.drawparallels(parallels, labels=[1, 0, 0, 0], fontsize=10, linewidth=0.3)
-        # draw meridians
-        meridians = np.arange(0.0, 360.0, 60.0)
-        m.drawmeridians(meridians, labels=[0, 0, 0, 1], fontsize=10, linewidth=0.3)
-
-        # Adjust longitude to match the -180 to 180 range
-        data["lon"] = np.where(data["lon"] > 180, data["lon"] - 360, data["lon"])
-
-        lons, lats = np.meshgrid(np.linspace(-180, 180, 288), np.linspace(-90, 90, 192))
-        x, y = m(lons, lats)
-
-        # Create a mask for land areas
-        # this mask will be used to filter out ocean points
-        # we assume that if a location_ID exists, it's a land point
-        land_mask = np.zeros_like(lons, dtype=bool)
-        for lon, lat in zip(data["lon"], data["lat"]):
-            lon_idx = np.argmin(np.abs(lons[0, :] - lon))
-            lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
-            land_mask[lat_idx, lon_idx] = True
-
-        # Prepare the data for plotting
-        data_to_plot = np.full_like(lons, np.nan)
-        for lon, lat, uhi in zip(data["lon"], data["lat"], data["UHI_diff"]):
-            lon_idx = np.argmin(np.abs(lons[0, :] - lon))
-            lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
-            data_to_plot[lat_idx, lon_idx] = uhi
-
-        # Mask out ocean points
-        data_to_plot[~land_mask] = np.nan
-
-        # Plot the data
-        cs = m.pcolormesh(
-            x, y, data_to_plot, cmap=cmap, norm=norm, zorder=2, shading="auto"
-        )
-
-        # sc = m.scatter(x, y, c=data["UHI_diff"], cmap=cmap, marker="o",
-        #               edgecolor="none", s=10, alpha=0.75, vmin=vmin, vmax=vmax, norm=norm)
-
-        plt.colorbar(cs, ax=ax, orientation="vertical", pad=0.02, extend="both")
-        ax.set_title(title, fontsize=14, fontweight="bold", pad=-1)
-        return cs
-
-    # Create both maps
-    create_map(ax1, day_data, "Daytime ΔUHI")
-    create_map(ax2, night_data, "Nighttime ΔUHI")
+    # Create both maps using the top-level create_map_figure3_style
+    create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "RdBu_r")
+    create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "RdBu_r")
 
     plt.tight_layout()
 
