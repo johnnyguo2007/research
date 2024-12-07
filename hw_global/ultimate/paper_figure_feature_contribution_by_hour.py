@@ -600,19 +600,19 @@ def create_day_night_summary(df_feature_group, output_dir):
     
     # Process global data first
     for period, hour_mask in [
-        ("Day", lambda x: x.between(6, 19)),  # 6:00 to 19:59
-        ("Night", lambda x: x.between(20, 23) | x.between(0, 5))  # 20:00 to 5:59
+        ("Day", lambda x: x.between(18, 19)),  # 18:00 to 19:59
+        ("Night", lambda x: x.between(5, 6))  # 5:00 to 6:59
     ]:
         # Filter data for the current period
         period_data = df_feature_group[hour_mask(df_feature_group['local_hour'])]
         
-        # Calculate mean for each feature group
+        # Calculate mean for each feature group (changed from top 2 average to mean)
         group_means = period_data.groupby('Feature Group')['Value'].mean()
         
         # Add to rows with 'Global' as KGMajorClass
         rows.append({
             'KGMajorClass': 'Global',
-            'Period': f"{period} Avg",
+            'Period': f"{period} Mean",  # Changed label from "Avg Top 2" to "Mean"
             **group_means.to_dict(),
             'Total': group_means.sum()
         })
@@ -622,19 +622,19 @@ def create_day_night_summary(df_feature_group, output_dir):
         kg_data = df_feature_group[df_feature_group['KGMajorClass'] == kg_class]
         
         for period, hour_mask in [
-            ("Day", lambda x: x.between(6, 19)),  # 6:00 to 19:59
-            ("Night", lambda x: x.between(20, 23) | x.between(0, 5))  # 20:00 to 5:59
+            ("Day", lambda x: x.between(18, 19)),  # 18:00 to 19:59
+            ("Night", lambda x: x.between(5, 6))  # 5:00 to 6:59
         ]:
             # Filter data for the current period
             period_data = kg_data[hour_mask(kg_data['local_hour'])]
             
-            # Calculate mean for each feature group
+            # Calculate mean for each feature group (changed from top 2 average to mean)
             group_means = period_data.groupby('Feature Group')['Value'].mean()
             
             # Add to rows
             rows.append({
                 'KGMajorClass': kg_class,
-                'Period': f"{period} Avg",
+                'Period': f"{period} Mean",  # Changed label from "Avg Top 2" to "Mean"
                 **group_means.to_dict(),
                 'Total': group_means.sum()
             })
