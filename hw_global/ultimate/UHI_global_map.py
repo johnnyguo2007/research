@@ -401,7 +401,9 @@ def plot_all_uhi_maps(df, output_dir=None):
 
     # Create both maps using the top-level create_map
     create_map(ax1, day_data, "All Daytime UHI", vmin=vmin, vmax=vmax, cmap="coolwarm")
-    create_map(ax2, night_data, "All Nighttime UHI", vmin=vmin, vmax=vmax, cmap="coolwarm")
+    create_map(
+        ax2, night_data, "All Nighttime UHI", vmin=vmin, vmax=vmax, cmap="coolwarm"
+    )
 
     plt.tight_layout()
 
@@ -428,9 +430,9 @@ def create_map_figure3_style(ax, data, title, vmin, vmax, cmap):
     m.fillcontinents(color="white", lake_color="lightcyan")
     m.drawcoastlines(linewidth=0.3, zorder=3)
 
-    parallels = np.arange(-90., 100., 30.)
+    parallels = np.arange(-90.0, 100.0, 30.0)
     m.drawparallels(parallels, labels=[1, 0, 0, 0], fontsize=10, linewidth=0.3)
-    meridians = np.arange(0., 360., 60.)
+    meridians = np.arange(0.0, 360.0, 60.0)
     m.drawmeridians(meridians, labels=[0, 0, 0, 1], fontsize=10, linewidth=0.3)
 
     data["lon"] = np.where(data["lon"] > 180, data["lon"] - 360, data["lon"])
@@ -453,11 +455,55 @@ def create_map_figure3_style(ax, data, title, vmin, vmax, cmap):
     data_to_plot[~land_mask] = np.nan
 
     cs = m.pcolormesh(
-        x, y, data_to_plot, cmap=cmap, norm=BoundaryNorm(np.arange(vmin, vmax, 0.1), ncolors=plt.get_cmap(cmap).N, clip=True), zorder=2, shading='auto'
+        # x, y, data_to_plot, cmap=cmap, norm=BoundaryNorm(np.arange(vmin, vmax, 0.1), ncolors=plt.get_cmap(cmap).N, clip=True), zorder=2, shading='auto'
+        x,
+        y,
+        data_to_plot,
+        cmap=cmap,
+        norm=BoundaryNorm(
+            np.linspace(vmin, vmax, 256), ncolors=plt.get_cmap(cmap).N, clip=True
+        ),
+        zorder=2,
+        shading="auto",
     )
-    plt.colorbar(cs, ax=ax, orientation="vertical", pad=0.02, extend="both")
+    plt.colorbar(
+        cs, ax=ax, orientation="vertical", pad=0.02, extend="both", format="%.1f"
+    )
     ax.set_title(title, fontsize=14, fontweight="bold", pad=-1)
     return cs
+
+
+# def plot_all_uhi_maps_figure3_style(df, output_dir=None):
+#     """
+#     Plot all UHI values for day and night with synchronized color scales
+#     using the style of Figure3.py
+#     """
+#     # Prepare data for day and night
+#     day_data = df[["location_ID", "lon", "lat", "Daytime_UHI_diff_avg"]].rename(
+#         columns={"Daytime_UHI_diff_avg": "UHI_diff"}
+#     )
+#     night_data = df[["location_ID", "lon", "lat", "Nighttime_UHI_diff_avg"]].rename(
+#         columns={"Nighttime_UHI_diff_avg": "UHI_diff"}
+#     )
+
+#     # Find global min and max for consistent color scaling
+#     vmin = min(day_data["UHI_diff"].min(), night_data["UHI_diff"].min())
+#     vmax = max(day_data["UHI_diff"].max(), night_data["UHI_diff"].max())
+
+#     # Create figure with two subplots
+#     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=600)
+#     plt.rcParams.update({"font.sans-serif": "Arial"})
+
+#     # Create both maps using the top-level create_map_figure3_style
+#     create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "RdBu_r")
+#     create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "RdBu_r")
+
+#     plt.tight_layout()
+
+#     if output_dir:
+#         save_plot(plt, "all_uhi_day_night_comparison_figure3_style.png", output_dir)
+#     else:
+#         plt.show()
 
 
 def plot_all_uhi_maps_figure3_style(df, output_dir=None):
@@ -473,9 +519,13 @@ def plot_all_uhi_maps_figure3_style(df, output_dir=None):
         columns={"Nighttime_UHI_diff_avg": "UHI_diff"}
     )
 
-    # Find global min and max for consistent color scaling
-    vmin = min(day_data["UHI_diff"].min(), night_data["UHI_diff"].min())
-    vmax = max(day_data["UHI_diff"].max(), night_data["UHI_diff"].max())
+    # Calculate the 5th and 95th percentiles for more robust min/max
+    vmin = np.nanpercentile(
+        pd.concat([day_data["UHI_diff"], night_data["UHI_diff"]]), 2
+    )
+    vmax = np.nanpercentile(
+        pd.concat([day_data["UHI_diff"], night_data["UHI_diff"]]), 98
+    )
 
     # Create figure with two subplots
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=600)
