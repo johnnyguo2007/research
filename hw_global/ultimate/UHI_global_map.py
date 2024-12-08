@@ -534,14 +534,14 @@ def plot_all_uhi_maps_figure3_style(df, output_dir=None):
     vmax = 1.0
 
     # Create figure with two subplots
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=600)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 6), dpi=600)
     plt.rcParams.update({"font.sans-serif": "Arial"})
 
     # Create both maps using the top-level create_map_figure3_style
     # create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "RdBu_r")  # Using updated vmin and vmax
     # create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "RdBu_r")  # Using updated vmin and vmax
-    create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
-    create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
+    create_map_figure3_style(ax1, day_data, "Daytime HW-NHW UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
+    create_map_figure3_style(ax2, night_data, "Nighttime HW-NHW UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
     plt.tight_layout()
 
     if output_dir:
