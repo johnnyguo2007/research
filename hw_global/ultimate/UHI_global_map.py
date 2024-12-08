@@ -519,22 +519,29 @@ def plot_all_uhi_maps_figure3_style(df, output_dir=None):
         columns={"Nighttime_UHI_diff_avg": "UHI_diff"}
     )
 
+    # Calculate the maximum absolute value for symmetric color scaling
+    combined_data = pd.concat([day_data["UHI_diff"], night_data["UHI_diff"]], ignore_index=True)
+    max_abs = np.nanmax(np.abs(combined_data))
+
     # Calculate the 5th and 95th percentiles for more robust min/max
-    vmin = np.nanpercentile(
-        pd.concat([day_data["UHI_diff"], night_data["UHI_diff"]]), 2
-    )
-    vmax = np.nanpercentile(
-        pd.concat([day_data["UHI_diff"], night_data["UHI_diff"]]), 98
-    )
+    percentile_vmin = np.nanpercentile(pd.concat([day_data["UHI_diff"], night_data["UHI_diff"]], ignore_index=True), 2)
+    percentile_vmax = np.nanpercentile(pd.concat([day_data["UHI_diff"], night_data["UHI_diff"]], ignore_index=True), 98)
+
+    # Set vmin and vmax to be the minimum of percentile limits and symmetric max_abs
+    vmin = min(percentile_vmin, -max_abs)
+    vmax = max(percentile_vmax, max_abs)  # Updated to center colorbar at 0 while respecting percentile limits
+    vmin = -1.0
+    vmax = 1.0
 
     # Create figure with two subplots
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=600)
     plt.rcParams.update({"font.sans-serif": "Arial"})
 
     # Create both maps using the top-level create_map_figure3_style
-    create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "RdBu_r")
-    create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "RdBu_r")
-
+    # create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "RdBu_r")  # Using updated vmin and vmax
+    # create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "RdBu_r")  # Using updated vmin and vmax
+    create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
+    create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
     plt.tight_layout()
 
     if output_dir:
