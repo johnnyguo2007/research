@@ -415,13 +415,31 @@ def plot_all_uhi_maps(df, output_dir=None):
 
 # Moved create_map_figure3_style out of plot_all_uhi_maps_figure3_style
 def create_map_figure3_style(ax, data, title, vmin, vmax, cmap):
+    # Calculate grid dimensions based on data
+    lat_resolution = 180/192  # Degrees per grid cell for latitude
+    lon_resolution = 360/288  # Degrees per grid cell for longitude
+    
+    # Define latitude bounds from Figure3.py
+    lat_south = -56.0733
+    lat_north = 84.34555
+    
+    # Create latitude and longitude arrays
+    lats = np.arange(-90, 90 + lat_resolution, lat_resolution)
+    lons = np.arange(-180, 180 + lon_resolution, lon_resolution)
+    
+    # Filter latitudes to exclude poles
+    lat_mask = (lats >= lat_south) & (lats <= lat_north)
+    filtered_lats = lats[lat_mask]
+    
     m = Basemap(
         projection="cyl",
         lon_0=0,
         ax=ax,
         fix_aspect=False,
-        llcrnrlat=-56.0733,
-        urcrnrlat=84.34555,
+        llcrnrlat=lat_south,
+        urcrnrlat=lat_north,
+        llcrnrlon=lons[0],
+        urcrnrlon=lons[-1],
         rsphere=6371200.0,
         resolution="l",
         area_thresh=10000,
@@ -430,32 +448,38 @@ def create_map_figure3_style(ax, data, title, vmin, vmax, cmap):
     m.fillcontinents(color="white", lake_color="lightcyan")
     m.drawcoastlines(linewidth=0.3, zorder=3)
 
-    parallels = np.arange(-90.0, 100.0, 30.0)
+    # Draw parallels and meridians
+    parallels = np.arange(-90, 91, 30)  # -90 to 90 by 30 degrees
     m.drawparallels(parallels, labels=[1, 0, 0, 0], fontsize=10, linewidth=0.3)
-    meridians = np.arange(0.0, 360.0, 60.0)
+    meridians = np.arange(-180, 181, 60)  # -180 to 180 by 60 degrees
     m.drawmeridians(meridians, labels=[0, 0, 0, 1], fontsize=10, linewidth=0.3)
 
+    # Normalize longitudes to [-180, 180]
     data["lon"] = np.where(data["lon"] > 180, data["lon"] - 360, data["lon"])
 
-    lons, lats = np.meshgrid(np.linspace(-180, 180, 288), np.linspace(-90, 90, 192))
+    # Create grid excluding poles
+    lons, lats = np.meshgrid(lons[:-1], filtered_lats)  # Exclude last point to avoid duplicate
     x, y = m(lons, lats)
 
+    # Create land mask for filtered grid
     land_mask = np.zeros_like(lons, dtype=bool)
     for lon, lat in zip(data["lon"], data["lat"]):
-        lon_idx = np.argmin(np.abs(lons[0, :] - lon))
-        lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
-        land_mask[lat_idx, lon_idx] = True
+        if lat_south <= lat <= lat_north:
+            lon_idx = np.argmin(np.abs(lons[0, :] - lon))
+            lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
+            land_mask[lat_idx, lon_idx] = True
 
+    # Create data array for filtered grid
     data_to_plot = np.full_like(lons, np.nan)
     for lon, lat, uhi in zip(data["lon"], data["lat"], data["UHI_diff"]):
-        lon_idx = np.argmin(np.abs(lons[0, :] - lon))
-        lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
-        data_to_plot[lat_idx, lon_idx] = uhi
+        if lat_south <= lat <= lat_north:
+            lon_idx = np.argmin(np.abs(lons[0, :] - lon))
+            lat_idx = np.argmin(np.abs(lats[:, 0] - lat))
+            data_to_plot[lat_idx, lon_idx] = uhi
 
     data_to_plot[~land_mask] = np.nan
 
     cs = m.pcolormesh(
-        # x, y, data_to_plot, cmap=cmap, norm=BoundaryNorm(np.arange(vmin, vmax, 0.1), ncolors=plt.get_cmap(cmap).N, clip=True), zorder=2, shading='auto'
         x,
         y,
         data_to_plot,
@@ -471,39 +495,6 @@ def create_map_figure3_style(ax, data, title, vmin, vmax, cmap):
     )
     ax.set_title(title, fontsize=14, fontweight="bold", pad=-1)
     return cs
-
-
-# def plot_all_uhi_maps_figure3_style(df, output_dir=None):
-#     """
-#     Plot all UHI values for day and night with synchronized color scales
-#     using the style of Figure3.py
-#     """
-#     # Prepare data for day and night
-#     day_data = df[["location_ID", "lon", "lat", "Daytime_UHI_diff_avg"]].rename(
-#         columns={"Daytime_UHI_diff_avg": "UHI_diff"}
-#     )
-#     night_data = df[["location_ID", "lon", "lat", "Nighttime_UHI_diff_avg"]].rename(
-#         columns={"Nighttime_UHI_diff_avg": "UHI_diff"}
-#     )
-
-#     # Find global min and max for consistent color scaling
-#     vmin = min(day_data["UHI_diff"].min(), night_data["UHI_diff"].min())
-#     vmax = max(day_data["UHI_diff"].max(), night_data["UHI_diff"].max())
-
-#     # Create figure with two subplots
-#     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), dpi=600)
-#     plt.rcParams.update({"font.sans-serif": "Arial"})
-
-#     # Create both maps using the top-level create_map_figure3_style
-#     create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "RdBu_r")
-#     create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "RdBu_r")
-
-#     plt.tight_layout()
-
-#     if output_dir:
-#         save_plot(plt, "all_uhi_day_night_comparison_figure3_style.png", output_dir)
-#     else:
-#         plt.show()
 
 
 def plot_all_uhi_maps_figure3_style(df, output_dir=None):
@@ -540,8 +531,8 @@ def plot_all_uhi_maps_figure3_style(df, output_dir=None):
     # Create both maps using the top-level create_map_figure3_style
     # create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "RdBu_r")  # Using updated vmin and vmax
     # create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "RdBu_r")  # Using updated vmin and vmax
-    create_map_figure3_style(ax1, day_data, "Daytime HW-NHW UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
-    create_map_figure3_style(ax2, night_data, "Nighttime HW-NHW UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
+    create_map_figure3_style(ax1, day_data, "Daytime Average HW-NHW UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
+    create_map_figure3_style(ax2, night_data, "Nighttime Average HW-NHW UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
     plt.tight_layout()
 
     if output_dir:
