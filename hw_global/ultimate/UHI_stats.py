@@ -67,7 +67,7 @@ if PLOT_GLOBAL_MEAN:
     plt.xticks(range(0, 24))
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'global_mean_uhi_by_hour.png'), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'global_mean_uhi_by_hour.png'), dpi=600, bbox_inches='tight')
     plt.close()
 
 # ##  4.2: Koppen Geiger Climate Analysis
@@ -226,7 +226,7 @@ if PLOT_KG_CLASS:
         if (i % graphs_per_row == graphs_per_row - 1) or (i == n_kg_ids - 1):
             plt.tight_layout()
             plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, f'kg_class_uhi_diff_group_{i//graphs_per_row + 1}.png'), 
-                        dpi=300, bbox_inches='tight')
+                        dpi=600, bbox_inches='tight')
             plt.close()
 
 # ###  4.2.4: Main Group Analysis - Aggregate Data by Main Koppen Geiger Groups
@@ -321,7 +321,7 @@ if PLOT_KG_MAIN_GROUP:
     
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust the top spacing
     plt.suptitle('Average Hourly UHI_diff by KG Main Group', size=20, weight='bold', y=0.99)  # Add an overall title
-    plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'kg_main_group_uhi_diff.png'), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'kg_main_group_uhi_diff.png'), dpi=600, bbox_inches='tight')
     plt.close()
     
     # ### Additional Plot: Combined Chart of All Main Groups without Std Dev
@@ -337,5 +337,5 @@ if PLOT_KG_MAIN_GROUP:
     plt.xticks(range(0, 24))
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'kg_main_group_uhi_diff_combined.png'), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'kg_main_group_uhi_diff_combined.png'), dpi=600, bbox_inches='tight')
     plt.close()
