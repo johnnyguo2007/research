@@ -2,6 +2,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
+def replace_cold_with_continental(kg_main_group):
+    if kg_main_group == 'Cold':
+        return 'Continental'
+    return kg_main_group
+
 # Add lookup table reading
 lookup_df = pd.read_excel('/home/jguo/research/hw_global/Data/var_name_unit_lookup.xlsx')
 lookup_dict = dict(zip(lookup_df['Variable'], lookup_df['LaTeX']))
@@ -116,6 +121,4 @@ plt.tight_layout()
 # Save the plot instead of displaying
 plt.savefig(os.path.join(output_dir, 'feature_group_contribution_by_KG.png'), 
             bbox_inches='tight', dpi=600)
-plt.savefig(os.path.join(output_dir, 'feature_group_contribution_by_KG.pdf'), 
-            bbox_inches='tight')
 plt.close()

@@ -4,6 +4,12 @@ import xarray as xr
 import os
 THRESHOLD: int = 98
 
+def replace_cold_with_continental(kg_main_group):
+    if kg_main_group == 'Cold':
+        return 'Continental'
+    return kg_main_group
+
+
 # #  3: Load Local Hour Adjusted Variables
 
 summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
@@ -227,11 +233,7 @@ if PLOT_KG_CLASS:
             plt.tight_layout()
             plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, f'kg_class_uhi_diff_group_{i//graphs_per_row + 1}.png'), 
                         dpi=600, bbox_inches='tight')
-            plt.close()
-def replace_cold_with_continental(kg_main_group):
-    if kg_main_group == 'Cold':
-        return 'Continental'
-    return kg_main_group    
+            plt.close() 
 
 # ###  4.2.4: Main Group Analysis - Aggregate Data by Main Koppen Geiger Groups
 if PLOT_KG_MAIN_GROUP:
@@ -324,7 +326,7 @@ if PLOT_KG_MAIN_GROUP:
         fig.delaxes(axs[row, col])
     
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust the top spacing
-    plt.suptitle('Average Hourly UHI_diff by KG Main Group', size=20, weight='bold', y=0.99)  # Add an overall title
+    plt.suptitle('Average Hourly HW-NHW UHI by Climate Zone', size=20, weight='bold', y=0.99)  # Add an overall title
     plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'kg_main_group_uhi_diff.png'), dpi=600, bbox_inches='tight')
     plt.close()
     
