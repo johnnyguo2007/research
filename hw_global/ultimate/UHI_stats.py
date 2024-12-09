@@ -228,6 +228,10 @@ if PLOT_KG_CLASS:
             plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, f'kg_class_uhi_diff_group_{i//graphs_per_row + 1}.png'), 
                         dpi=600, bbox_inches='tight')
             plt.close()
+def replace_cold_with_continental(kg_main_group):
+    if kg_main_group == 'Cold':
+        return 'Continental'
+    return kg_main_group    
 
 # ###  4.2.4: Main Group Analysis - Aggregate Data by Main Koppen Geiger Groups
 if PLOT_KG_MAIN_GROUP:
@@ -283,7 +287,7 @@ if PLOT_KG_MAIN_GROUP:
     
         subset = avg_diff_by_hour_and_main_group[avg_diff_by_hour_and_main_group['KGMainGroup'] == main_group]
     
-        axs[row, col].plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label='UHI_diff Mean')
+        axs[row, col].plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label='HW-NHW UHI')
         
         axs[row, col].fill_between(
             subset['local_hour'],
@@ -299,8 +303,8 @@ if PLOT_KG_MAIN_GROUP:
         main_group_font = {'size': 16, 'weight': 'bold'}
     
         # Set the title with the main climate group name in bold
-        axs[row, col].set_title(f'KG Main Group:', fontdict=title_font)
-        axs[row, col].text(0.5, 1.05, main_group, fontdict=main_group_font, transform=axs[row, col].transAxes, ha='center', va='bottom')
+        axs[row, col].set_title(f'Climate Zone:', fontdict=title_font)
+        axs[row, col].text(0.5, 1.05, replace_cold_with_continental(main_group), fontdict=main_group_font, transform=axs[row, col].transAxes, ha='center', va='bottom')
     
         axs[row, col].set_xlabel('Local Hour')
         axs[row, col].set_ylabel('Average UHI_diff')
@@ -328,7 +332,7 @@ if PLOT_KG_MAIN_GROUP:
     plt.figure(figsize=(10, 6))
     for main_group in sorted_main_groups:
         subset = avg_diff_by_hour_and_main_group[avg_diff_by_hour_and_main_group['KGMainGroup'] == main_group]
-        plt.plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label=main_group)
+        plt.plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label=replace_cold_with_continental(main_group))
     
     plt.title('Average Hourly UHI_diff by KG Main Groups')
     plt.xlabel('Local Hour')
