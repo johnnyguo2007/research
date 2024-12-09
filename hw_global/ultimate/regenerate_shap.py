@@ -17,12 +17,6 @@ lookup_dict = dict(zip(lookup_df['Variable'], lookup_df['LaTeX']))
 def get_latex_label(feature_name):
     """
     Retrieves the LaTeX label for a given feature based on its feature group.
-    
-    Args:
-        feature_name (str): The name of the feature.
-    
-    Returns:
-        str: The corresponding LaTeX label.
     """
     prefix_to_symbol = {
         'delta_': '(Δ)',
@@ -141,7 +135,6 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
     # Load data
     df_daily_vars_path = os.path.join(artifact_uri, "hourlyDataSchema.xlsx")
     shap_values_feather_path = os.path.join(artifact_uri, "shap_values_with_additional_columns.feather")
-    X_path = os.path.join(artifact_uri, "X_data.feather")
 
     if os.path.exists(df_daily_vars_path):
         df_daily_vars = pd.read_excel(df_daily_vars_path)
@@ -151,15 +144,17 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
 
     if os.path.exists(shap_values_feather_path):
         shap_df = pd.read_feather(shap_values_feather_path)
+        logging.info(f"Loaded shap_values from {shap_values_feather_path}")
+        logging.info(f"shap_df shape: {shap_df.shape}")
+
+        # Display column information
+        logging.info("Column Information:")
+        logging.info("========================================")
+        for i, col in enumerate(shap_df.columns):
+            logging.info(f"{i:5}  {col:36}  {str(shap_df.dtypes[col]):14} {shap_df[col].isnull().any()}")
     else:
         logging.error(f"shap_values_with_additional_columns.feather file not found at {shap_values_feather_path}")
         return
-
-    if os.path.exists(X_path):
-        X = pd.read_feather(X_path)
-    else:
-        logging.warning(f"X_data file not found at {X_path}. Cannot proceed with feature values.")
-        X = None
 
     # Determine time period
     if 'day' in experiment_name.lower():
@@ -176,60 +171,23 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
     os.makedirs(feature_group_shap_dir, exist_ok=True)
 
     # Separate SHAP and non-SHAP columns
-    non_shap_columns = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'UHI_diff', 'Estimation_Error', 'base_value']
-    non_shap_columns = [col for col in non_shap_columns if col in shap_df.columns]
-    shap_values_df = shap_df.drop(columns=non_shap_columns, errors='ignore')
-    # Extract feature names from shap_values_df, considering the '_shap' suffix
-    feature_names = [col.replace('_shap', '') for col in shap_values_df.columns]
+    shap_columns = [col for col in shap_df.columns if col.endswith('_shap')]
+    non_shap_columns = [col for col in shap_df.columns if col not in shap_columns]
+
+    shap_values_df = shap_df[shap_columns]
+    feature_names = [col.replace('_shap', '') for col in shap_columns]
     shap_values = shap_values_df.values
-    
-    # if X is not None:
-    #     # Ensure X has the same number of rows as shap_values
-    #     if X.shape[0] != shap_values.shape[0]:
-    #         logging.warning("X and shap_values have different number of rows. Using first rows of X to match shap_values.")
-    #         X = X.iloc[:shap_values.shape[0]]
-    #     # Ensure X has the same number of columns as shap_values
-    #     if X.shape[1] != shap_values.shape[1]:
-    #         # Assuming the order of columns in X is the same as in feature_names
-    #         missing_features = [f for f in feature_names if f not in X.columns]
-    #         if missing_features:
-    #             logging.warning(f"Missing features in X: {missing_features}. Adding them as zero-filled columns.")
-    #             for feature in missing_features:
-    #                 X[feature] = 0
-    #         extra_features = [f for f in X.columns if f not in feature_names]
-    #         if extra_features:
-    #             logging.warning(f"Extra features in X: {extra_features}. Removing them.")
-    #             X = X.drop(columns=extra_features)
-    #     # Reorder columns in X to match the order of feature_names
-    #     X = X[feature_names]
+
+    X = shap_df[[col.replace('_shap', '') for col in shap_columns if col.replace('_shap', '') in shap_df.columns]]
 
     # Calculate SHAP feature importance
     shap_feature_importance = get_shap_feature_importance(shap_values, feature_names, df_daily_vars)
     if exclude_features:
         shap_feature_importance = shap_feature_importance[~shap_feature_importance['Feature'].isin(exclude_features)]
-
+    
     # Generate SHAP summary plot for individual features
     logging.info(f"Creating SHAP summary plot for individual features for {time_period}time...")
-    if X is not None:
-        # Ensure X has the same number of rows as shap_values
-        if X.shape[0] != shap_values.shape[0]:
-            logging.warning("X and shap_values have different number of rows. Using first rows of X to match shap_values.")
-            X = X.iloc[:shap_values.shape[0]]
-        # Ensure X has the same number of columns as shap_values
-        if X.shape[1] != shap_values.shape[1]:
-            # Assuming the order of columns in X is the same as in feature_names
-            missing_features = [f for f in feature_names if f not in X.columns]
-            if missing_features:
-                logging.warning(f"Missing features in X: {missing_features}. Adding them as zero-filled columns.")
-                for feature in missing_features:
-                    X[feature] = 0
-            extra_features = [f for f in X.columns if f not in feature_names]
-            if extra_features:
-                logging.warning(f"Extra features in X: {extra_features}. Removing them.")
-                X = X.drop(columns=extra_features)
-        # Reorder columns in X to match the order of feature_names
-        X = X[feature_names]
-        
+    if not X.empty:
         shap.summary_plot(
             shap_values[:, shap_feature_importance.index],
             X.iloc[:, shap_feature_importance.index],
@@ -238,7 +196,7 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
         )
     else:
         shap.summary_plot(
-            shap_values[:, shap_feature_importance.index],
+            shap_values,
             feature_names=shap_feature_importance['Feature'].tolist(),
             show=False
         )
@@ -269,9 +227,9 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
     shap_feature_importance_by_group['Percentage'] = (shap_feature_importance_by_group['Importance'] / total_importance) * 100
     shap_feature_importance_by_group.sort_values(by='Importance', ascending=False, inplace=True)
 
-    # Normalize feature values if X is available
-    if X is not None:
-        X_normalized = X.copy()
+    # Normalize feature values
+    X_normalized = X.copy()
+    if not X.empty:
         for col in X.columns:
             max_val = X[col].max()
             min_val = X[col].min()
@@ -279,8 +237,6 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
             if range_val == 0:
                 range_val = 1e-8
             X_normalized[col] = (X[col] - min_val) / range_val
-    else:
-        X_normalized = None
 
     # Calculate group-level SHAP values and feature values
     group_shap_values = []
@@ -290,14 +246,14 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
         group_indices = [feature_names.index(feat) for feat in group_features]
         group_shap = shap_values[:, group_indices].sum(axis=1)
         group_shap_values.append(group_shap)
-        if X_normalized is not None:
+        if not X.empty:
             group_feature_value = X_normalized.iloc[:, group_indices].sum(axis=1).values
             group_feature_values.append(group_feature_value)
         else:
             group_feature_values.append(None)
 
     group_shap_values = np.array(group_shap_values).T
-    if X_normalized is not None:
+    if not X.empty:
         group_feature_values = np.array(group_feature_values).T
     else:
         group_feature_values = None
@@ -330,7 +286,7 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
     # Create SHAP summary plot by feature group
     logging.info(f"Creating SHAP summary plot by feature group for {time_period}time...")
     plt.figure(figsize=(10, 8))
-    if X_normalized is not None:
+    if not X.empty:
         shap.summary_plot(
             group_shap_values,
             group_feature_values,
