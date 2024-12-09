@@ -65,8 +65,8 @@ def get_latex_label(feature_name):
             feature_group = feature_name[len(prefix):]
             symbol = prefix_to_symbol[prefix]
             break
-    if feature_group == feature_name:
-        feature_group += "_Level"
+    # if feature_group == feature_name:
+    #     feature_group += "_Level"
     
     # Get the LaTeX label from the lookup dictionary
     latex_label = lookup_dict.get(feature_group)
@@ -280,9 +280,9 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
         sorted_columns = sorted(shap_df.columns, key=lambda x: x)
         colors = [color_mapping.get(feature, '#333333') for feature in sorted_columns]
         shap_df = shap_df[sorted_columns]
-        shap_df.plot(kind='bar', stacked=True, color=colors, ax=ax, bottom=base_value)  # Add bottom=base_value
+        shap_df.plot(kind='bar', stacked=True, color=colors, ax=ax, bottom=base_value)  
     else:
-        shap_df.plot(kind='bar', stacked=True, colormap='tab20', ax=ax, bottom=base_value)  # Add bottom=base_value
+        shap_df.plot(kind='bar', stacked=True, colormap='tab20', ax=ax, bottom=base_value)  
     
     # Calculate mean SHAP values and add base_value
     mean_shap = shap_df.sum(axis=1) + base_value
@@ -293,9 +293,15 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
     # Add base value line
     ax.axhline(y=base_value, color='red', linestyle='--', label=f'Base Value ({base_value:.3f})')
 
-    # Single legend for all lines
+    # Get handles and labels, convert feature names to LaTeX labels
     handles, labels = ax.get_legend_handles_labels()
-    new_labels = [get_latex_label(label) for label in labels]
+    new_labels = []
+    for label in labels:
+        if label.startswith('Mean SHAP') or label.startswith('Base Value'):
+            new_labels.append(label)
+        else:
+            new_labels.append(get_latex_label(label))
+    
     ax.legend(handles, new_labels, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
 
     plt.title(title)
@@ -379,14 +385,21 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
     # Calculate and plot mean SHAP values on the same axis
     mean_shap = mean_shap_df.sum(axis=1)  # Sum across features for each hour
     mean_shap.plot(kind='line', color='black', marker='o', linewidth=2, 
-                    ax=axes[0], label='Mean SHAP')
+                    ax=axes[0])
 
-    # Single legend for SHAP plot
-    axes[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
+    # Get handles and labels for SHAP plot, convert feature names to LaTeX labels
+    handles, labels = axes[0].get_legend_handles_labels()
+    new_labels = []
+    for label in labels:
+        if label.startswith('Mean SHAP') or label.startswith('Base Value'):
+            new_labels.append(label)
+        else:
+            new_labels.append(get_latex_label(label))
+    axes[0].legend(handles, new_labels, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
 
     # Plot feature values on axes[1]
     feature_values_df.plot(ax=axes[1], color=feature_colors)
-    axes[1].set_title(f'Feature Values - Group: {group_name}')
+    axes[1].set_title(f'Feature Values - Group: {get_latex_label(group_name)}')
     axes[1].set_xlabel('Hour of Day')
     axes[1].set_ylabel('Feature Value')
     axes[1].axhline(0, linestyle='--', color='lightgray', linewidth=1)
@@ -398,13 +411,18 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
         total_features.plot(kind='line', color='black', marker='o', linewidth=2, 
                           ax=axes[1], label='Total Feature Value')
 
-        # Single legend for feature value plot
-        axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
-    else:
-        axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
+    # Get handles and labels for feature values plot, convert feature names to LaTeX labels
+    handles, labels = axes[1].get_legend_handles_labels()
+    new_labels = []
+    for label in labels:
+        if label == 'Total Feature Value':
+            new_labels.append(label)
+        else:
+            new_labels.append(get_latex_label(label))
+    axes[1].legend(handles, new_labels, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
 
     # Adjust layout and save the figure
-    title = f'ΔUHI Contribution and Feature Values by Hour - {group_name} - KGMajorClass {kg_class}'
+    title = f'HW-NHW UHI Contribution and Feature Values by Hour - {get_latex_label(group_name)} - Climate Zone {replace_cold_with_continental(kg_class)}'
     plt.suptitle(title, y=1.02)
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches='tight')
@@ -612,8 +630,7 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base
     # Create figure and axis
     fig, ax = plt.subplots(figsize=(12, 8))
     
-    # Plot stacked bars starting from base_value - keep bottom=base_value here
-    # since this is a feature group report
+    # Plot stacked bars starting from base_value
     pivot_df.plot(kind='bar', stacked=True, ax=ax, bottom=base_value)
 
     # Plot mean values including base_value for feature group reports
@@ -624,8 +641,16 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base
     # Add base value line
     ax.axhline(y=base_value, color='red', linestyle='--', label=f'Base Value ({base_value:.3f})')
 
-    # Single legend for all lines
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    # Get handles and labels, convert feature group names to LaTeX labels
+    handles, labels = ax.get_legend_handles_labels()
+    new_labels = []
+    for label in labels:
+        if label.startswith('Mean SHAP') or label.startswith('Base Value'):
+            new_labels.append(label)
+        else:
+            new_labels.append(get_latex_label(label))
+
+    ax.legend(handles, new_labels, bbox_to_anchor=(1.05, 1), loc='upper left')
 
     plt.title(title)
     ax.set_xlabel(group_by_column.replace('_', ' ').title())
