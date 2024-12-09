@@ -2,6 +2,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
+# Add lookup table reading
+lookup_df = pd.read_excel('/home/jguo/research/hw_global/Data/var_name_unit_lookup.xlsx')
+lookup_dict = dict(zip(lookup_df['Variable'], lookup_df['LaTeX']))
+
+# Define the output directory
+output_dir = '/home/jguo/tmp/output'
+os.makedirs(output_dir, exist_ok=True)
+
 # Define the directory containing the CSV files
 # base_directory = "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/688208898444255196/23ec2bcc719a4a4bb6bd569edd5790b7/artifacts/KGMajor/"
 base_directory = "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/688208898444255196/23ec2bcc719a4a4bb6bd569edd5790b7/artifacts/KGMajor/"
@@ -47,6 +55,16 @@ data_pivot = consolidated_data.pivot(index='Feature Group', columns='Region', va
 
 # Use consistent colors for the bar chart
 colors = [major_zone_colors[zone] for zone in data_pivot.columns]
+
+# Map feature groups to LaTeX labels
+latex_index = []
+for feature_group in data_pivot.index:
+    latex_label = lookup_dict.get(feature_group)  # Get the LaTeX label
+    # Use original value if latex_label is None, empty string, or NaN
+    if pd.isna(latex_label) or latex_label == '':
+        latex_label = feature_group
+    latex_index.append(latex_label)
+data_pivot.index = latex_index
 
 # Plot the grouped bar chart
 ax = data_pivot.plot(kind='bar', figsize=(16, 10), width=0.75, color=colors)
@@ -95,5 +113,9 @@ for i, feature_group in enumerate(data_pivot.index):
 # Improve layout to avoid overlapping elements
 plt.tight_layout()
 
-# Display the plot
-plt.show()
+# Save the plot instead of displaying
+plt.savefig(os.path.join(output_dir, 'feature_group_contribution_by_KG.png'), 
+            bbox_inches='tight', dpi=600)
+plt.savefig(os.path.join(output_dir, 'feature_group_contribution_by_KG.pdf'), 
+            bbox_inches='tight')
+plt.close()
