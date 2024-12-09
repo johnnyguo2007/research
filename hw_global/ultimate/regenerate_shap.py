@@ -188,16 +188,20 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
     # Generate SHAP summary plot for individual features
     logging.info(f"Creating SHAP summary plot for individual features for {time_period}time...")
     if not X.empty:
+        # Convert feature names to LaTeX labels
+        latex_feature_names = [get_latex_label(feat) for feat in shap_feature_importance['Feature'].tolist()]
         shap.summary_plot(
             shap_values[:, shap_feature_importance.index],
             X.iloc[:, shap_feature_importance.index],
-            feature_names=shap_feature_importance['Feature'].tolist(),
+            feature_names=latex_feature_names,
             show=False
         )
     else:
+        # Convert feature names to LaTeX labels
+        latex_feature_names = [get_latex_label(feat) for feat in shap_feature_importance['Feature'].tolist()]
         shap.summary_plot(
             shap_values,
-            feature_names=shap_feature_importance['Feature'].tolist(),
+            feature_names=latex_feature_names,
             show=False
         )
     summary_output_path = f"post_process_{time_period}_shap_summary_plot.png"
@@ -207,11 +211,13 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
     # Generate SHAP value-based importance plot
     logging.info(f"Creating SHAP value-based importance plot for {time_period}time...")
     plt.figure(figsize=(10, 8))
+    # Convert feature names to LaTeX labels for waterfall plot
+    latex_feature_names = [get_latex_label(feat) for feat in shap_feature_importance['Feature'].tolist()]
     shap.waterfall_plot(
         shap.Explanation(
             values=shap_feature_importance['Importance'].values,
             base_values=0,
-            feature_names=shap_feature_importance['Feature'].tolist()
+            feature_names=latex_feature_names
         ),
         show=False
     )
