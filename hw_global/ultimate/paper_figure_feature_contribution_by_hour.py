@@ -9,6 +9,75 @@ import mlflow
 import seaborn as sns
 
 
+def get_feature_groups(feature_names):
+    """
+    Assign features to groups based on specified rules.
+
+    Args:
+        feature_names (list): List of feature names.
+
+    Returns:
+        dict: Mapping from feature names to group names.
+    """
+    prefixes = ('delta_', 'hw_nohw_diff_', 'Double_Differencing_')
+    feature_groups = {}
+    for feature in feature_names:
+        group = feature
+        for prefix in prefixes:
+            if feature.startswith(prefix):
+                group = feature[len(prefix):]
+                break
+        # If feature does not start with any prefix, it is its own group, but name the group feature + "Level"
+        if group == feature:
+            group = feature + "_Level"
+        feature_groups[feature] = group
+    return feature_groups
+
+def replace_cold_with_continental(kg_main_group):
+    if kg_main_group == 'Cold':
+        return 'Continental'
+    return kg_main_group
+
+# Add lookup table reading
+lookup_df = pd.read_excel('/home/jguo/research/hw_global/Data/var_name_unit_lookup.xlsx')
+lookup_dict = dict(zip(lookup_df['Variable'], lookup_df['LaTeX']))
+
+def get_latex_label(feature_name):
+    """
+    Retrieves the LaTeX label for a given feature based on its feature group.
+    
+    Args:
+        feature_name (str): The name of the feature.
+    
+    Returns:
+        str: The corresponding LaTeX label.
+    """
+    # Define mapping from prefixes to symbols
+    prefix_to_symbol = {
+        'delta_': '(Δ)',
+        'hw_nohw_diff_': 'HW-NHW ',
+        'Double_Differencing_': '(Δ)HW-NHW '
+    }
+    symbol = ''
+    feature_group = feature_name
+    for prefix in prefix_to_symbol.keys():
+        if feature_name.startswith(prefix):
+            feature_group = feature_name[len(prefix):]
+            symbol = prefix_to_symbol[prefix]
+            break
+    if feature_group == feature_name:
+        feature_group += "_Level"
+    
+    # Get the LaTeX label from the lookup dictionary
+    latex_label = lookup_dict.get(feature_group)
+    
+    # Use the original feature group if LaTeX label is not found
+    if pd.isna(latex_label) or latex_label == '':
+        latex_label = feature_group
+    # Combine symbol and LaTeX label
+    final_label = f"{symbol}{latex_label}".strip()
+    return final_label
+
 def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, output_feature_group, output_pivot, output_feature):
     """
     Reports SHAP value contributions from each feature group and feature by hour and by KGMajorClass
@@ -174,29 +243,6 @@ def get_top_features(df, top_n):
     top_features_list = feature_totals.sort_values(ascending=False).head(top_n).index.tolist()
     return top_features_list
 
-def get_feature_groups(feature_names):
-    """
-    Assign features to groups based on specified rules.
-
-    Args:
-        feature_names (list): List of feature names.
-
-    Returns:
-        dict: Mapping from feature names to group names.
-    """
-    prefixes = ('delta_', 'hw_nohw_diff_', 'Double_Differencing_')
-    feature_groups = {}
-    for feature in feature_names:
-        group = feature
-        for prefix in prefixes:
-            if feature.startswith(prefix):
-                group = feature[len(prefix):]
-                break
-        # If feature does not start with any prefix, it is its own group, but name the group feature + "Level"
-        if group == feature:
-            group = feature + "_Level"
-        feature_groups[feature] = group
-    return feature_groups
 
 def save_plot_data(df, total_values, output_path, plot_type):
     """
@@ -248,7 +294,9 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
     ax.axhline(y=base_value, color='red', linestyle='--', label=f'Base Value ({base_value:.3f})')
 
     # Single legend for all lines
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
+    handles, labels = ax.get_legend_handles_labels()
+    new_labels = [get_latex_label(label) for label in labels]
+    ax.legend(handles, new_labels, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=6)
 
     plt.title(title)
     plt.xlabel('Hour of Day')
