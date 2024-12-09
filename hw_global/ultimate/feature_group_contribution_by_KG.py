@@ -58,6 +58,9 @@ for zone in climate_zones:
 # Pivot the data for grouped bar chart
 data_pivot = consolidated_data.pivot(index='Feature Group', columns='Region', values='Percentage')
 
+# Apply replacement to Regions for plotting
+display_regions = [replace_cold_with_continental(zone) for zone in data_pivot.columns]
+
 # Use consistent colors for the bar chart
 colors = [major_zone_colors[zone] for zone in data_pivot.columns]
 
@@ -93,7 +96,7 @@ ax.legend(
     loc='upper left',
     fontsize=12,
     title_fontsize=14,
-    labels=data_pivot.columns,
+    labels=display_regions,
 )
 
 # Add labels only to the bars with the highest value for each feature group
