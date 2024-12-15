@@ -7,6 +7,7 @@ import argparse
 import logging
 import mlflow
 import seaborn as sns
+import shap
 
 
 def get_feature_groups(feature_names):
@@ -95,6 +96,39 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     
     # Extract base_value before dropping columns
     base_value = shap_df['base_value'].iloc[0] if 'base_value' in shap_df.columns else 0
+    
+    # Create a copy of the original data before dropping columns
+    feature_values_df = shap_df.copy()
+    
+    # Drop specified columns
+    columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'base_value']
+    shap_df = shap_df.drop(columns=columns_to_drop, errors='ignore')
+    
+    # Generate summary plots for global data
+    summary_dir = os.path.join(output_dir, 'summary_plots')
+    os.makedirs(summary_dir, exist_ok=True)
+    
+    # Get SHAP columns and corresponding feature columns
+    shap_cols = [col for col in shap_df.columns if col.endswith('_shap')]
+    feature_cols = [col.replace('_shap', '') for col in shap_cols]
+    
+    # Generate summary plots for global data
+    generate_summary_plots(
+        shap_df[shap_cols],
+        feature_values_df[feature_cols],
+        summary_dir
+    )
+    
+    # Generate summary plots for each KGMajorClass
+    if 'KGMajorClass' in feature_values_df.columns:
+        for kg_class in feature_values_df['KGMajorClass'].unique():
+            kg_mask = feature_values_df['KGMajorClass'] == kg_class
+            generate_summary_plots(
+                shap_df[kg_mask][shap_cols],
+                feature_values_df[kg_mask][feature_cols],
+                summary_dir,
+                kg_class
+            )
     
     # Step 1: Drop specified columns
     columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'base_value']
@@ -755,6 +789,103 @@ def create_day_night_summary(df_feature_group, output_dir):
     
     return summary_df, pivot_df
 
+def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Global'):
+    """
+    Generate feature summary plot, feature group summary plot and waterfall plot.
+    
+    Args:
+        shap_df (pd.DataFrame): DataFrame containing SHAP values
+        feature_values_df (pd.DataFrame): DataFrame containing feature values
+        output_dir (str): Directory to save output plots
+        kg_class (str): Name of the climate zone (default: 'Global')
+    """
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Get feature names (removing '_shap' suffix)
+    feature_names = [col.replace('_shap', '') for col in shap_df.columns]
+    
+    # Convert SHAP values to numpy array
+    shap_values = shap_df.values
+    
+    # Convert feature values to numpy array
+    feature_values = feature_values_df[feature_names].values
+    
+    # Generate feature summary plot
+    plt.figure(figsize=(12, 8))
+    shap.summary_plot(
+        shap_values,
+        feature_values,
+        feature_names=feature_names,
+        show=False,
+        plot_size=(12, 8)
+    )
+    plt.title(f'Feature Summary Plot - {kg_class}')
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f'feature_summary_plot_{kg_class}.png'), bbox_inches='tight', dpi=300)
+    plt.close()
+    
+    # Get feature groups
+    feature_groups = get_feature_groups(feature_names)
+    
+    # Calculate group-level SHAP values
+    group_names = list(set(feature_groups.values()))
+    group_shap_values = []
+    group_feature_values = []
+    
+    for group in group_names:
+        # Get features in this group
+        group_features = [f for f, g in feature_groups.items() if g == group]
+        group_indices = [feature_names.index(feat) for feat in group_features]
+        
+        # Sum SHAP values for features in the group
+        group_shap = shap_values[:, [feature_names.index(f + '_shap') for f in group_features]].sum(axis=1)
+        group_shap_values.append(group_shap)
+        
+        # Average feature values for the group
+        group_feat = feature_values[:, group_indices].mean(axis=1)
+        group_feature_values.append(group_feat)
+    
+    # Convert to numpy arrays
+    group_shap_values = np.array(group_shap_values).T
+    group_feature_values = np.array(group_feature_values).T
+    
+    # Generate feature group summary plot
+    plt.figure(figsize=(12, 8))
+    shap.summary_plot(
+        group_shap_values,
+        group_feature_values,
+        feature_names=group_names,
+        show=False,
+        plot_size=(12, 8)
+    )
+    plt.title(f'Feature Group Summary Plot - {kg_class}')
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f'feature_group_summary_plot_{kg_class}.png'), bbox_inches='tight', dpi=300)
+    plt.close()
+    
+    # Calculate mean absolute SHAP values for waterfall plot
+    mean_abs_shap = np.abs(group_shap_values).mean(axis=0)
+    total_shap = mean_abs_shap.sum()
+    shap_percentages = (mean_abs_shap / total_shap) * 100
+    
+    # Generate waterfall plot
+    plt.figure(figsize=(12, 8))
+    shap.waterfall_plot(
+        shap.Explanation(
+            values=shap_percentages,
+            base_values=0,
+            data=None,
+            feature_names=[get_latex_label(name) for name in group_names]
+        ),
+        show=False
+    )
+    plt.title(f'Feature Group Contribution Waterfall Plot - {kg_class}')
+    plt.xlabel('Percentage Contribution')
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f'feature_group_waterfall_plot_{kg_class}.png'), bbox_inches='tight', dpi=300)
+    plt.close()
+
 def main():
     import argparse
     import mlflow
@@ -790,6 +921,13 @@ def main():
         action='store_true',
         default=False,
         help='Only generate the day/night summary without creating other plots.'
+    )
+    # Add new argument for summary plots only
+    parser.add_argument(
+        '--summary-plots-only',
+        action='store_true',
+        default=False,
+        help='Only generate the summary plots (feature summary, group summary, and waterfall plots) then exit.'
     )
 
     # Parse the arguments
@@ -830,6 +968,49 @@ def main():
     output_dir = os.path.join(artifact_uri, '24_hourly_plot')
 
     os.makedirs(output_dir, exist_ok=True)
+
+    # If summary plots only flag is set, generate only summary plots and exit
+    if args.summary_plots_only:
+        # Load the shap values with additional columns
+        shap_df = pd.read_feather(shap_values_feather_path)
+        
+        # Create a copy of the original data before dropping columns
+        feature_values_df = shap_df.copy()
+        
+        # Generate summary plots for global data
+        summary_dir = os.path.join(output_dir, 'summary_plots')
+        os.makedirs(summary_dir, exist_ok=True)
+        
+        # Get SHAP columns and corresponding feature columns
+        shap_cols = [col for col in shap_df.columns if col.endswith('_shap')]
+        feature_cols = [col.replace('_shap', '') for col in shap_cols]
+        
+        # Drop non-feature columns for SHAP values
+        columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'base_value']
+        shap_df_cleaned = shap_df.drop(columns=columns_to_drop, errors='ignore')
+        
+        # Generate summary plots for global data
+        print("Generating global summary plots...")
+        generate_summary_plots(
+            shap_df_cleaned[shap_cols],
+            feature_values_df[feature_cols],
+            summary_dir
+        )
+        
+        # Generate summary plots for each KGMajorClass
+        if 'KGMajorClass' in feature_values_df.columns:
+            for kg_class in feature_values_df['KGMajorClass'].unique():
+                print(f"Generating summary plots for {kg_class}...")
+                kg_mask = feature_values_df['KGMajorClass'] == kg_class
+                generate_summary_plots(
+                    shap_df_cleaned[kg_mask][shap_cols],
+                    feature_values_df[kg_mask][feature_cols],
+                    summary_dir,
+                    kg_class
+                )
+        
+        print(f"Summary plots have been generated in {summary_dir}")
+        return
 
     output_feature_group = os.path.join(output_dir, 'shap_feature_group.feather')
     output_pivot = os.path.join(output_dir, 'shap_pivot.feather')

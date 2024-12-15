@@ -7,6 +7,48 @@ import shap
 import mlflow
 import logging
 
+
+# Add lookup table reading
+lookup_df = pd.read_excel('/home/jguo/research/hw_global/Data/var_name_unit_lookup.xlsx')
+lookup_dict = dict(zip(lookup_df['Variable'], lookup_df['LaTeX']))
+
+def get_latex_label(feature_name):
+    """
+    Retrieves the LaTeX label for a given feature based on its feature group.
+    
+    Args:
+        feature_name (str): The name of the feature.
+    
+    Returns:
+        str: The corresponding LaTeX label.
+    """
+    # Define mapping from prefixes to symbols
+    prefix_to_symbol = {
+        'delta_': '(Δ)',
+        'hw_nohw_diff_': 'HW-NHW ',
+        'Double_Differencing_': '(Δ)HW-NHW '
+    }
+    symbol = ''
+    feature_group = feature_name
+    for prefix in prefix_to_symbol.keys():
+        if feature_name.startswith(prefix):
+            feature_group = feature_name[len(prefix):]
+            symbol = prefix_to_symbol[prefix]
+            break
+    # if feature_group == feature_name:
+    #     feature_group += "_Level"
+    
+    # Get the LaTeX label from the lookup dictionary
+    latex_label = lookup_dict.get(feature_group)
+    
+    # Use the original feature group if LaTeX label is not found
+    if pd.isna(latex_label) or latex_label == '':
+        latex_label = feature_group
+    # Combine symbol and LaTeX label
+    final_label = f"{symbol}{latex_label}".strip()
+    return final_label
+
+
 # Configure logging to display information, warnings, and errors with timestamps
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

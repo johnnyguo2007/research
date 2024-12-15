@@ -273,12 +273,14 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
     plt.figure(figsize=(12, 0.5 * len(shap_feature_importance_by_group)))
     waterfall_values = shap_feature_importance_by_group['Percentage'].values
     base_value = 0
+    # Convert feature group names to LaTeX labels
+    latex_group_names = [get_latex_label(group) for group in shap_feature_importance_by_group['Feature Group'].tolist()]
     shap.waterfall_plot(
         shap.Explanation(
             values=waterfall_values,
             base_values=base_value,
             data=None,
-            feature_names=shap_feature_importance_by_group['Feature Group'].tolist()
+            feature_names=latex_group_names
         ),
         show=False,
         max_display=len(shap_feature_importance_by_group)
@@ -292,17 +294,19 @@ def process_shap_values_for_experiment(experiment_name, exclude_features=None):
     # Create SHAP summary plot by feature group
     logging.info(f"Creating SHAP summary plot by feature group for {time_period}time...")
     plt.figure(figsize=(10, 8))
+    # Convert feature group names to LaTeX labels
+    latex_group_names = [get_latex_label(group) for group in shap_feature_importance_by_group['Feature Group'].tolist()]
     if not X.empty:
         shap.summary_plot(
             group_shap_values,
             group_feature_values,
-            feature_names=shap_feature_importance_by_group['Feature Group'].tolist(),
+            feature_names=latex_group_names,
             show=False
         )
     else:
         shap.summary_plot(
             group_shap_values,
-            feature_names=shap_feature_importance_by_group['Feature Group'].tolist(),
+            feature_names=latex_group_names,
             show=False
         )
     plt.title(f'SHAP Summary Plot by Feature Group for {time_period.capitalize()}time')
