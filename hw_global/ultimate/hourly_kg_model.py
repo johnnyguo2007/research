@@ -525,6 +525,11 @@ def load_data(merged_feather_path):
     logging.info(f"Loaded dataframe with shape: {local_hour_adjusted_df.shape}")
     return local_hour_adjusted_df
 
+def filter_by_local_hour(df, hour):
+    """Filters the dataframe by local hour."""
+    logging.info(f"Filtering data by local hour {hour}")
+    return df[df['local_hour'] == int(hour)]
+
 def apply_filters(local_hour_adjusted_df, filters):
     """
     Applies the specified filters to the dataframe.
@@ -809,6 +814,46 @@ def report_shap_contribution(shap_values, X, shap_df_additional_columns, df_dail
     mlflow.log_artifact(combined_csv_path)
     logging.info(f"Saved combined SHAP contribution to {combined_csv_path}")
 
+def create_and_log_shap_dependence_plots(shap_values, X, feature_names, time_period, figure_dir, df_daily_vars):
+    """
+    Creates and logs SHAP dependence plots for each feature using shap.plots.scatter.
+    """
+    dependence_plots_dir = os.path.join(figure_dir, 'shap_dependence_plots')
+    os.makedirs(dependence_plots_dir, exist_ok=True)
+
+    # Convert shap_values to an Explanation object if it's a numpy array
+    if isinstance(shap_values, np.ndarray):
+        explanation = shap.Explanation(shap_values, data=X, feature_names=feature_names)
+    else:
+        explanation = shap_values  # Assuming it's already an Explanation object
+
+    for feature_name in feature_names:
+        logging.info(f"Creating SHAP dependence plot for {feature_name}...")
+
+        # Get the long name for the feature
+        long_name = get_long_name(feature_name, df_daily_vars)
+
+        # Find potential interactions
+        feature_index = feature_names.index(feature_name)
+        inds = shap.utils.potential_interactions(explanation[:, feature_index], explanation)
+
+        # Create scatter plot with coloring by the most likely interacting feature
+        plt.figure(figsize=(10, 6))
+        shap.plots.scatter(
+            explanation[:, feature_index],
+            color=explanation[:, inds[0]] if len(inds) > 0 else explanation[:, feature_index],
+            show=False
+        )
+        plt.title(f'SHAP Dependence Plot for {long_name} ({time_period.capitalize()}time)')
+        plt.tight_layout()
+
+        dependence_plot_filename = f"{time_period}_shap_dependence_plot_{feature_name}.png"
+        dependence_plot_path = os.path.join(dependence_plots_dir, dependence_plot_filename)
+        plt.savefig(dependence_plot_path)
+        plt.close()
+
+        mlflow.log_artifact(dependence_plot_path)
+        logging.info(f"Saved SHAP dependence plot for {feature_name} to {dependence_plot_path}")
 
 def main():
     args = parse_arguments()
@@ -885,6 +930,11 @@ def main():
     process_shap_values_by_kg_major_class(
         shap_values, X.columns.tolist(), X, shap_df_additional_columns,
         args.time_period, df_daily_vars, figure_dir, exclude_features=args.exclude_features
+    )
+
+    logging.info("Creating and logging SHAP dependence plots...")
+    create_and_log_shap_dependence_plots(
+        shap_values, X, feature_names, args.time_period, figure_dir, df_daily_vars
     )
     
     # # New step: Report SHAP value contribution from each feature group by hour and by KGMajorClass
