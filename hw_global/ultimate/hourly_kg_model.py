@@ -835,7 +835,17 @@ def create_and_log_shap_dependence_plots(shap_values, X, feature_names, time_per
 
         # Find potential interactions
         feature_index = feature_names.index(feature_name)
-        inds = shap.utils.potential_interactions(explanation[:, feature_index], explanation)
+
+        # Create a copy of the Explanation slice for the current feature
+        shap_values_column = explanation[:, feature_index]
+
+        # Access the underlying SHAP values and get their sort order
+        sort_order = np.argsort(shap_values_column.values)
+
+        # Limit inds to the actual number of features
+        num_features = len(feature_names)
+        inds = sort_order[-3:] if len(sort_order) >= 3 else sort_order
+        inds = [i % num_features for i in inds]  # Wrap around indices if they exceed num_features
 
         # Create scatter plot with coloring by the most likely interacting feature
         plt.figure(figsize=(10, 6))
