@@ -4,7 +4,7 @@
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="Hourly_KG_Model"
+BASE_RUN_TYPE="Single_Hour_NO_FSA"
 HW_PERCENTILE=98
 MERGED_FILE="updated_local_hour_adjusted_variables_HW${HW_PERCENTILE}.feather"
 FEATURE_COLUMN="hourly_selected"
@@ -42,11 +42,12 @@ run_experiment() {
 }
 
 # Define KGMajorClass categories
-kg_major_classes=("Arid" "Cold" "Temperate" "Tropical")
+# kg_major_classes=("Arid" "Cold" "Temperate" "Tropical")
+kg_major_classes=("Arid" "Cold")
 
 # Loop through KGMajorClass categories and local hours
 for kg_major_class in "${kg_major_classes[@]}"; do
-    for local_hour in $(seq 0 23); do
+    for local_hour in $(seq 8 10); do
         echo "Running experiment for KGMajorClass: ${kg_major_class}, Local Hour: ${local_hour}"
         run_experiment "$kg_major_class" "$local_hour"
     done
