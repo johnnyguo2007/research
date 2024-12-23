@@ -5,7 +5,33 @@ import re
 import shap
 import matplotlib.pyplot as plt
 import numpy as np
-from ultimate.paper_figure_feature_contribution_by_hour import get_feature_groups
+import scipy
+
+
+
+def get_feature_groups(feature_names):
+    """
+    Assign features to groups based on specified rules.
+
+    Args:
+        feature_names (list): List of feature names.
+
+    Returns:
+        dict: Mapping from feature names to group names.
+    """
+    prefixes = ('delta_', 'hw_nohw_diff_', 'Double_Differencing_')
+    feature_groups = {}
+    for feature in feature_names:
+        group = feature
+        for prefix in prefixes:
+            if feature.startswith(prefix):
+                group = feature[len(prefix):]
+                break
+        # If feature does not start with any prefix, it is its own group, but name the group feature + "Level"
+        if group == feature:
+            group = feature + "_Level"
+        feature_groups[feature] = group
+    return feature_groups
 
 class Experiment:
     def __init__(self, experiment_name: str, run_id: str, tracking_uri: str = "http://192.168.4.85:8080"):
@@ -194,4 +220,106 @@ class Experiment:
                 bbox_inches="tight",
                 dpi=300,
             )
-            plt.close() 
+            plt.close()
+
+    def generate_marginal_effects_plot(self, output_path: str = None, num_samples: int = 100, max_points: int = 20, logit: bool = True, seed: int = 0):
+        """
+        Generates a plot similar to marginal_effects, showing the true marginal causal effects
+        and overlays it with SHAP values for comparison.
+
+        Args:
+            output_path (str, optional): Path to save the plot. If None, uses default artifact directory.
+            num_samples (int): Number of samples to use for generating the marginal effects.
+            max_points (int): Maximum number of points to plot for each feature.
+            logit (bool): Whether to apply logit transformation to the 'Did renew' values.
+            seed (int): Seed for random number generation.
+        """
+        if output_path is None:
+            output_path = os.path.join(
+                self.artifact_uri, "summary_plots", "marginal_effects_vs_shap.png"
+            )
+        else:
+            # Modify output_path to include experiment and run identifiers
+            base_dir, filename = os.path.split(output_path)
+            filename, ext = os.path.splitext(filename)
+            new_filename = f"{filename}_{self.experiment_name}_{self.run_id}{ext}"
+            output_path = os.path.join(base_dir, new_filename)
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        # Assuming you have a way to access the 'generator' function from 'econ.py'
+        # You might need to adjust this part based on how you can access it
+        from sandbox.econ import generator, marginal_effects
+
+        true_effects = marginal_effects(generator, num_samples, self.feature_names, max_points, logit, seed)
+
+        plt.figure(figsize=(12, 8))
+        shap.plots.scatter(
+            self.shap_values,
+            ylabel="SHAP value\n(higher means more likely to renew)",
+            overlay={"True causal effects": true_effects},
+            feature_names=self.feature_names,
+            show=False
+        )
+        plt.title(f"Marginal Effects vs. SHAP Values - {self.experiment_name} - {self.run_id}")
+        plt.tight_layout()
+        plt.savefig(output_path, bbox_inches="tight", dpi=300)
+        plt.close()
+
+    def calculate_marginal_effects(self, columns=None, num_samples=100, max_points=20, logit=True, seed=0):
+        """
+        Calculates marginal effects based on SHAP values and associated data,
+        aligning with the algorithm in econ.py's marginal_effects.
+
+        Args:
+            columns (list, optional): List of column names to calculate marginal effects for.
+                                      If None, defaults to all SHAP value columns.
+            num_samples (int, optional): Number of samples to generate for each column. Defaults to 100.
+            max_points (int, optional): Maximum number of points to plot for each feature. Defaults to 20.
+            logit (bool, optional): Whether to apply logit transformation to the base value. Defaults to True.
+            seed (int, optional): Seed for random number generation. Defaults to 0.
+
+        Returns:
+            list: A list of (x, y) pairs, where x represents the unique values of a column
+                  and y represents the corresponding centered average SHAP values.
+        """
+        if self.shap_df is None:
+            print("Warning: SHAP data not loaded. Cannot calculate marginal effects.")
+            return []
+
+        if columns is None:
+            columns = [col for col in self.shap_df.columns if col.endswith('_shap')]
+
+        np.random.seed(seed)
+        results = []
+
+        for col in columns:
+            data_col = col.replace('_shap', '')
+            if data_col not in self.shap_df.columns:
+                print(f"Warning: Data column '{data_col}' not found for SHAP column '{col}'. Skipping.")
+                continue
+
+            # Sample data points and select unique values
+            x_values = np.random.choice(self.shap_df[data_col].values, size=num_samples, replace=True)
+            x_values = np.sort(x_values)
+            x_values = np.unique([np.nanpercentile(x_values, v, method="nearest") for v in np.linspace(0, 100, max_points)])
+
+            y_values = []
+            for x in x_values:
+                # Create a temporary copy of the DataFrame and set the column value
+                temp_df = self.shap_df.copy()
+                temp_df[data_col] = x
+
+                # Calculate the mean SHAP value plus base value
+                avg_shap = temp_df[col].mean()
+                val = avg_shap + temp_df["base_value"].mean()
+
+                if logit:
+                    val = scipy.special.logit(val)
+                y_values.append(val)
+
+            y_values = np.array(y_values)
+            y_values = y_values - np.nanmean(y_values)
+            results.append((x_values, y_values))
+
+        return results 

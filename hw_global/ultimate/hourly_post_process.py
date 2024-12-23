@@ -1,5 +1,5 @@
 import argparse
-from ultimate.mlflow_tools.experiment_manager import ExperimentManager
+from mlflow_tools.experiment_manager import ExperimentManager
 
 def main():
     """

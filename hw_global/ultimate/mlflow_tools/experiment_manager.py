@@ -1,6 +1,6 @@
 import mlflow
 import re
-from ultimate.mlflow_tools.experiment import Experiment
+from mlflow_tools.experiment import Experiment
 
 class ExperimentManager:
     def __init__(self, pattern: str, tracking_uri: str = "http://192.168.4.85:8080"):
@@ -67,7 +67,8 @@ class ExperimentManager:
             generate_funcs.extend([
                 lambda exp, path: exp.generate_summary_shap_plot(path),
                 lambda exp, path: exp.generate_summary_shap_plot_by_group(path),
-                lambda exp, path: exp.generate_dependency_plots(path)
+                lambda exp, path: exp.generate_dependency_plots(path),
+                lambda exp, path: exp.generate_marginal_effects_plot(path)
             ])
         else:
             for gen_type in generate_types:
@@ -77,6 +78,8 @@ class ExperimentManager:
                     generate_funcs.append(lambda exp, path: exp.generate_summary_shap_plot_by_group(path))
                 elif gen_type == "dependency":
                     generate_funcs.append(lambda exp, path: exp.generate_dependency_plots(path))
+                elif gen_type == "marginal_effects":
+                    generate_funcs.append(lambda exp, path: exp.generate_marginal_effects_plot(path))
                 else:
                     raise ValueError(f"Invalid generate_type: {gen_type}")
 
