@@ -51,8 +51,10 @@ class Experiment:
         self.feature_names: list[str] = None
         self.shap_values: np.ndarray = None
         self.feature_values: np.ndarray = None
+        self.model = None
         self._setup_mlflow()
         self._load_data()
+        self._load_model()
 
     def _setup_mlflow(self):
         """Sets up the MLflow tracking URI."""
@@ -97,6 +99,11 @@ class Experiment:
             [f + "_shap" for f in self.feature_names]
         ].values
         self.feature_values = self.shap_df[self.feature_names].values
+
+    def _load_model(self, model_subdur: str = "hourly_model"):
+        """Loads the model for the specific experiment run and subduration."""
+        model_path = os.path.join(self.artifact_uri, model_subdur)
+        self.model = mlflow.pyfunc.load_model(model_path)
 
     def generate_summary_shap_plot(self, output_path: str = None):
         """
@@ -189,10 +196,11 @@ class Experiment:
 
     def generate_dependency_plots(self, output_dir: str = None):
         """
-        Generates SHAP dependency plots for each feature for the experiment run.
+        Generates SHAP dependency plots for each feature, showing the top 3
+        features with the highest interaction, for the experiment run.
 
         Args:
-            output_dir (str, optional): Directory to save the plots. 
+            output_dir (str, optional): Directory to save the plots.
                                        If None, uses default artifact directory.
         """
         if output_dir is None:
@@ -203,24 +211,45 @@ class Experiment:
 
         os.makedirs(output_dir, exist_ok=True)
 
+        # Calculate interaction values
+        explainer = shap.Explainer(self.model.predict, self.feature_values)
+        interaction_values = explainer(self.feature_values)
+        if type(interaction_values) == shap.Explanation:
+            interaction_values = interaction_values.values
+        if interaction_values.ndim == 3:
+            interaction_values = interaction_values[:,:,:-1] # remove final column which is the base value
+        else:
+            interaction_values = np.zeros((self.feature_values.shape[0], self.feature_values.shape[1], self.feature_values.shape[1]))
+
         for feature_name in self.feature_names:
-            plt.figure(figsize=(12, 8))
-            shap.dependence_plot(
-                feature_name,
-                self.shap_values,
-                self.feature_values,
-                feature_names=self.feature_names,
-                display_features=self.feature_values,
-                show=False,
-            )
-            plt.title(f"SHAP Dependence Plot - {feature_name} - {self.experiment_name} - {self.run_id}")
-            plt.tight_layout()
-            plt.savefig(
-                os.path.join(output_dir, f"{feature_name}_dependence_plot.png"),
-                bbox_inches="tight",
-                dpi=300,
-            )
-            plt.close()
+            # Get top 3 interacting features for the target feature
+            interaction_index = self.feature_names.index(feature_name)
+            top_interactions = np.abs(interaction_values[:, interaction_index, :]).mean(0).argsort()[::-1][:3]
+            top_features = [self.feature_names[i] for i in top_interactions if self.feature_names[i] != feature_name]
+
+            for interacting_feature in top_features:
+                plt.figure(figsize=(12, 8))
+                shap.dependence_plot(
+                    feature_name,
+                    self.shap_values,
+                    self.feature_values,
+                    feature_names=self.feature_names,
+                    interaction_index=interacting_feature,
+                    display_features=self.feature_values,
+                    show=False,
+                )
+                plt.title(
+                    f"SHAP Dependence Plot - {feature_name} vs {interacting_feature} - {self.experiment_name} - {self.run_id}"
+                )
+                plt.tight_layout()
+                plt.savefig(
+                    os.path.join(
+                        output_dir, f"{feature_name}_vs_{interacting_feature}_dependence_plot.png"
+                    ),
+                    bbox_inches="tight",
+                    dpi=300,
+                )
+                plt.close()
 
     def generate_marginal_effects_plot(self, output_path: str = None, num_samples: int = 100, max_points: int = 20, logit: bool = True, seed: int = 0):
         """

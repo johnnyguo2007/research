@@ -20,7 +20,7 @@ class ExperimentManager:
         """Sets up the MLflow tracking URI."""
         mlflow.set_tracking_uri(uri=self.tracking_uri)
 
-    def _load_and_process_experiment(self, experiment_name: str, generate_funcs: list[callable], output_path: str = None):
+    def _load_and_process_experiment(self, experiment_name: str, generate_funcs: list[callable], output_path: str = None, model_subdur: str = "hourly_model"):
         """Loads an experiment, processes it, and then removes it from memory."""
         experiment = mlflow.get_experiment_by_name(experiment_name)
         runs = mlflow.search_runs(
@@ -39,13 +39,14 @@ class ExperimentManager:
                     run_id=run.run_id,
                     tracking_uri=self.tracking_uri,
                 )
+                exp_obj._load_model(model_subdur)
                 for generate_func in generate_funcs:
                     generate_func(exp_obj, output_path)  # Call each specified generate function
                 del exp_obj  # Remove experiment object from memory
             except FileNotFoundError as e:
                 print(e)
 
-    def process_experiments(self, generate_types: list[str] = ["summary"], output_path: str = None):
+    def process_experiments(self, generate_types: list[str] = ["summary"], output_path: str = None, args = None):
         """
         Processes experiments sequentially based on the specified generation types.
 
@@ -84,4 +85,4 @@ class ExperimentManager:
                     raise ValueError(f"Invalid generate_type: {gen_type}")
 
         for experiment_name in experiment_names:
-            self._load_and_process_experiment(experiment_name, generate_funcs, output_path)
+            self._load_and_process_experiment(experiment_name, generate_funcs, output_path, args.model_subdur)

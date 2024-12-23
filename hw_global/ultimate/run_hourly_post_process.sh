@@ -13,7 +13,7 @@ declare -A patterns
 # patterns["^Single_Hour_NO_FSA_(Tropical)_HW98_Hour(8|9|10)$"]="dependency"
 
 # patterns["^Single_Hour_NO_FSA_(Arid|Cold)_HW98_Hour(8|9|10)$"]="marginal_effects"
-patterns["^Single_Hour_NO_FSA_Arid_HW98_Hour8$"]="marginal_effects"
+patterns["^Single_Hour_NO_FSA_Arid_Hourly_HW98_Hour8$"]="dependency"
 
 # Loop through the patterns and generate types
 for pattern in "${!patterns[@]}"; do
@@ -21,12 +21,13 @@ for pattern in "${!patterns[@]}"; do
     echo "Processing experiments matching pattern: $pattern"
     echo "Generating plots of types: $generate_types"
 
-    # Run the Python script with the current pattern and generate types
+    # Run the Python script with the current pattern, generate types, and model subduration
     python /home/jguo/research/hw_global/ultimate/hourly_post_process.py \
         --pattern "$pattern" \
         --generate_types "$generate_types" \
         --tracking_uri "$TRACKING_URI" \
-        --output_path "$OUTPUT_PATH"
+        --output_path "$OUTPUT_PATH" \
+        --model_subdur "hourly_model"
 done
 
 echo "All experiments processed." 
