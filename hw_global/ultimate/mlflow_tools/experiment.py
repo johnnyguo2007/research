@@ -6,6 +6,8 @@ import shap
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+import logging
+import mlflow.catboost
 
 
 
@@ -103,7 +105,7 @@ class Experiment:
     def _load_model(self, model_subdur: str = "hourly_model"):
         """Loads the model for the specific experiment run and subduration."""
         model_path = os.path.join(self.artifact_uri, model_subdur)
-        self.model = mlflow.pyfunc.load_model(model_path)
+        self.model = mlflow.catboost.load_model(model_path)
 
     def generate_summary_shap_plot(self, output_path: str = None):
         """
@@ -203,53 +205,76 @@ class Experiment:
             output_dir (str, optional): Directory to save the plots.
                                        If None, uses default artifact directory.
         """
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("Starting generate_dependency_plots method")
+
         if output_dir is None:
             output_dir: str = os.path.join(self.artifact_uri, "dependency_plots")
+            logging.info(f"Output directory not provided, using default: {output_dir}")
         else:
             # Modify output_dir to include experiment and run identifiers
             output_dir = os.path.join(output_dir, f"{self.experiment_name}_{self.run_id}")
+            logging.info(f"Using provided output directory: {output_dir}")
 
         os.makedirs(output_dir, exist_ok=True)
+        logging.info(f"Created output directory: {output_dir}")
 
-        # Calculate interaction values
-        explainer = shap.Explainer(self.model.predict, self.feature_values)
-        interaction_values = explainer(self.feature_values)
-        if type(interaction_values) == shap.Explanation:
-            interaction_values = interaction_values.values
-        if interaction_values.ndim == 3:
-            interaction_values = interaction_values[:,:,:-1] # remove final column which is the base value
-        else:
-            interaction_values = np.zeros((self.feature_values.shape[0], self.feature_values.shape[1], self.feature_values.shape[1]))
+        # Calculate interaction values using TreeExplainer for CatBoost models
+        # logging.info("Initializing TreeExplainer for CatBoost model")
+        # explainer = shap.TreeExplainer(self.model)
+        # logging.info("Calculating SHAP interaction values using shap_interaction_values")
+        # interaction_values = explainer.shap_interaction_values(self.feature_values)
+        # logging.info(f"Shape of interaction_values: {interaction_values.shape}")
 
-        for feature_name in self.feature_names:
+        for feature_index, feature_name in enumerate(self.feature_names):
+            logging.info(f"Processing feature: {feature_name} (index {feature_index})")
+
             # Get top 3 interacting features for the target feature
-            interaction_index = self.feature_names.index(feature_name)
-            top_interactions = np.abs(interaction_values[:, interaction_index, :]).mean(0).argsort()[::-1][:3]
-            top_features = [self.feature_names[i] for i in top_interactions if self.feature_names[i] != feature_name]
+            logging.info("Calculating top 3 interacting features")
+            # top_interactions = np.abs(interaction_values[:, feature_index, :]).mean(0).argsort()[::-1][:3]
+            # top_features = [self.feature_names[i] for i in top_interactions if self.feature_names[i] != feature_name]
+            explanation = shap.Explanation(values=self.shap_values, data=self.feature_values, feature_names=self.feature_names)
+            top_interactions = shap.utils.potential_interactions(explanation[:, feature_name], explanation)
+            top_features = [self.feature_names[i] for i in top_interactions[:3] if self.feature_names[i] != feature_name]
+            logging.info(f"Top interacting features for {feature_name}: {top_features}")
 
             for interacting_feature in top_features:
-                plt.figure(figsize=(12, 8))
-                shap.dependence_plot(
-                    feature_name,
-                    self.shap_values,
-                    self.feature_values,
-                    feature_names=self.feature_names,
-                    interaction_index=interacting_feature,
-                    display_features=self.feature_values,
-                    show=False,
-                )
+                logging.info(f"Creating dependency plot for {feature_name} vs {interacting_feature}")
+                
+                # Create nested directory structure under 'x_dependence_plots'
+                nested_path = os.path.join('x_dependence_plots', interacting_feature)
+                full_nested_path = os.path.join(self.artifact_uri, nested_path)
+                os.makedirs(full_nested_path, exist_ok=True)
+                
+                # plt.figure(figsize=(12, 8))
+                # shap.dependence_plot(
+                #     feature_name,
+                #     self.shap_values,
+                #     self.feature_values,
+                #     feature_names=self.feature_names,
+                #     interaction_index=interacting_feature,
+                #     display_features=self.feature_values,
+                #     show=False,
+                # )
+                shap.plots.scatter(explanation[:, feature_name], color=explanation[:, interacting_feature], show=False)
                 plt.title(
                     f"SHAP Dependence Plot - {feature_name} vs {interacting_feature} - {self.experiment_name} - {self.run_id}"
                 )
                 plt.tight_layout()
+                
+                # Save the plot in the nested directory
+                output_path: str = os.path.join(
+                    full_nested_path, f"{feature_name}_vs_{interacting_feature}_dependence_plot.png"
+                )
                 plt.savefig(
-                    os.path.join(
-                        output_dir, f"{feature_name}_vs_{interacting_feature}_dependence_plot.png"
-                    ),
+                    output_path,
                     bbox_inches="tight",
                     dpi=300,
                 )
                 plt.close()
+                logging.info(f"Saved dependency plot to {output_path}")
+
+        logging.info("Finished generate_dependency_plots method")
 
     def generate_marginal_effects_plot(self, output_path: str = None, num_samples: int = 100, max_points: int = 20, logit: bool = True, seed: int = 0):
         """
@@ -263,6 +288,8 @@ class Experiment:
             logit (bool): Whether to apply logit transformation to the 'Did renew' values.
             seed (int): Seed for random number generation.
         """
+
+
         if output_path is None:
             output_path = os.path.join(
                 self.artifact_uri, "summary_plots", "marginal_effects_vs_shap.png"
