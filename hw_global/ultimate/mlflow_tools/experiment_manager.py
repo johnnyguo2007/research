@@ -81,6 +81,8 @@ class ExperimentManager:
                     generate_funcs.append(lambda exp, path: exp.generate_dependency_plots(path))
                 elif gen_type == "marginal_effects":
                     generate_funcs.append(lambda exp, path: exp.generate_marginal_effects_plot(path))
+                elif gen_type == "waterfall":
+                    generate_funcs.append(lambda exp, path: exp.generate_waterfall_plot(path))
                 else:
                     raise ValueError(f"Invalid generate_type: {gen_type}")
 

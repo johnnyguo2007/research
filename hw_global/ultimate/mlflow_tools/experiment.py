@@ -112,24 +112,24 @@ class Experiment:
         model_path = os.path.join(self.artifact_uri, model_subdur)
         self.model = mlflow.catboost.load_model(model_path)
 
-    def generate_summary_shap_plot(self, output_path: str = None, base_dir: str = "summary_plots"):
+    def generate_summary_shap_plot(self, output_path: str = None, base_dir: str = "."):
         """
         Generates a SHAP summary plot for the experiment run.
 
         Args:
             output_path (str, optional): Specific filename to save the plot. 
                                          If None, uses default naming convention.
-            base_dir (str, optional): Base directory for saving plots. Defaults to "summary_plots".
+            base_dir (str, optional): Base directory for saving plots. Defaults to ".".
         """
         if output_path is None:
             output_path: str = os.path.join(
                 self.artifact_uri, base_dir, "feature_summary_plot.png"
             )
         else:
-            # Modify output_path to include experiment and run identifiers
+            # Modify output_path to include experiment identifier
             base_dir, filename = os.path.split(output_path)
             filename, ext = os.path.splitext(filename)
-            new_filename = f"{filename}_{self.experiment_name}_{self.run_id}{ext}"
+            new_filename = f"{filename}_{self.experiment_name}{ext}"
             output_path = os.path.join(base_dir, new_filename)
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -142,7 +142,7 @@ class Experiment:
             show=False,
             plot_size=(12, 8),
         )
-        plt.title(f"Feature Summary Plot - {self.experiment_name} - {self.run_id}")
+        plt.title(f"Feature Summary Plot - {self.experiment_name}")
         plt.tight_layout()
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
         plt.close()
@@ -161,10 +161,10 @@ class Experiment:
                 self.artifact_uri, base_dir, "feature_group_summary_plot.png"
             )
         else:
-            # Modify output_path to include experiment and run identifiers
+            # Modify output_path to include experiment identifier
             base_dir, filename = os.path.split(output_path)
             filename, ext = os.path.splitext(filename)
-            new_filename = f"{filename}_{self.experiment_name}_{self.run_id}{ext}"
+            new_filename = f"{filename}_{self.experiment_name}{ext}"
             output_path = os.path.join(base_dir, new_filename)
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -198,7 +198,7 @@ class Experiment:
             show=False,
             plot_size=(12, 8),
         )
-        plt.title(f"Feature Group Summary Plot - {self.experiment_name} - {self.run_id}")
+        plt.title(f"Feature Group Summary Plot - {self.experiment_name}")
         plt.tight_layout()
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
         plt.close()
@@ -219,8 +219,8 @@ class Experiment:
             output_dir: str = os.path.join(self.artifact_uri, "dependency_plots")
             logging.info(f"Output directory not provided, using default: {output_dir}")
         else:
-            # Modify output_dir to include experiment and run identifiers
-            output_dir = os.path.join(output_dir, f"{self.experiment_name}_{self.run_id}")
+            # Use output_dir directly under artifact_uri
+            output_dir = os.path.join(self.artifact_uri, output_dir)
             logging.info(f"Using provided output directory: {output_dir}")
 
         os.makedirs(output_dir, exist_ok=True)
@@ -251,7 +251,6 @@ class Experiment:
                 shap.plots.scatter(
                     explanation[:, target_feature_name], color=explanation[:, interacting_feature_name], show=False
                 )
-                # Start of Selection
                 plt.title(
                     f"{target_feature_name} vs {interacting_feature_name} (Interaction Rank: {rank})\n"
                     f"{self.experiment_name}"
@@ -299,10 +298,10 @@ class Experiment:
         if output_path is None:
             output_path = os.path.join(self.artifact_uri, "summary_plots", "marginal_effects_vs_shap.png")
         else:
-            # Modify output_path to include experiment and run identifiers
+            # Modify output_path to include experiment identifier
             base_dir, filename = os.path.split(output_path)
             filename, ext = os.path.splitext(filename)
-            new_filename = f"{filename}_{self.experiment_name}_{self.run_id}{ext}"
+            new_filename = f"{filename}_{self.experiment_name}{ext}"
             output_path = os.path.join(base_dir, new_filename)
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -323,7 +322,7 @@ class Experiment:
             feature_names=self.feature_names,
             show=False,
         )
-        plt.title(f"Marginal Effects vs. SHAP Values - {self.experiment_name} - {self.run_id}")
+        plt.title(f"Marginal Effects vs. SHAP Values - {self.experiment_name}")
         plt.tight_layout()
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
         plt.close()
@@ -383,3 +382,41 @@ class Experiment:
             results.append((x_values, y_values))
 
         return results 
+
+    def generate_waterfall_plot(self, output_path: str = None, base_dir: str = "."):
+        """
+        Generates a SHAP waterfall plot for the first observation in the experiment run.
+
+        Args:
+            output_path (str, optional): Specific filename to save the plot. 
+                                         If None, uses default naming convention.
+            base_dir (str, optional): Base directory for saving plots. Defaults to current directory ".".
+        """
+        if output_path is None:
+            output_path = os.path.join(
+                self.artifact_uri, base_dir, "waterfall_plot.png"
+            )
+        else:
+            # Modify output_path to include experiment identifier
+            base_dir, filename = os.path.split(output_path)
+            filename, ext = os.path.splitext(filename)
+            new_filename = f"{filename}_{self.experiment_name}{ext}"
+            output_path = os.path.join(base_dir, new_filename)
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        # Create a SHAP Explanation object
+        explanation = shap.Explanation(
+            values=self.shap_values[0, :],
+            base_values=self.shap_df["base_value"].iloc[0],
+            data=self.feature_values[0, :],
+            feature_names=self.feature_names
+        )
+
+        # Generate the waterfall plot
+        plt.figure(figsize=(12, 8))
+        shap.plots.waterfall(explanation, show=False)
+        plt.title(f"Waterfall Plot - {self.experiment_name}")
+        plt.tight_layout()
+        plt.savefig(output_path, bbox_inches="tight", dpi=300)
+        plt.close() 

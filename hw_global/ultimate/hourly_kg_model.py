@@ -39,6 +39,11 @@ def filter_by_KGMajorClass(df, major_class):
     logging.info(f"Filtering data by KGMajorClass: {major_class}")
     return df[df['KGMajorClass'] == major_class]
 
+def filter_by_NO_KGMajorClass(df, major_class):
+    """Filters OUT KGMajorClass."""
+    logging.info(f"Filtering OUT KGMajorClass: {major_class}")
+    return df[df['KGMajorClass'] != major_class]
+
 def filter_by_hw_count(df, threshold):
     """Filters the dataframe by the number of heatwave events per location."""
     logging.info(f"Filtering data by HW count threshold: {threshold}")
@@ -921,18 +926,18 @@ def main():
     
     logging.info("Training and evaluating the model...")
     model = train_model(X, y, args)
+
+    logging.info("Calculating SHAP values...")
+    # Unpack base_values returned from calculate_shap_values
+    shap_values, base_values, shap_df_additional_columns = calculate_shap_values(model, X, y, uhi_diff)
+    
+    logging.info("Saving SHAP values and combined dataframe...")
+    save_shap_values(shap_values, figure_dir)
+    feature_names = X.columns.tolist()
+    # Pass base_values to save_combined_shap_dataframe
+    save_combined_shap_dataframe(shap_values, base_values, shap_df_additional_columns, feature_names, figure_dir, X, y)    
     
     if args.post_process:
-        logging.info("Calculating SHAP values...")
-        # Unpack base_values returned from calculate_shap_values
-        shap_values, base_values, shap_df_additional_columns = calculate_shap_values(model, X, y, uhi_diff)
-        
-        logging.info("Saving SHAP values and combined dataframe...")
-        save_shap_values(shap_values, figure_dir)
-        feature_names = X.columns.tolist()
-        # Pass base_values to save_combined_shap_dataframe
-        save_combined_shap_dataframe(shap_values, base_values, shap_df_additional_columns, feature_names, figure_dir, X, y)
-        
         logging.info("Processing SHAP values and generating plots...")
         process_shap_values(
             shap_values, X.columns.tolist(), X, shap_df_additional_columns,
