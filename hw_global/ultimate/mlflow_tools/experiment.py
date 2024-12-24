@@ -121,6 +121,7 @@ class Experiment:
                                          If None, uses default naming convention.
             base_dir (str, optional): Base directory for saving plots. Defaults to ".".
         """
+        logging.info("Starting generate_summary_shap_plot method")
         if output_path is None:
             output_path: str = os.path.join(
                 self.artifact_uri, base_dir, "feature_summary_plot.png"
@@ -132,6 +133,7 @@ class Experiment:
             new_filename = f"{filename}_{self.experiment_name}{ext}"
             output_path = os.path.join(base_dir, new_filename)
 
+        logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         plt.figure(figsize=(12, 8))
@@ -146,6 +148,7 @@ class Experiment:
         plt.tight_layout()
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
         plt.close()
+        logging.info(f"Generated summary SHAP plot at {output_path}")
 
     def generate_summary_shap_plot_by_group(self, output_path: str = None, base_dir: str = "summary_plots"):
         """
@@ -156,6 +159,7 @@ class Experiment:
                                          If None, uses default naming convention.
             base_dir (str, optional): Base directory for saving plots. Defaults to "summary_plots".
         """
+        logging.info("Starting generate_summary_shap_plot_by_group method")
         if output_path is None:
             output_path: str = os.path.join(
                 self.artifact_uri, base_dir, "feature_group_summary_plot.png"
@@ -167,6 +171,7 @@ class Experiment:
             new_filename = f"{filename}_{self.experiment_name}{ext}"
             output_path = os.path.join(base_dir, new_filename)
 
+        logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         feature_groups: dict[str, str] = get_feature_groups(self.feature_names)
@@ -202,6 +207,7 @@ class Experiment:
         plt.tight_layout()
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
         plt.close()
+        logging.info(f"Generated summary SHAP plot by group at {output_path}")
 
     def generate_dependency_plots(self, output_dir: str = None):
         """
@@ -212,7 +218,7 @@ class Experiment:
             output_dir (str, optional): Directory to save the plots.
                                        If None, uses default artifact directory.
         """
-        logging.getLogger().setLevel(logging.INFO)
+        
         logging.info("Starting generate_dependency_plots method")
 
         if output_dir is None:
@@ -223,8 +229,8 @@ class Experiment:
             output_dir = os.path.join(self.artifact_uri, output_dir)
             logging.info(f"Using provided output directory: {output_dir}")
 
+        logging.info(f"Creating directory: {output_dir}")
         os.makedirs(output_dir, exist_ok=True)
-        logging.info(f"Created output directory: {output_dir}")
 
         for feature_index, target_feature_name in enumerate(self.feature_names):
             logging.info(f"Processing feature: {target_feature_name} (index {feature_index})")
@@ -294,6 +300,7 @@ class Experiment:
             logit (bool): Whether to apply logit transformation to the 'Did renew' values.
             seed (int): Seed for random number generation.
         """
+        logging.info("Starting generate_marginal_effects_plot method")
 
         if output_path is None:
             output_path = os.path.join(self.artifact_uri, "summary_plots", "marginal_effects_vs_shap.png")
@@ -304,6 +311,7 @@ class Experiment:
             new_filename = f"{filename}_{self.experiment_name}{ext}"
             output_path = os.path.join(base_dir, new_filename)
 
+        logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         # Calculate marginal effects if not provided
@@ -326,6 +334,7 @@ class Experiment:
         plt.tight_layout()
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
         plt.close()
+        logging.info(f"Generated marginal effects plot at {output_path}")
 
     def calculate_marginal_effects(self, columns=None, num_samples=100, max_points=20, logit=True, seed=0):
         """
@@ -392,6 +401,7 @@ class Experiment:
                                          If None, uses default naming convention.
             base_dir (str, optional): Base directory for saving plots. Defaults to current directory ".".
         """
+        logging.info("Starting generate_waterfall_plot method")
         if output_path is None:
             output_path = os.path.join(
                 self.artifact_uri, base_dir, "waterfall_plot.png"
@@ -403,6 +413,7 @@ class Experiment:
             new_filename = f"{filename}_{self.experiment_name}{ext}"
             output_path = os.path.join(base_dir, new_filename)
 
+        logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         # Create a SHAP Explanation object
@@ -419,4 +430,5 @@ class Experiment:
         plt.title(f"Waterfall Plot - {self.experiment_name}")
         plt.tight_layout()
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
-        plt.close() 
+        plt.close()
+        logging.info(f"Generated waterfall plot at {output_path}") 

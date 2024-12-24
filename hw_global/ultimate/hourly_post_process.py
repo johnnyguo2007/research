@@ -1,5 +1,6 @@
 import argparse
 from mlflow_tools.experiment_manager import ExperimentManager
+import logging
 
 def main():
     """
@@ -17,6 +18,7 @@ def main():
         help="Model subduration to load (hourly_model, day_model, night_model)",
     )
     args = parser.parse_args()
+    logging.getLogger().setLevel(logging.INFO)
 
     # Convert generate_types string to a list
     generate_types_list = args.generate_types.split()

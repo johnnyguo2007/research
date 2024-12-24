@@ -22,6 +22,7 @@ class ExperimentManager:
 
     def _load_and_process_experiment(self, experiment_name: str, generate_funcs: list[callable], output_path: str = None, model_subdur: str = "hourly_model"):
         """Loads an experiment, processes it, and then removes it from memory."""
+        print(f"Announcing the start of processing experiment '{experiment_name}'")
         experiment = mlflow.get_experiment_by_name(experiment_name)
         runs = mlflow.search_runs(
             experiment_ids=[experiment.experiment_id],
