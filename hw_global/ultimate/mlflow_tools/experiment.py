@@ -238,29 +238,18 @@ class Experiment:
             top_features = [self.feature_names[i] for i in top_interactions[:3] if self.feature_names[i] != feature_name]
             logging.info(f"Top interacting features for {feature_name}: {top_features}")
 
+            rank: int = 1
+            # Create nested directory structure under 'x_dependence_plots'
+            nested_path = os.path.join('x_dependence_plots', feature_name)
+            full_nested_path = os.path.join(self.artifact_uri, nested_path)
+            os.makedirs(full_nested_path, exist_ok=True)
             for interacting_feature in top_features:
-                logging.info(f"Creating dependency plot for {feature_name} vs {interacting_feature}")
-                
-                # Create nested directory structure under 'x_dependence_plots'
-                nested_path = os.path.join('x_dependence_plots', interacting_feature)
-                full_nested_path = os.path.join(self.artifact_uri, nested_path)
-                os.makedirs(full_nested_path, exist_ok=True)
-                
-                # plt.figure(figsize=(12, 8))
-                # shap.dependence_plot(
-                #     feature_name,
-                #     self.shap_values,
-                #     self.feature_values,
-                #     feature_names=self.feature_names,
-                #     interaction_index=interacting_feature,
-                #     display_features=self.feature_values,
-                #     show=False,
-                # )
+                logging.info(f"Creating dependency plot for {feature_name} vs {interacting_feature} rank {rank}")
                 shap.plots.scatter(explanation[:, feature_name], color=explanation[:, interacting_feature], show=False)
                 plt.title(
-                    f"SHAP Dependence Plot - {feature_name} vs {interacting_feature} - {self.experiment_name} - {self.run_id}"
+                    f"SHAP Dependence Plot - {feature_name} vs {interacting_feature} (Interaction Rank: {rank}) - {self.experiment_name}"
                 )
-                plt.tight_layout()
+                # plt.tight_layout()
                 
                 # Save the plot in the nested directory
                 output_path: str = os.path.join(
@@ -268,11 +257,12 @@ class Experiment:
                 )
                 plt.savefig(
                     output_path,
-                    bbox_inches="tight",
-                    dpi=300,
+                    # bbox_inches="tight",
+                    # dpi=300,
                 )
                 plt.close()
                 logging.info(f"Saved dependency plot to {output_path}")
+                rank += 1
 
         logging.info("Finished generate_dependency_plots method")
 
