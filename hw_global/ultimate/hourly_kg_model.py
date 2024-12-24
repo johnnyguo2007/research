@@ -513,6 +513,8 @@ def parse_arguments():
     parser.add_argument("--daily_freq", action="store_true",
                         help="If set, data will be averaged by day before training the model.")
     parser.add_argument('--exclude_features', nargs='*', default=[], help='List of features to exclude from SHAP summary plot')
+    parser.add_argument("--post_process", action="store_true",
+                        help="If set, SHAP-related calculations and graphs will be performed.")
     args = parser.parse_args()
     return args
 
@@ -920,32 +922,33 @@ def main():
     logging.info("Training and evaluating the model...")
     model = train_model(X, y, args)
     
-    logging.info("Calculating SHAP values...")
-    # Unpack base_values returned from calculate_shap_values
-    shap_values, base_values, shap_df_additional_columns = calculate_shap_values(model, X, y, uhi_diff)
+    if args.post_process:
+        logging.info("Calculating SHAP values...")
+        # Unpack base_values returned from calculate_shap_values
+        shap_values, base_values, shap_df_additional_columns = calculate_shap_values(model, X, y, uhi_diff)
+        
+        logging.info("Saving SHAP values and combined dataframe...")
+        save_shap_values(shap_values, figure_dir)
+        feature_names = X.columns.tolist()
+        # Pass base_values to save_combined_shap_dataframe
+        save_combined_shap_dataframe(shap_values, base_values, shap_df_additional_columns, feature_names, figure_dir, X, y)
+        
+        logging.info("Processing SHAP values and generating plots...")
+        process_shap_values(
+            shap_values, X.columns.tolist(), X, shap_df_additional_columns,
+            args.time_period, df_daily_vars, figure_dir, exclude_features=args.exclude_features
+        )
+        
+        logging.info("Processing SHAP values by KGMajorClass...")
+        process_shap_values_by_kg_major_class(
+            shap_values, X.columns.tolist(), X, shap_df_additional_columns,
+            args.time_period, df_daily_vars, figure_dir, exclude_features=args.exclude_features
+        )
     
-    logging.info("Saving SHAP values and combined dataframe...")
-    save_shap_values(shap_values, figure_dir)
-    feature_names = X.columns.tolist()
-    # Pass base_values to save_combined_shap_dataframe
-    save_combined_shap_dataframe(shap_values, base_values, shap_df_additional_columns, feature_names, figure_dir, X, y)
-    
-    logging.info("Processing SHAP values and generating plots...")
-    process_shap_values(
-        shap_values, X.columns.tolist(), X, shap_df_additional_columns,
-        args.time_period, df_daily_vars, figure_dir, exclude_features=args.exclude_features
-    )
-    
-    logging.info("Processing SHAP values by KGMajorClass...")
-    process_shap_values_by_kg_major_class(
-        shap_values, X.columns.tolist(), X, shap_df_additional_columns,
-        args.time_period, df_daily_vars, figure_dir, exclude_features=args.exclude_features
-    )
-
-    logging.info("Creating and logging SHAP dependence plots...")
-    create_and_log_shap_dependence_plots(
-        shap_values, X, feature_names, args.time_period, figure_dir, df_daily_vars
-    )
+        logging.info("Creating and logging SHAP dependence plots...")
+        create_and_log_shap_dependence_plots(
+            shap_values, X, feature_names, args.time_period, figure_dir, df_daily_vars
+        )
     
     # # New step: Report SHAP value contribution from each feature group by hour and by KGMajorClass
     # report_shap_contribution(shap_values, X, shap_df_additional_columns, df_daily_vars, figure_dir)

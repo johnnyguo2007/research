@@ -38,7 +38,8 @@ run_experiment() {
         --double_diff_column "${DOUBLE_DIFF_COLUMN}" \
         --delta_mode "include" \
         --exclude_features "local_hour" \
-        --filters "filter_by_KGMajorClass,${kg_major_class};filter_by_local_hour,${local_hour}"
+        --filters "filter_by_KGMajorClass,${kg_major_class};filter_by_local_hour,${local_hour}" \
+        --post_process
 }
 
 # Define KGMajorClass categories

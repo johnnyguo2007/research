@@ -75,9 +75,12 @@ class Experiment:
         )
 
         if not os.path.exists(shap_values_feather_path):
-            raise FileNotFoundError(
-                f"SHAP values file not found for run {self.run_id} at {shap_values_feather_path}"
+            logging.warning(
+                f"SHAP values file not found for run {self.run_id} at {shap_values_feather_path}. "
+                "Some functionalities might be unavailable."
             )
+            self.shap_df = None
+            return
 
         self.shap_df = pd.read_feather(shap_values_feather_path)
 
@@ -96,7 +99,9 @@ class Experiment:
             "KGMajorClass",
             "base_value",
         ]
-        shap_df_cleaned: pd.DataFrame = self.shap_df.drop(columns=columns_to_drop, errors="ignore")
+        # Only drop columns that exist
+        existing_columns_to_drop = [col for col in columns_to_drop if col in self.shap_df.columns]
+        shap_df_cleaned: pd.DataFrame = self.shap_df.drop(columns=existing_columns_to_drop)
         self.shap_values = shap_df_cleaned[
             [f + "_shap" for f in self.feature_names]
         ].values
@@ -107,17 +112,18 @@ class Experiment:
         model_path = os.path.join(self.artifact_uri, model_subdur)
         self.model = mlflow.catboost.load_model(model_path)
 
-    def generate_summary_shap_plot(self, output_path: str = None):
+    def generate_summary_shap_plot(self, output_path: str = None, base_dir: str = "summary_plots"):
         """
         Generates a SHAP summary plot for the experiment run.
 
         Args:
-            output_path (str, optional): Path to save the plot. 
-                                         If None, uses default artifact directory.
+            output_path (str, optional): Specific filename to save the plot. 
+                                         If None, uses default naming convention.
+            base_dir (str, optional): Base directory for saving plots. Defaults to "summary_plots".
         """
         if output_path is None:
             output_path: str = os.path.join(
-                self.artifact_uri, "summary_plots", "feature_summary_plot.png"
+                self.artifact_uri, base_dir, "feature_summary_plot.png"
             )
         else:
             # Modify output_path to include experiment and run identifiers
@@ -141,17 +147,18 @@ class Experiment:
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
         plt.close()
 
-    def generate_summary_shap_plot_by_group(self, output_path: str = None):
+    def generate_summary_shap_plot_by_group(self, output_path: str = None, base_dir: str = "summary_plots"):
         """
         Generates a SHAP summary plot, grouped by feature groups, for the experiment run.
 
         Args:
-            output_path (str, optional): Path to save the plot. 
-                                         If None, uses default artifact directory.
+            output_path (str, optional): Specific filename to save the plot. 
+                                         If None, uses default naming convention.
+            base_dir (str, optional): Base directory for saving plots. Defaults to "summary_plots".
         """
         if output_path is None:
             output_path: str = os.path.join(
-                self.artifact_uri, "summary_plots", "feature_group_summary_plot.png"
+                self.artifact_uri, base_dir, "feature_group_summary_plot.png"
             )
         else:
             # Modify output_path to include experiment and run identifiers
@@ -219,41 +226,42 @@ class Experiment:
         os.makedirs(output_dir, exist_ok=True)
         logging.info(f"Created output directory: {output_dir}")
 
-        # Calculate interaction values using TreeExplainer for CatBoost models
-        # logging.info("Initializing TreeExplainer for CatBoost model")
-        # explainer = shap.TreeExplainer(self.model)
-        # logging.info("Calculating SHAP interaction values using shap_interaction_values")
-        # interaction_values = explainer.shap_interaction_values(self.feature_values)
-        # logging.info(f"Shape of interaction_values: {interaction_values.shape}")
-
-        for feature_index, feature_name in enumerate(self.feature_names):
-            logging.info(f"Processing feature: {feature_name} (index {feature_index})")
+        for feature_index, target_feature_name in enumerate(self.feature_names):
+            logging.info(f"Processing feature: {target_feature_name} (index {feature_index})")
 
             # Get top 3 interacting features for the target feature
             logging.info("Calculating top 3 interacting features")
-            # top_interactions = np.abs(interaction_values[:, feature_index, :]).mean(0).argsort()[::-1][:3]
-            # top_features = [self.feature_names[i] for i in top_interactions if self.feature_names[i] != feature_name]
             explanation = shap.Explanation(values=self.shap_values, data=self.feature_values, feature_names=self.feature_names)
-            top_interactions = shap.utils.potential_interactions(explanation[:, feature_name], explanation)
-            top_features = [self.feature_names[i] for i in top_interactions[:3] if self.feature_names[i] != feature_name]
-            logging.info(f"Top interacting features for {feature_name}: {top_features}")
+            interaction_indices = shap.utils.potential_interactions(explanation[:, target_feature_name], explanation)
+            
+            # Handle cases with fewer than 3 interactions
+            top_interaction_indices = interaction_indices[:min(3, len(interaction_indices))]
+            top_interacting_features = [
+                self.feature_names[i] for i in top_interaction_indices if self.feature_names[i] != target_feature_name
+            ]
+            logging.info(f"Top interacting features for {target_feature_name}: {top_interacting_features}")
 
             rank: int = 1
             # Create nested directory structure under 'x_dependence_plots'
-            nested_path = os.path.join('x_dependence_plots', feature_name)
+            nested_path = os.path.join('x_dependence_plots', target_feature_name)
             full_nested_path = os.path.join(self.artifact_uri, nested_path)
             os.makedirs(full_nested_path, exist_ok=True)
-            for interacting_feature in top_features:
-                logging.info(f"Creating dependency plot for {feature_name} vs {interacting_feature} rank {rank}")
-                shap.plots.scatter(explanation[:, feature_name], color=explanation[:, interacting_feature], show=False)
-                plt.title(
-                    f"SHAP Dependence Plot - {feature_name} vs {interacting_feature} (Interaction Rank: {rank}) - {self.experiment_name}"
+            for interacting_feature_name in top_interacting_features:
+                logging.info(f"Creating dependency plot for {target_feature_name} vs {interacting_feature_name} (rank {rank})")
+                shap.plots.scatter(
+                    explanation[:, target_feature_name], color=explanation[:, interacting_feature_name], show=False
                 )
+                # Start of Selection
+                plt.title(
+                    f"{target_feature_name} vs {interacting_feature_name} (Interaction Rank: {rank})\n"
+                    f"{self.experiment_name}"
+                )
+        
                 # plt.tight_layout()
                 
                 # Save the plot in the nested directory
                 output_path: str = os.path.join(
-                    full_nested_path, f"{feature_name}_vs_{interacting_feature}_dependence_plot.png"
+                    full_nested_path, f"{target_feature_name}_vs_{interacting_feature_name}_dependence_plot.png"
                 )
                 plt.savefig(
                     output_path,
@@ -266,24 +274,30 @@ class Experiment:
 
         logging.info("Finished generate_dependency_plots method")
 
-    def generate_marginal_effects_plot(self, output_path: str = None, num_samples: int = 100, max_points: int = 20, logit: bool = True, seed: int = 0):
+    def generate_marginal_effects_plot(
+        self,
+        output_path: str = None,
+        marginal_effects_data=None,
+        num_samples: int = 100,
+        max_points: int = 20,
+        logit: bool = True,
+        seed: int = 0,
+    ):
         """
         Generates a plot similar to marginal_effects, showing the true marginal causal effects
         and overlays it with SHAP values for comparison.
 
         Args:
             output_path (str, optional): Path to save the plot. If None, uses default artifact directory.
+            marginal_effects_data (list, optional): Pre-calculated marginal effects data.
             num_samples (int): Number of samples to use for generating the marginal effects.
             max_points (int): Maximum number of points to plot for each feature.
             logit (bool): Whether to apply logit transformation to the 'Did renew' values.
             seed (int): Seed for random number generation.
         """
 
-
         if output_path is None:
-            output_path = os.path.join(
-                self.artifact_uri, "summary_plots", "marginal_effects_vs_shap.png"
-            )
+            output_path = os.path.join(self.artifact_uri, "summary_plots", "marginal_effects_vs_shap.png")
         else:
             # Modify output_path to include experiment and run identifiers
             base_dir, filename = os.path.split(output_path)
@@ -293,19 +307,21 @@ class Experiment:
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-        # Assuming you have a way to access the 'generator' function from 'econ.py'
-        # You might need to adjust this part based on how you can access it
-        from sandbox.econ import generator, marginal_effects
+        # Calculate marginal effects if not provided
+        if marginal_effects_data is None:
+            from sandbox.econ import generator, marginal_effects  # Assuming you have access to these
 
-        true_effects = marginal_effects(generator, num_samples, self.feature_names, max_points, logit, seed)
+            marginal_effects_data = marginal_effects(
+                generator, num_samples, self.feature_names, max_points, logit, seed
+            )
 
         plt.figure(figsize=(12, 8))
         shap.plots.scatter(
             self.shap_values,
             ylabel="SHAP value\n(higher means more likely to renew)",
-            overlay={"True causal effects": true_effects},
+            overlay={"True causal effects": marginal_effects_data},
             feature_names=self.feature_names,
-            show=False
+            show=False,
         )
         plt.title(f"Marginal Effects vs. SHAP Values - {self.experiment_name} - {self.run_id}")
         plt.tight_layout()
@@ -330,7 +346,7 @@ class Experiment:
                   and y represents the corresponding centered average SHAP values.
         """
         if self.shap_df is None:
-            print("Warning: SHAP data not loaded. Cannot calculate marginal effects.")
+            logging.warning("Warning: SHAP data not loaded. Cannot calculate marginal effects.")
             return []
 
         if columns is None:
@@ -342,13 +358,11 @@ class Experiment:
         for col in columns:
             data_col = col.replace('_shap', '')
             if data_col not in self.shap_df.columns:
-                print(f"Warning: Data column '{data_col}' not found for SHAP column '{col}'. Skipping.")
+                logging.warning(f"Data column '{data_col}' not found for SHAP column '{col}'. Skipping.")
                 continue
 
-            # Sample data points and select unique values
-            x_values = np.random.choice(self.shap_df[data_col].values, size=num_samples, replace=True)
-            x_values = np.sort(x_values)
-            x_values = np.unique([np.nanpercentile(x_values, v, method="nearest") for v in np.linspace(0, 100, max_points)])
+            # Sample data points and select unique values using linspace directly
+            x_values = np.linspace(self.shap_df[data_col].min(), self.shap_df[data_col].max(), max_points)
 
             y_values = []
             for x in x_values:
