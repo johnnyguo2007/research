@@ -18,7 +18,9 @@ def main():
         help="Model subduration to load (hourly_model, day_model, night_model)",
     )
     args = parser.parse_args()
-    logging.getLogger().setLevel(logging.INFO)
+
+    # Configure logging
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     # Convert generate_types string to a list
     generate_types_list = args.generate_types.split()

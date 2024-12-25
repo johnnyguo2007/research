@@ -1,7 +1,7 @@
 import mlflow
 import re
 from mlflow_tools.experiment import Experiment
-
+import logging
 class ExperimentManager:
     def __init__(self, pattern: str, tracking_uri: str = "http://192.168.4.85:8080"):
         """
@@ -22,7 +22,7 @@ class ExperimentManager:
 
     def _load_and_process_experiment(self, experiment_name: str, generate_funcs: list[callable], output_path: str = None, model_subdur: str = "hourly_model"):
         """Loads an experiment, processes it, and then removes it from memory."""
-        print(f"Announcing the start of processing experiment '{experiment_name}'")
+        logging.info(f"Announcing the start of processing experiment '{experiment_name}'")
         experiment = mlflow.get_experiment_by_name(experiment_name)
         runs = mlflow.search_runs(
             experiment_ids=[experiment.experiment_id],
@@ -42,7 +42,7 @@ class ExperimentManager:
                 )
                 exp_obj._load_model(model_subdur)
                 for generate_func in generate_funcs:
-                    generate_func(exp_obj, output_path)  # Call each specified generate function
+                    generate_func(exp_obj)  # Call each specified generate function without the 'path' argument
                 del exp_obj  # Remove experiment object from memory
             except FileNotFoundError as e:
                 print(e)
@@ -67,23 +67,24 @@ class ExperimentManager:
         generate_funcs: list[callable] = []
         if "all" in generate_types:
             generate_funcs.extend([
-                lambda exp, path: exp.generate_summary_shap_plot(path),
-                lambda exp, path: exp.generate_summary_shap_plot_by_group(path),
-                lambda exp, path: exp.generate_dependency_plots(path),
-                lambda exp, path: exp.generate_marginal_effects_plot(path)
+                lambda exp: exp.generate_summary_shap_plot(),
+                lambda exp: exp.generate_summary_shap_plot_by_group(),
+                lambda exp: exp.generate_dependency_plots(),
+                lambda exp: exp.generate_marginal_effects_plot(),
+                lambda exp: exp.generate_waterfall_plot()
             ])
         else:
             for gen_type in generate_types:
                 if gen_type == "summary":
-                    generate_funcs.append(lambda exp, path: exp.generate_summary_shap_plot(path))
+                    generate_funcs.append(lambda exp: exp.generate_summary_shap_plot())
                 elif gen_type == "group_summary":
-                    generate_funcs.append(lambda exp, path: exp.generate_summary_shap_plot_by_group(path))
+                    generate_funcs.append(lambda exp: exp.generate_summary_shap_plot_by_group())
                 elif gen_type == "dependency":
-                    generate_funcs.append(lambda exp, path: exp.generate_dependency_plots(path))
+                    generate_funcs.append(lambda exp: exp.generate_dependency_plots())
                 elif gen_type == "marginal_effects":
-                    generate_funcs.append(lambda exp, path: exp.generate_marginal_effects_plot(path))
+                    generate_funcs.append(lambda exp: exp.generate_marginal_effects_plot())
                 elif gen_type == "waterfall":
-                    generate_funcs.append(lambda exp, path: exp.generate_waterfall_plot(path))
+                    generate_funcs.append(lambda exp: exp.generate_waterfall_plot())
                 else:
                     raise ValueError(f"Invalid generate_type: {gen_type}")
 

@@ -4,7 +4,7 @@
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="pure_24"
+BASE_RUN_TYPE="pure_soil_24"
 HW_PERCENTILE=98
 MERGED_FILE="updated_local_hour_adjusted_variables_HW${HW_PERCENTILE}.feather"
 FEATURE_COLUMN="hourly_selected"
@@ -40,10 +40,18 @@ run_experiment() {
         --filters "filter_by_NO_KGMajorClass,Polar;filter_by_local_hour,${local_hour}"
 }
 
-# Loop through local hours
-for local_hour in $(seq 0 23); do
+# Run experiments for hours 6, 9, and 18
+for local_hour in 6 9 18; do
     echo "Running experiment for Local Hour: ${local_hour}"
     run_experiment "$local_hour"
+done
+
+# Run experiments for the remaining hours
+for local_hour in $(seq 0 23); do
+    if [[ ! " 6 9 18 " =~ " ${local_hour} " ]]; then
+        echo "Running experiment for Local Hour: ${local_hour}"
+        run_experiment "$local_hour"
+    fi
 done
 
 echo "All experiments completed." 

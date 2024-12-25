@@ -56,7 +56,7 @@ class Experiment:
         self.model = None
         self._setup_mlflow()
         self._load_data()
-        self._load_model()
+        # self._load_model()
 
     def _setup_mlflow(self):
         """Sets up the MLflow tracking URI."""
@@ -65,10 +65,14 @@ class Experiment:
     def _load_data(self):
         """Loads data for the specific experiment run."""
         run = mlflow.get_run(self.run_id)
+        logging.warning(
+                f"experiment_name  {self.experiment_name} run.info.artifact_uri {run.info.artifact_uri}"
+        )
         self.artifact_uri = run.info.artifact_uri.replace(
             "mlflow-artifacts:",
             "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts",
         )
+        logging.warning(f"self.artifact_uri {self.artifact_uri}")
 
         shap_values_feather_path: str = os.path.join(
             self.artifact_uri, "shap_values_with_additional_columns.feather"
@@ -112,26 +116,15 @@ class Experiment:
         model_path = os.path.join(self.artifact_uri, model_subdur)
         self.model = mlflow.catboost.load_model(model_path)
 
-    def generate_summary_shap_plot(self, output_path: str = None, base_dir: str = "."):
+    def generate_summary_shap_plot(self):
         """
         Generates a SHAP summary plot for the experiment run.
-
-        Args:
-            output_path (str, optional): Specific filename to save the plot. 
-                                         If None, uses default naming convention.
-            base_dir (str, optional): Base directory for saving plots. Defaults to ".".
         """
+        base_dir: str = "."
         logging.info("Starting generate_summary_shap_plot method")
-        if output_path is None:
-            output_path: str = os.path.join(
-                self.artifact_uri, base_dir, "feature_summary_plot.png"
-            )
-        else:
-            # Modify output_path to include experiment identifier
-            base_dir, filename = os.path.split(output_path)
-            filename, ext = os.path.splitext(filename)
-            new_filename = f"{filename}_{self.experiment_name}{ext}"
-            output_path = os.path.join(base_dir, new_filename)
+        output_path: str = os.path.join(
+            self.artifact_uri, base_dir, "feature_summary_plot.png"
+        )
 
         logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -150,26 +143,15 @@ class Experiment:
         plt.close()
         logging.info(f"Generated summary SHAP plot at {output_path}")
 
-    def generate_summary_shap_plot_by_group(self, output_path: str = None, base_dir: str = "summary_plots"):
+    def generate_summary_shap_plot_by_group(self):
         """
         Generates a SHAP summary plot, grouped by feature groups, for the experiment run.
-
-        Args:
-            output_path (str, optional): Specific filename to save the plot. 
-                                         If None, uses default naming convention.
-            base_dir (str, optional): Base directory for saving plots. Defaults to "summary_plots".
         """
+        base_dir: str = "group_summary_plots"
         logging.info("Starting generate_summary_shap_plot_by_group method")
-        if output_path is None:
-            output_path: str = os.path.join(
-                self.artifact_uri, base_dir, "feature_group_summary_plot.png"
-            )
-        else:
-            # Modify output_path to include experiment identifier
-            base_dir, filename = os.path.split(output_path)
-            filename, ext = os.path.splitext(filename)
-            new_filename = f"{filename}_{self.experiment_name}{ext}"
-            output_path = os.path.join(base_dir, new_filename)
+        output_path: str = os.path.join(
+            self.artifact_uri, base_dir, "feature_group_summary_plot.png"
+        )
 
         logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -209,28 +191,17 @@ class Experiment:
         plt.close()
         logging.info(f"Generated summary SHAP plot by group at {output_path}")
 
-    def generate_dependency_plots(self, output_dir: str = None):
+    def generate_dependency_plots(self):
         """
         Generates SHAP dependency plots for each feature, showing the top 3
         features with the highest interaction, for the experiment run.
-
-        Args:
-            output_dir (str, optional): Directory to save the plots.
-                                       If None, uses default artifact directory.
         """
-        
+        base_dir: str = "x_dependence_plots"
         logging.info("Starting generate_dependency_plots method")
 
-        if output_dir is None:
-            output_dir: str = os.path.join(self.artifact_uri, "dependency_plots")
-            logging.info(f"Output directory not provided, using default: {output_dir}")
-        else:
-            # Use output_dir directly under artifact_uri
-            output_dir = os.path.join(self.artifact_uri, output_dir)
-            logging.info(f"Using provided output directory: {output_dir}")
-
-        logging.info(f"Creating directory: {output_dir}")
-        os.makedirs(output_dir, exist_ok=True)
+        # Use base_dir directly under artifact_uri
+        output_dir = os.path.join(self.artifact_uri, base_dir)
+        logging.info(f"Using output directory: {output_dir}")
 
         for feature_index, target_feature_name in enumerate(self.feature_names):
             logging.info(f"Processing feature: {target_feature_name} (index {feature_index})")
@@ -249,8 +220,7 @@ class Experiment:
 
             rank: int = 1
             # Create nested directory structure under 'x_dependence_plots'
-            nested_path = os.path.join('x_dependence_plots', target_feature_name)
-            full_nested_path = os.path.join(self.artifact_uri, nested_path)
+            full_nested_path = os.path.join(output_dir, target_feature_name)
             os.makedirs(full_nested_path, exist_ok=True)
             for interacting_feature_name in top_interacting_features:
                 logging.info(f"Creating dependency plot for {target_feature_name} vs {interacting_feature_name} (rank {rank})")
@@ -281,7 +251,6 @@ class Experiment:
 
     def generate_marginal_effects_plot(
         self,
-        output_path: str = None,
         marginal_effects_data=None,
         num_samples: int = 100,
         max_points: int = 20,
@@ -293,23 +262,15 @@ class Experiment:
         and overlays it with SHAP values for comparison.
 
         Args:
-            output_path (str, optional): Path to save the plot. If None, uses default artifact directory.
             marginal_effects_data (list, optional): Pre-calculated marginal effects data.
             num_samples (int): Number of samples to use for generating the marginal effects.
             max_points (int): Maximum number of points to plot for each feature.
             logit (bool): Whether to apply logit transformation to the 'Did renew' values.
             seed (int): Seed for random number generation.
         """
+        base_dir: str = "marginal_plots"
         logging.info("Starting generate_marginal_effects_plot method")
-
-        if output_path is None:
-            output_path = os.path.join(self.artifact_uri, "summary_plots", "marginal_effects_vs_shap.png")
-        else:
-            # Modify output_path to include experiment identifier
-            base_dir, filename = os.path.split(output_path)
-            filename, ext = os.path.splitext(filename)
-            new_filename = f"{filename}_{self.experiment_name}{ext}"
-            output_path = os.path.join(base_dir, new_filename)
+        output_path = os.path.join(self.artifact_uri, base_dir, "marginal_effects_vs_shap.png")
 
         logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -321,7 +282,7 @@ class Experiment:
             marginal_effects_data = marginal_effects(
                 generator, num_samples, self.feature_names, max_points, logit, seed
             )
-
+        
         plt.figure(figsize=(12, 8))
         shap.plots.scatter(
             self.shap_values,
@@ -392,26 +353,15 @@ class Experiment:
 
         return results 
 
-    def generate_waterfall_plot(self, output_path: str = None, base_dir: str = "."):
+    def generate_waterfall_plot(self):
         """
         Generates a SHAP waterfall plot for the first observation in the experiment run.
-
-        Args:
-            output_path (str, optional): Specific filename to save the plot. 
-                                         If None, uses default naming convention.
-            base_dir (str, optional): Base directory for saving plots. Defaults to current directory ".".
         """
+        base_dir: str = "."
         logging.info("Starting generate_waterfall_plot method")
-        if output_path is None:
-            output_path = os.path.join(
-                self.artifact_uri, base_dir, "waterfall_plot.png"
-            )
-        else:
-            # Modify output_path to include experiment identifier
-            base_dir, filename = os.path.split(output_path)
-            filename, ext = os.path.splitext(filename)
-            new_filename = f"{filename}_{self.experiment_name}{ext}"
-            output_path = os.path.join(base_dir, new_filename)
+        output_path = os.path.join(
+            self.artifact_uri, base_dir, "waterfall_plot.png"
+        )
 
         logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)

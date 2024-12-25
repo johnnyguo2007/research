@@ -15,8 +15,11 @@ declare -A patterns
 # patterns["^Single_Hour_NO_FSA_(Arid|Cold)_HW98_Hour(8|9|10)$"]="marginal_effects"
 # patterns["^Single_Hour_NO_FSA_Arid_Hourly_HW98_Hour8$"]="dependency"
 
-# Add a pattern to generate summary, waterfall, and dependency plots for pure_24 experiments with hours 0-10
-patterns["^pure_24_Hourly_HW98_Hour(10|[0-9])$"]="summary waterfall dependency"
+# # Add a pattern to generate summary, waterfall, and dependency plots for pure_24 experiments with hours 0-10
+# patterns["^pure_24_Hourly_HW98_Hour(10|[0-9])$"]="summary waterfall dependency"
+
+# Add a pattern to generate summary, waterfall, and dependency plots for pure_24 experiments with hours 11-23
+patterns["^pure_24_Hourly_HW98_Hour(1[1-9]|2[0-3])$"]="summary waterfall dependency"
 
 # Loop through the patterns and generate types
 for pattern in "${!patterns[@]}"; do

@@ -1,0 +1,861 @@
+Processing experiments matching pattern: ^pure_24_Hourly_HW98_Hour(1[1-9]|2[0-3])$
+Generating plots of types: summary waterfall dependency
+2024-12-24 17:33:22,833 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour23'
+2024-12-24 17:33:22,991 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour23 run.info.artifact_uri mlflow-artifacts:/984285549447774224/44704865257f429281d622b0de407082/artifacts
+2024-12-24 17:33:22,991 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts
+2024-12-24 17:33:25,804 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:33:25,804 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/.
+2024-12-24 17:33:38,036 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/./feature_summary_plot.png
+2024-12-24 17:33:38,036 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:33:38,036 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/.
+2024-12-24 17:33:38,968 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/./waterfall_plot.png
+2024-12-24 17:33:38,968 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:33:38,968 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots
+2024-12-24 17:33:38,968 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:33:38,968 - INFO - Calculating top 3 interacting features
+2024-12-24 17:33:39,075 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['hw_nohw_diff_U10', 'Double_Differencing_EFLX_LH_TOT', 'Double_Differencing_FSH']
+2024-12-24 17:33:39,076 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs hw_nohw_diff_U10 (rank 1)
+2024-12-24 17:33:40,606 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:33:40,606 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:33:42,313 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:33:42,313 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:33:43,844 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:33:43,845 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:33:43,845 - INFO - Calculating top 3 interacting features
+2024-12-24 17:33:43,949 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FIRA', 'Double_Differencing_FSH', 'Double_Differencing_FGR']
+2024-12-24 17:33:43,949 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:33:45,476 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:33:45,476 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:33:47,007 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:33:47,007 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:33:48,588 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:33:48,588 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:33:48,588 - INFO - Calculating top 3 interacting features
+2024-12-24 17:33:48,700 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['hw_nohw_diff_Q2M', 'Double_Differencing_FSH', 'Double_Differencing_FGR']
+2024-12-24 17:33:48,700 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:33:50,229 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:33:50,229 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:33:51,756 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:33:51,756 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:33:53,453 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:33:53,453 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:33:53,453 - INFO - Calculating top 3 interacting features
+2024-12-24 17:33:53,556 - INFO - Top interacting features for Double_Differencing_FGR: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_U10']
+2024-12-24 17:33:53,557 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:33:55,086 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:33:55,086 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:33:56,625 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:33:56,625 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:33:58,160 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:33:58,160 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:33:58,160 - INFO - Calculating top 3 interacting features
+2024-12-24 17:33:58,272 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_FGR', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:33:58,272 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:33:59,779 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:33:59,779 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:34:01,289 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:34:01,290 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:34:02,804 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:34:02,804 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:34:02,804 - INFO - Calculating top 3 interacting features
+2024-12-24 17:34:02,912 - INFO - Top interacting features for Double_Differencing_FSH: ['Double_Differencing_FIRA', 'hw_nohw_diff_U10', 'Double_Differencing_FGR']
+2024-12-24 17:34:02,912 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:34:04,436 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:34:04,437 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_U10 (rank 2)
+2024-12-24 17:34:06,151 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:34:06,151 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:34:07,680 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/984285549447774224/44704865257f429281d622b0de407082/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:34:07,680 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:34:07,868 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour22'
+2024-12-24 17:34:08,035 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour22 run.info.artifact_uri mlflow-artifacts:/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts
+2024-12-24 17:34:08,035 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts
+2024-12-24 17:34:10,715 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:34:10,715 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/.
+2024-12-24 17:34:22,523 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/./feature_summary_plot.png
+2024-12-24 17:34:22,524 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:34:22,524 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/.
+2024-12-24 17:34:23,200 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/./waterfall_plot.png
+2024-12-24 17:34:23,200 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:34:23,200 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots
+2024-12-24 17:34:23,200 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:34:23,200 - INFO - Calculating top 3 interacting features
+2024-12-24 17:34:23,311 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_U10', 'Double_Differencing_FIRA']
+2024-12-24 17:34:23,311 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_EFLX_LH_TOT (rank 1)
+2024-12-24 17:34:24,855 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:34:24,856 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs hw_nohw_diff_U10 (rank 2)
+2024-12-24 17:34:26,578 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:34:26,578 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:34:28,125 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:34:28,125 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:34:28,125 - INFO - Calculating top 3 interacting features
+2024-12-24 17:34:28,235 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FSH', 'Double_Differencing_FIRA', 'Double_Differencing_FGR']
+2024-12-24 17:34:28,235 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:34:29,949 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:34:29,949 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:34:31,495 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:34:31,495 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:34:33,054 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:34:33,054 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:34:33,054 - INFO - Calculating top 3 interacting features
+2024-12-24 17:34:33,161 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['hw_nohw_diff_Q2M', 'Double_Differencing_FIRA', 'Double_Differencing_FGR']
+2024-12-24 17:34:33,161 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:34:34,775 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:34:34,775 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:34:36,343 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:34:36,343 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:34:37,880 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:34:37,880 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:34:37,880 - INFO - Calculating top 3 interacting features
+2024-12-24 17:34:37,986 - INFO - Top interacting features for Double_Differencing_FGR: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_U10']
+2024-12-24 17:34:37,986 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:34:39,521 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:34:39,521 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:34:41,215 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:34:41,215 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:34:42,743 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:34:42,743 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:34:42,743 - INFO - Calculating top 3 interacting features
+2024-12-24 17:34:42,841 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_FGR', 'hw_nohw_diff_U10']
+2024-12-24 17:34:42,842 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:34:44,339 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:34:44,339 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:34:45,841 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:34:45,841 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:34:47,346 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:34:47,346 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:34:47,346 - INFO - Calculating top 3 interacting features
+2024-12-24 17:34:47,448 - INFO - Top interacting features for Double_Differencing_FSH: ['Double_Differencing_FIRA', 'hw_nohw_diff_U10', 'Double_Differencing_FGR']
+2024-12-24 17:34:47,448 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:34:48,976 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:34:48,976 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_U10 (rank 2)
+2024-12-24 17:34:50,513 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:34:50,513 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:34:52,063 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/161526423450756748/4167edb868e146a9b4ef8d3973834463/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:34:52,063 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:34:52,176 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour21'
+2024-12-24 17:34:52,330 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour21 run.info.artifact_uri mlflow-artifacts:/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts
+2024-12-24 17:34:52,330 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts
+2024-12-24 17:34:54,990 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:34:54,990 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/.
+2024-12-24 17:35:06,800 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/./feature_summary_plot.png
+2024-12-24 17:35:06,800 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:35:06,800 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/.
+2024-12-24 17:35:07,388 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/./waterfall_plot.png
+2024-12-24 17:35:07,388 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:35:07,388 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots
+2024-12-24 17:35:07,388 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:35:07,388 - INFO - Calculating top 3 interacting features
+2024-12-24 17:35:07,489 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_U10', 'Double_Differencing_FIRA']
+2024-12-24 17:35:07,489 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_EFLX_LH_TOT (rank 1)
+2024-12-24 17:35:09,004 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:35:09,004 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs hw_nohw_diff_U10 (rank 2)
+2024-12-24 17:35:10,554 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:35:10,554 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:35:12,084 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:35:12,085 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:35:12,085 - INFO - Calculating top 3 interacting features
+2024-12-24 17:35:12,187 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FIRA', 'Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:35:12,187 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:35:13,706 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:35:13,706 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:35:15,435 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:35:15,435 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:35:16,952 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:35:16,952 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:35:16,952 - INFO - Calculating top 3 interacting features
+2024-12-24 17:35:17,055 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['Double_Differencing_FSH', 'Double_Differencing_FGR', 'hw_nohw_diff_Q2M']
+2024-12-24 17:35:17,055 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:35:18,570 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:35:18,570 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:35:20,090 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:35:20,090 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:35:21,601 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:35:21,601 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:35:21,601 - INFO - Calculating top 3 interacting features
+2024-12-24 17:35:21,700 - INFO - Top interacting features for Double_Differencing_FGR: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_Q2M']
+2024-12-24 17:35:21,700 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:35:23,209 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:35:23,209 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:35:24,717 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:35:24,717 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:35:26,232 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:35:26,232 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:35:26,232 - INFO - Calculating top 3 interacting features
+2024-12-24 17:35:26,333 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_FGR', 'hw_nohw_diff_U10']
+2024-12-24 17:35:26,333 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:35:28,000 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:35:28,000 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:35:29,511 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:35:29,511 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:35:31,019 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:35:31,019 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:35:31,019 - INFO - Calculating top 3 interacting features
+2024-12-24 17:35:31,117 - INFO - Top interacting features for Double_Differencing_FSH: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'hw_nohw_diff_Q2M']
+2024-12-24 17:35:31,117 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:35:32,633 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:35:32,634 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:35:34,148 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:35:34,148 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:35:35,670 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/266148157968307326/945c92007b71403c86232c1e772c1c74/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:35:35,670 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:35:35,781 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour20'
+2024-12-24 17:35:35,945 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour20 run.info.artifact_uri mlflow-artifacts:/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts
+2024-12-24 17:35:35,945 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts
+2024-12-24 17:35:38,543 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:35:38,543 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/.
+2024-12-24 17:35:50,532 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/./feature_summary_plot.png
+2024-12-24 17:35:50,532 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:35:50,532 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/.
+2024-12-24 17:35:51,322 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/./waterfall_plot.png
+2024-12-24 17:35:51,322 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:35:51,322 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots
+2024-12-24 17:35:51,322 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:35:51,322 - INFO - Calculating top 3 interacting features
+2024-12-24 17:35:51,423 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_EFLX_LH_TOT', 'Double_Differencing_FSH', 'Double_Differencing_FIRA']
+2024-12-24 17:35:51,423 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_EFLX_LH_TOT (rank 1)
+2024-12-24 17:35:52,978 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:35:52,978 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:35:54,518 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:35:54,518 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:35:56,048 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:35:56,048 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:35:56,048 - INFO - Calculating top 3 interacting features
+2024-12-24 17:35:56,156 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'Double_Differencing_FSH']
+2024-12-24 17:35:56,156 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:35:57,703 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:35:57,703 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:35:59,237 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:35:59,237 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:36:00,779 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:36:00,779 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:36:00,779 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:00,885 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['hw_nohw_diff_Q2M', 'Double_Differencing_FSH', 'hw_nohw_diff_U10']
+2024-12-24 17:36:00,885 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:36:02,595 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:36:02,595 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:36:04,109 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:36:04,109 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:36:05,650 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:36:05,650 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:36:05,650 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:05,757 - INFO - Top interacting features for Double_Differencing_FGR: ['Double_Differencing_EFLX_LH_TOT', 'Double_Differencing_FSH', 'Double_Differencing_FIRA']
+2024-12-24 17:36:05,757 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_EFLX_LH_TOT (rank 1)
+2024-12-24 17:36:07,279 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:36:07,279 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:36:08,801 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:36:08,801 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:36:10,329 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:36:10,329 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:36:10,329 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:10,434 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_FGR', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:36:10,434 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:36:11,946 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:36:11,946 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:36:13,611 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:36:13,611 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:36:15,109 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:36:15,109 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:36:15,109 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:15,207 - INFO - Top interacting features for Double_Differencing_FSH: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:36:15,207 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:36:16,732 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:36:16,733 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:36:18,258 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:36:18,258 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:36:19,781 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/958260284033964447/3b831ce6df014e99b3941f444ffbd5c4/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:36:19,781 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:36:19,957 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour19'
+2024-12-24 17:36:20,110 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour19 run.info.artifact_uri mlflow-artifacts:/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts
+2024-12-24 17:36:20,110 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts
+2024-12-24 17:36:22,599 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:36:22,599 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/.
+2024-12-24 17:36:34,259 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/./feature_summary_plot.png
+2024-12-24 17:36:34,259 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:36:34,259 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/.
+2024-12-24 17:36:34,847 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/./waterfall_plot.png
+2024-12-24 17:36:34,847 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:36:34,847 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots
+2024-12-24 17:36:34,847 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:36:34,847 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:34,946 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_EFLX_LH_TOT', 'Double_Differencing_FSH', 'Double_Differencing_FIRA']
+2024-12-24 17:36:34,946 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_EFLX_LH_TOT (rank 1)
+2024-12-24 17:36:36,587 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:36:36,587 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:36:38,122 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:36:38,122 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:36:39,647 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:36:39,647 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:36:39,647 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:39,748 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:36:39,749 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:36:41,266 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:36:41,266 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:36:42,809 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:36:42,809 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:36:44,330 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:36:44,330 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:36:44,330 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:44,440 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['Double_Differencing_FIRA', 'hw_nohw_diff_Q2M', 'hw_nohw_diff_U10']
+2024-12-24 17:36:44,440 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:36:45,991 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:36:45,991 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_Q2M (rank 2)
+2024-12-24 17:36:47,524 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:36:47,524 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:36:49,235 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:36:49,235 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:36:49,235 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:49,337 - INFO - Top interacting features for Double_Differencing_FGR: ['Double_Differencing_FIRA', 'hw_nohw_diff_U10', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:36:49,337 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:36:50,855 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:36:50,855 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_U10 (rank 2)
+2024-12-24 17:36:52,372 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:36:52,372 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:36:53,897 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:36:53,897 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:36:53,897 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:53,999 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_U10']
+2024-12-24 17:36:53,999 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:36:55,509 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:36:55,509 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:36:57,041 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:36:57,041 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:36:58,591 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:36:58,591 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:36:58,591 - INFO - Calculating top 3 interacting features
+2024-12-24 17:36:58,696 - INFO - Top interacting features for Double_Differencing_FSH: ['Double_Differencing_FIRA', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_U10']
+2024-12-24 17:36:58,696 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:37:00,403 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:37:00,403 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:37:01,927 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:37:01,927 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:37:03,464 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/123125659585887634/2a6352721ba34d6f98ad2db7fd2d600b/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:37:03,464 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:37:03,579 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour18'
+2024-12-24 17:37:03,734 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour18 run.info.artifact_uri mlflow-artifacts:/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts
+2024-12-24 17:37:03,734 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts
+2024-12-24 17:37:06,337 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:37:06,337 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/.
+2024-12-24 17:37:18,125 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/./feature_summary_plot.png
+2024-12-24 17:37:18,125 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:37:18,125 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/.
+2024-12-24 17:37:18,732 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/./waterfall_plot.png
+2024-12-24 17:37:18,732 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:37:18,732 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots
+2024-12-24 17:37:18,732 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:37:18,732 - INFO - Calculating top 3 interacting features
+2024-12-24 17:37:18,833 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_FIRA', 'Double_Differencing_EFLX_LH_TOT', 'Double_Differencing_FSH']
+2024-12-24 17:37:18,833 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:37:20,375 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:37:20,375 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:37:21,888 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:37:21,888 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:37:23,594 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:37:23,594 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:37:23,594 - INFO - Calculating top 3 interacting features
+2024-12-24 17:37:23,697 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:37:23,698 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:37:25,222 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:37:25,222 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:37:26,737 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:37:26,737 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:37:28,260 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:37:28,261 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:37:28,261 - INFO - Calculating top 3 interacting features
+2024-12-24 17:37:28,358 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['Double_Differencing_FIRA', 'Double_Differencing_FSH', 'hw_nohw_diff_U10']
+2024-12-24 17:37:28,359 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:37:29,884 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:37:29,885 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:37:31,413 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:37:31,413 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:37:32,923 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:37:32,923 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:37:32,923 - INFO - Calculating top 3 interacting features
+2024-12-24 17:37:33,020 - INFO - Top interacting features for Double_Differencing_FGR: ['Double_Differencing_FIRA', 'Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:37:33,021 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:37:34,529 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:37:34,529 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:37:36,189 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:37:36,189 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:37:37,707 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:37:37,707 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:37:37,707 - INFO - Calculating top 3 interacting features
+2024-12-24 17:37:37,811 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'Double_Differencing_FGR']
+2024-12-24 17:37:37,811 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:37:39,328 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:37:39,328 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:37:40,851 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:37:40,852 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:37:42,366 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:37:42,366 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:37:42,366 - INFO - Calculating top 3 interacting features
+2024-12-24 17:37:42,464 - INFO - Top interacting features for Double_Differencing_FSH: ['Double_Differencing_FIRA', 'Double_Differencing_EFLX_LH_TOT', 'Double_Differencing_FGR']
+2024-12-24 17:37:42,464 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:37:43,984 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:37:43,984 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:37:45,500 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:37:45,500 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:37:47,161 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/927721536529562031/211262e8e6774e0e80d4d076d30e54ce/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:37:47,162 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:37:47,278 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour17'
+2024-12-24 17:37:47,452 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour17 run.info.artifact_uri mlflow-artifacts:/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts
+2024-12-24 17:37:47,452 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts
+2024-12-24 17:37:50,013 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:37:50,013 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/.
+2024-12-24 17:38:01,790 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/./feature_summary_plot.png
+2024-12-24 17:38:01,790 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:38:01,790 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/.
+2024-12-24 17:38:02,394 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/./waterfall_plot.png
+2024-12-24 17:38:02,394 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:38:02,394 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots
+2024-12-24 17:38:02,394 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:38:02,394 - INFO - Calculating top 3 interacting features
+2024-12-24 17:38:02,500 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_FIRA', 'Double_Differencing_EFLX_LH_TOT', 'Double_Differencing_FSH']
+2024-12-24 17:38:02,500 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:38:04,046 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:38:04,046 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:38:05,581 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:38:05,581 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:38:07,135 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:38:07,135 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:38:07,135 - INFO - Calculating top 3 interacting features
+2024-12-24 17:38:07,240 - INFO - Top interacting features for hw_nohw_diff_U10: ['hw_nohw_diff_Q2M', 'Double_Differencing_FSH', 'Double_Differencing_FIRA']
+2024-12-24 17:38:07,240 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:38:08,756 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:38:08,756 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:38:10,451 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:38:10,451 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:38:11,995 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:38:11,995 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:38:11,995 - INFO - Calculating top 3 interacting features
+2024-12-24 17:38:12,099 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['Double_Differencing_FSH', 'Double_Differencing_FIRA', 'Double_Differencing_FGR']
+2024-12-24 17:38:12,099 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:38:13,630 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:38:13,630 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:38:15,165 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:38:15,165 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:38:16,700 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:38:16,700 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:38:16,700 - INFO - Calculating top 3 interacting features
+2024-12-24 17:38:16,801 - INFO - Top interacting features for Double_Differencing_FGR: ['Double_Differencing_FIRA', 'Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:38:16,802 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:38:18,324 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:38:18,324 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:38:19,857 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:38:19,857 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:38:21,376 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:38:21,376 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:38:21,376 - INFO - Calculating top 3 interacting features
+2024-12-24 17:38:21,481 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_Q2M']
+2024-12-24 17:38:21,482 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:38:23,166 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:38:23,166 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:38:24,674 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:38:24,674 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:38:26,179 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:38:26,179 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:38:26,179 - INFO - Calculating top 3 interacting features
+2024-12-24 17:38:26,283 - INFO - Top interacting features for Double_Differencing_FSH: ['Double_Differencing_FIRA', 'hw_nohw_diff_Q2M', 'hw_nohw_diff_U10']
+2024-12-24 17:38:26,283 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:38:27,813 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:38:27,813 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_Q2M (rank 2)
+2024-12-24 17:38:29,337 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:38:29,337 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:38:30,867 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/116531084501576853/b8cfe7541dff4189850f0af411fdf4ef/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:38:30,868 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:38:30,980 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour16'
+2024-12-24 17:38:31,139 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour16 run.info.artifact_uri mlflow-artifacts:/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts
+2024-12-24 17:38:31,139 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts
+2024-12-24 17:38:33,720 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:38:33,720 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/.
+2024-12-24 17:38:45,391 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/./feature_summary_plot.png
+2024-12-24 17:38:45,391 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:38:45,391 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/.
+2024-12-24 17:38:46,116 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/./waterfall_plot.png
+2024-12-24 17:38:46,116 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:38:46,116 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots
+2024-12-24 17:38:46,116 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:38:46,116 - INFO - Calculating top 3 interacting features
+2024-12-24 17:38:46,214 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'Double_Differencing_FSH']
+2024-12-24 17:38:46,214 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:38:47,731 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:38:47,731 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:38:49,235 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:38:49,235 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:38:50,743 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:38:50,744 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:38:50,744 - INFO - Calculating top 3 interacting features
+2024-12-24 17:38:50,842 - INFO - Top interacting features for hw_nohw_diff_U10: ['hw_nohw_diff_Q2M', 'Double_Differencing_FIRA', 'Double_Differencing_FSH']
+2024-12-24 17:38:50,842 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:38:52,357 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:38:52,357 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:38:53,877 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:38:53,877 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:38:55,389 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:38:55,389 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:38:55,389 - INFO - Calculating top 3 interacting features
+2024-12-24 17:38:55,489 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['Double_Differencing_FIRA', 'Double_Differencing_FSH', 'Double_Differencing_FGR']
+2024-12-24 17:38:55,490 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:38:57,017 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:38:57,017 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:38:58,711 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:38:58,711 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:39:00,253 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:39:00,253 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:39:00,253 - INFO - Calculating top 3 interacting features
+2024-12-24 17:39:00,351 - INFO - Top interacting features for Double_Differencing_FGR: ['hw_nohw_diff_Q2M', 'hw_nohw_diff_U10', 'Double_Differencing_FSH']
+2024-12-24 17:39:00,351 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:39:01,848 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:39:01,849 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_U10 (rank 2)
+2024-12-24 17:39:03,352 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:39:03,352 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:39:04,865 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:39:04,865 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:39:04,865 - INFO - Calculating top 3 interacting features
+2024-12-24 17:39:04,965 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_Q2M']
+2024-12-24 17:39:04,966 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:39:06,466 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:39:06,467 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:39:07,973 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:39:07,973 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:39:09,629 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:39:09,630 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:39:09,630 - INFO - Calculating top 3 interacting features
+2024-12-24 17:39:09,733 - INFO - Top interacting features for Double_Differencing_FSH: ['Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_Q2M', 'Double_Differencing_FIRA']
+2024-12-24 17:39:09,734 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_EFLX_LH_TOT (rank 1)
+2024-12-24 17:39:11,262 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:39:11,262 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_Q2M (rank 2)
+2024-12-24 17:39:12,770 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:39:12,770 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:39:14,305 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/447939542783973947/1a7374eac6c94e69be42c9cca9635323/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:39:14,305 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:39:14,421 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour15'
+2024-12-24 17:39:14,580 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour15 run.info.artifact_uri mlflow-artifacts:/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts
+2024-12-24 17:39:14,580 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts
+2024-12-24 17:39:17,172 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:39:17,173 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/.
+2024-12-24 17:39:28,864 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/./feature_summary_plot.png
+2024-12-24 17:39:28,864 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:39:28,864 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/.
+2024-12-24 17:39:29,457 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/./waterfall_plot.png
+2024-12-24 17:39:29,457 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:39:29,457 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots
+2024-12-24 17:39:29,457 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:39:29,457 - INFO - Calculating top 3 interacting features
+2024-12-24 17:39:29,560 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_FGR', 'Double_Differencing_FIRA', 'Double_Differencing_FSH']
+2024-12-24 17:39:29,560 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FGR (rank 1)
+2024-12-24 17:39:31,103 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:39:31,103 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:39:32,782 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:39:32,782 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:39:34,372 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:39:34,372 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:39:34,372 - INFO - Calculating top 3 interacting features
+2024-12-24 17:39:34,480 - INFO - Top interacting features for hw_nohw_diff_U10: ['hw_nohw_diff_Q2M', 'Double_Differencing_FGR', 'Double_Differencing_FIRA']
+2024-12-24 17:39:34,480 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:39:36,011 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:39:36,011 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:39:37,544 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:39:37,545 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:39:39,080 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:39:39,080 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:39:39,080 - INFO - Calculating top 3 interacting features
+2024-12-24 17:39:39,179 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'hw_nohw_diff_Q2M']
+2024-12-24 17:39:39,179 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:39:40,705 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:39:40,706 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:39:42,233 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:39:42,233 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:39:43,920 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:39:43,920 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:39:43,920 - INFO - Calculating top 3 interacting features
+2024-12-24 17:39:44,021 - INFO - Top interacting features for Double_Differencing_FGR: ['hw_nohw_diff_Q2M', 'hw_nohw_diff_U10', 'Double_Differencing_FSH']
+2024-12-24 17:39:44,021 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:39:45,535 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:39:45,535 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_U10 (rank 2)
+2024-12-24 17:39:47,060 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:39:47,060 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:39:48,582 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:39:48,583 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:39:48,583 - INFO - Calculating top 3 interacting features
+2024-12-24 17:39:48,687 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_Q2M']
+2024-12-24 17:39:48,687 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:39:50,252 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:39:50,253 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:39:51,844 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:39:51,844 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:39:53,392 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:39:53,392 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:39:53,392 - INFO - Calculating top 3 interacting features
+2024-12-24 17:39:53,497 - INFO - Top interacting features for Double_Differencing_FSH: ['hw_nohw_diff_Q2M', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_U10']
+2024-12-24 17:39:53,497 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:39:55,027 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:39:55,027 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:39:56,736 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:39:56,736 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:39:58,264 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/463565819921393285/3a3415ec3f304e3b846bf3a38c1cbf00/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:39:58,264 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:39:58,379 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour14'
+2024-12-24 17:39:58,536 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour14 run.info.artifact_uri mlflow-artifacts:/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts
+2024-12-24 17:39:58,536 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts
+2024-12-24 17:40:01,111 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:40:01,112 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/.
+2024-12-24 17:40:12,869 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/./feature_summary_plot.png
+2024-12-24 17:40:12,869 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:40:12,869 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/.
+2024-12-24 17:40:13,471 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/./waterfall_plot.png
+2024-12-24 17:40:13,472 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:40:13,472 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots
+2024-12-24 17:40:13,472 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:40:13,472 - INFO - Calculating top 3 interacting features
+2024-12-24 17:40:13,572 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_FGR', 'Double_Differencing_FIRA', 'Double_Differencing_FSH']
+2024-12-24 17:40:13,572 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FGR (rank 1)
+2024-12-24 17:40:15,102 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:40:15,102 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:40:16,659 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:40:16,659 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:40:18,208 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:40:18,208 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:40:18,208 - INFO - Calculating top 3 interacting features
+2024-12-24 17:40:18,310 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'hw_nohw_diff_Q2M']
+2024-12-24 17:40:18,310 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:40:19,998 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:40:19,998 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:40:21,535 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:40:21,535 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:40:23,062 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:40:23,062 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:40:23,062 - INFO - Calculating top 3 interacting features
+2024-12-24 17:40:23,162 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'hw_nohw_diff_U10']
+2024-12-24 17:40:23,162 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:40:24,682 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:40:24,682 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:40:26,221 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:40:26,221 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:40:27,736 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:40:27,736 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:40:27,736 - INFO - Calculating top 3 interacting features
+2024-12-24 17:40:27,841 - INFO - Top interacting features for Double_Differencing_FGR: ['hw_nohw_diff_Q2M', 'Double_Differencing_FIRA', 'hw_nohw_diff_U10']
+2024-12-24 17:40:27,841 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:40:29,351 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:40:29,351 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:40:31,062 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:40:31,062 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:40:32,578 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:40:32,578 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:40:32,578 - INFO - Calculating top 3 interacting features
+2024-12-24 17:40:32,681 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_Q2M']
+2024-12-24 17:40:32,681 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:40:34,191 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:40:34,191 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:40:35,708 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:40:35,708 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:40:37,225 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:40:37,225 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:40:37,225 - INFO - Calculating top 3 interacting features
+2024-12-24 17:40:37,323 - INFO - Top interacting features for Double_Differencing_FSH: ['hw_nohw_diff_Q2M', 'hw_nohw_diff_U10', 'Double_Differencing_FGR']
+2024-12-24 17:40:37,323 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:40:38,861 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:40:38,862 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_U10 (rank 2)
+2024-12-24 17:40:40,391 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:40:40,391 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:40:41,924 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/230540310474528197/79b70485bc8a456fa0eeea5b9d30010a/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:40:41,924 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:40:42,035 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour13'
+2024-12-24 17:40:42,193 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour13 run.info.artifact_uri mlflow-artifacts:/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts
+2024-12-24 17:40:42,193 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts
+2024-12-24 17:40:44,854 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:40:44,854 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/.
+2024-12-24 17:40:56,668 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/./feature_summary_plot.png
+2024-12-24 17:40:56,668 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:40:56,668 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/.
+2024-12-24 17:40:57,253 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/./waterfall_plot.png
+2024-12-24 17:40:57,253 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:40:57,253 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots
+2024-12-24 17:40:57,253 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:40:57,253 - INFO - Calculating top 3 interacting features
+2024-12-24 17:40:57,356 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_FGR', 'Double_Differencing_FIRA', 'Double_Differencing_FSH']
+2024-12-24 17:40:57,356 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FGR (rank 1)
+2024-12-24 17:40:58,910 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:40:58,910 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:41:00,445 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:41:00,445 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:41:01,977 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:41:01,977 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:41:01,977 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:02,078 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'hw_nohw_diff_Q2M']
+2024-12-24 17:41:02,078 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:41:03,634 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:41:03,634 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:41:05,184 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:41:05,184 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:41:06,896 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:41:06,896 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:41:06,896 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:07,001 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'hw_nohw_diff_U10']
+2024-12-24 17:41:07,002 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:41:08,523 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:41:08,523 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:41:10,048 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:41:10,048 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:41:11,572 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:41:11,572 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:41:11,572 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:11,671 - INFO - Top interacting features for Double_Differencing_FGR: ['hw_nohw_diff_Q2M', 'Double_Differencing_FSH', 'Double_Differencing_FIRA']
+2024-12-24 17:41:11,671 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:41:13,185 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:41:13,185 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FSH (rank 2)
+2024-12-24 17:41:14,717 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:41:14,717 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:41:16,248 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:41:16,248 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:41:16,248 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:16,348 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_Q2M']
+2024-12-24 17:41:16,348 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:41:17,853 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:41:17,853 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:41:19,539 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:41:19,539 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:41:21,045 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:41:21,045 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:41:21,045 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:21,149 - INFO - Top interacting features for Double_Differencing_FSH: ['hw_nohw_diff_U10', 'hw_nohw_diff_Q2M', 'Double_Differencing_FGR']
+2024-12-24 17:41:21,149 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_U10 (rank 1)
+2024-12-24 17:41:22,667 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:41:22,667 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_Q2M (rank 2)
+2024-12-24 17:41:24,202 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:41:24,202 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:41:25,901 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/122280176335800229/4dc7db63a26a4613821747597cf6f63f/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:41:25,901 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:41:26,010 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour12'
+2024-12-24 17:41:26,159 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour12 run.info.artifact_uri mlflow-artifacts:/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts
+2024-12-24 17:41:26,159 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts
+2024-12-24 17:41:28,728 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:41:28,728 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/.
+2024-12-24 17:41:40,381 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/./feature_summary_plot.png
+2024-12-24 17:41:40,381 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:41:40,381 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/.
+2024-12-24 17:41:40,964 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/./waterfall_plot.png
+2024-12-24 17:41:40,964 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:41:40,964 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots
+2024-12-24 17:41:40,964 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:41:40,964 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:41,063 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'Double_Differencing_FSH']
+2024-12-24 17:41:41,063 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:41:42,738 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:41:42,738 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:41:44,238 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:41:44,238 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:41:45,755 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:41:45,755 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:41:45,755 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:45,856 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FIRA', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_Q2M']
+2024-12-24 17:41:45,856 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:41:47,366 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:41:47,366 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:41:48,886 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:41:48,886 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs hw_nohw_diff_Q2M (rank 3)
+2024-12-24 17:41:50,402 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:41:50,402 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:41:50,402 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:50,505 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['hw_nohw_diff_U10', 'Double_Differencing_FGR', 'Double_Differencing_FIRA']
+2024-12-24 17:41:50,505 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_U10 (rank 1)
+2024-12-24 17:41:52,052 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:41:52,052 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:41:53,721 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:41:53,722 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:41:55,233 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:41:55,233 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:41:55,233 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:55,330 - INFO - Top interacting features for Double_Differencing_FGR: ['hw_nohw_diff_Q2M', 'Double_Differencing_FIRA', 'hw_nohw_diff_U10']
+2024-12-24 17:41:55,330 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_Q2M (rank 1)
+2024-12-24 17:41:56,839 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:41:56,840 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:41:58,360 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:41:58,360 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:41:59,874 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:41:59,874 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:41:59,874 - INFO - Calculating top 3 interacting features
+2024-12-24 17:41:59,973 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_U10']
+2024-12-24 17:41:59,973 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:42:01,476 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:42:01,476 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:42:02,976 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:42:02,976 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:42:04,485 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:42:04,485 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:42:04,485 - INFO - Calculating top 3 interacting features
+2024-12-24 17:42:04,592 - INFO - Top interacting features for Double_Differencing_FSH: ['hw_nohw_diff_U10', 'hw_nohw_diff_Q2M', 'Double_Differencing_FIRA']
+2024-12-24 17:42:04,592 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_U10 (rank 1)
+2024-12-24 17:42:06,295 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:42:06,295 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_Q2M (rank 2)
+2024-12-24 17:42:07,810 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:42:07,810 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:42:09,342 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/898771401620795905/1afe649c69a147208eb550fc0c245898/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:42:09,342 - INFO - Finished generate_dependency_plots method
+2024-12-24 17:42:09,452 - INFO - Announcing the start of processing experiment 'pure_24_Hourly_HW98_Hour11'
+2024-12-24 17:42:09,605 - WARNING - experiment_name  pure_24_Hourly_HW98_Hour11 run.info.artifact_uri mlflow-artifacts:/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts
+2024-12-24 17:42:09,605 - WARNING - self.artifact_uri /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts
+2024-12-24 17:42:12,210 - INFO - Starting generate_summary_shap_plot method
+2024-12-24 17:42:12,210 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/.
+2024-12-24 17:42:23,835 - INFO - Generated summary SHAP plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/./feature_summary_plot.png
+2024-12-24 17:42:23,835 - INFO - Starting generate_waterfall_plot method
+2024-12-24 17:42:23,835 - INFO - Creating directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/.
+2024-12-24 17:42:24,415 - INFO - Generated waterfall plot at /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/./waterfall_plot.png
+2024-12-24 17:42:24,416 - INFO - Starting generate_dependency_plots method
+2024-12-24 17:42:24,416 - INFO - Using output directory: /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots
+2024-12-24 17:42:24,416 - INFO - Processing feature: hw_nohw_diff_Q2M (index 0)
+2024-12-24 17:42:24,416 - INFO - Calculating top 3 interacting features
+2024-12-24 17:42:24,516 - INFO - Top interacting features for hw_nohw_diff_Q2M: ['Double_Differencing_FIRA', 'Double_Differencing_FGR', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:42:24,516 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:42:26,023 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:42:26,023 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:42:27,533 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:42:27,533 - INFO - Creating dependency plot for hw_nohw_diff_Q2M vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:42:29,192 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/hw_nohw_diff_Q2M/hw_nohw_diff_Q2M_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:42:29,192 - INFO - Processing feature: hw_nohw_diff_U10 (index 1)
+2024-12-24 17:42:29,192 - INFO - Calculating top 3 interacting features
+2024-12-24 17:42:29,290 - INFO - Top interacting features for hw_nohw_diff_U10: ['Double_Differencing_FIRA', 'Double_Differencing_EFLX_LH_TOT', 'Double_Differencing_FSH']
+2024-12-24 17:42:29,290 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:42:30,817 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:42:30,817 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:42:32,345 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:42:32,345 - INFO - Creating dependency plot for hw_nohw_diff_U10 vs Double_Differencing_FSH (rank 3)
+2024-12-24 17:42:33,862 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/hw_nohw_diff_U10/hw_nohw_diff_U10_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:42:33,862 - INFO - Processing feature: Double_Differencing_EFLX_LH_TOT (index 2)
+2024-12-24 17:42:33,862 - INFO - Calculating top 3 interacting features
+2024-12-24 17:42:33,966 - INFO - Top interacting features for Double_Differencing_EFLX_LH_TOT: ['hw_nohw_diff_U10', 'Double_Differencing_FGR', 'Double_Differencing_FIRA']
+2024-12-24 17:42:33,966 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs hw_nohw_diff_U10 (rank 1)
+2024-12-24 17:42:35,487 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:42:35,487 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FGR (rank 2)
+2024-12-24 17:42:37,003 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:42:37,003 - INFO - Creating dependency plot for Double_Differencing_EFLX_LH_TOT vs Double_Differencing_FIRA (rank 3)
+2024-12-24 17:42:38,522 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_EFLX_LH_TOT/Double_Differencing_EFLX_LH_TOT_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:42:38,522 - INFO - Processing feature: Double_Differencing_FGR (index 3)
+2024-12-24 17:42:38,522 - INFO - Calculating top 3 interacting features
+2024-12-24 17:42:38,620 - INFO - Top interacting features for Double_Differencing_FGR: ['Double_Differencing_FIRA', 'hw_nohw_diff_Q2M', 'Double_Differencing_EFLX_LH_TOT']
+2024-12-24 17:42:38,620 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_FIRA (rank 1)
+2024-12-24 17:42:40,146 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:42:40,146 - INFO - Creating dependency plot for Double_Differencing_FGR vs hw_nohw_diff_Q2M (rank 2)
+2024-12-24 17:42:41,798 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_hw_nohw_diff_Q2M_dependence_plot.png
+2024-12-24 17:42:41,798 - INFO - Creating dependency plot for Double_Differencing_FGR vs Double_Differencing_EFLX_LH_TOT (rank 3)
+2024-12-24 17:42:43,300 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_FGR/Double_Differencing_FGR_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:42:43,300 - INFO - Processing feature: Double_Differencing_FIRA (index 4)
+2024-12-24 17:42:43,300 - INFO - Calculating top 3 interacting features
+2024-12-24 17:42:43,397 - INFO - Top interacting features for Double_Differencing_FIRA: ['Double_Differencing_FSH', 'Double_Differencing_EFLX_LH_TOT', 'hw_nohw_diff_U10']
+2024-12-24 17:42:43,398 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_FSH (rank 1)
+2024-12-24 17:42:44,907 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_FSH_dependence_plot.png
+2024-12-24 17:42:44,907 - INFO - Creating dependency plot for Double_Differencing_FIRA vs Double_Differencing_EFLX_LH_TOT (rank 2)
+2024-12-24 17:42:46,419 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_Double_Differencing_EFLX_LH_TOT_dependence_plot.png
+2024-12-24 17:42:46,420 - INFO - Creating dependency plot for Double_Differencing_FIRA vs hw_nohw_diff_U10 (rank 3)
+2024-12-24 17:42:47,934 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_FIRA/Double_Differencing_FIRA_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:42:47,935 - INFO - Processing feature: Double_Differencing_FSH (index 5)
+2024-12-24 17:42:47,935 - INFO - Calculating top 3 interacting features
+2024-12-24 17:42:48,038 - INFO - Top interacting features for Double_Differencing_FSH: ['hw_nohw_diff_U10', 'Double_Differencing_FIRA', 'Double_Differencing_FGR']
+2024-12-24 17:42:48,038 - INFO - Creating dependency plot for Double_Differencing_FSH vs hw_nohw_diff_U10 (rank 1)
+2024-12-24 17:42:49,568 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_hw_nohw_diff_U10_dependence_plot.png
+2024-12-24 17:42:49,568 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FIRA (rank 2)
+2024-12-24 17:42:51,095 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FIRA_dependence_plot.png
+2024-12-24 17:42:51,095 - INFO - Creating dependency plot for Double_Differencing_FSH vs Double_Differencing_FGR (rank 3)
+2024-12-24 17:42:52,611 - INFO - Saved dependency plot to /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/628672508199443289/832a3f95ddee452f82da5d6a57234dd7/artifacts/x_dependence_plots/Double_Differencing_FSH/Double_Differencing_FSH_vs_Double_Differencing_FGR_dependence_plot.png
+2024-12-24 17:42:52,611 - INFO - Finished generate_dependency_plots method
+All experiments processed.
