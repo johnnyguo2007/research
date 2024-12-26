@@ -22,7 +22,7 @@ def dump_feather_metadata(file_name, show_data=False):
         with pa.memory_map(file_name, 'r') as source:
             # Read the table metadata
             table = feather.read_table(source, memory_map=True)
-            
+
             # Print basic file info
             print(f"Feather File Info for {file_name}:")
             print("=" * 40)
@@ -30,7 +30,7 @@ def dump_feather_metadata(file_name, show_data=False):
                 ["Number of rows", format_number(table.num_rows)],
                 ["Number of columns", format_number(table.num_columns)]
             ], tablefmt="plain"))
-            
+
             # Prepare column information
             column_info = []
             for i, column in enumerate(table.columns):
@@ -40,43 +40,55 @@ def dump_feather_metadata(file_name, show_data=False):
                     str(column.type),
                     str(table.field(i).nullable),
                 ])
-            
+
             # Print column information
             print("\nColumn Information:")
             print("=" * 40)
             print(tabulate(column_info, headers=["Index", "Name", "Type", "Nullable"], tablefmt="plain"))
-            
-           
+
             # Show data preview if requested
             if show_data:
                 print("\nData Preview:")
                 print("=" * 40)
-                df = table.to_pandas()
-                
-                # Apply float formatting to the entire dataframe
-                df = df.applymap(format_float)
-                
+
+                num_rows = table.num_rows
+                num_cols = table.num_columns
+
+                # Define the number of rows to preview
+                preview_rows = 20
+
                 # Function to display data in groups of 12 columns
-                def display_data_groups(data, row_label):
-                    num_cols = data.shape[1]
-                    num_groups = math.ceil(num_cols / 12)
-                    
+                def display_data_groups(df_preview, row_label):
+                    num_cols_preview = df_preview.shape[1]
+                    num_groups = math.ceil(num_cols_preview / 12)
+
                     for i in range(num_groups):
                         start_col = i * 12
-                        end_col = min((i + 1) * 12, num_cols)
-                        
+                        end_col = min((i + 1) * 12, num_cols_preview)
+
                         print(f"\n{row_label} (Columns {start_col+1}-{end_col}):")
-                        print(tabulate(data.iloc[:, start_col:end_col], 
-                                       headers='keys', 
-                                       tablefmt='pretty', 
+                        print(tabulate(df_preview.iloc[:, start_col:end_col],
+                                       headers='keys',
+                                       tablefmt='pretty',
                                        showindex=False))
-                
-                # Display top 20 rows
-                display_data_groups(df.head(20), "Top 20 rows")
-                
-                # Display bottom 20 rows
-                display_data_groups(df.tail(20), "Bottom 20 rows")
-        
+
+                # Display top rows
+                if num_rows > 0:
+                    head_rows = min(preview_rows, num_rows)
+                    head_table = table.slice(0, head_rows)
+                    df_head = head_table.to_pandas()
+                    df_head = df_head.applymap(format_float)
+                    display_data_groups(df_head, f"Top {head_rows} rows")
+
+                # Display bottom rows
+                if num_rows > 0:
+                    tail_rows = min(preview_rows, num_rows)
+                    tail_start_index = max(0, num_rows - tail_rows)
+                    tail_table = table.slice(tail_start_index, tail_rows)
+                    df_tail = tail_table.to_pandas()
+                    df_tail = df_tail.applymap(format_float)
+                    display_data_groups(df_tail, f"Bottom {tail_rows} rows")
+
     except Exception as e:
         print(f"An error occurred: {str(e)}")
 
