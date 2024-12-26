@@ -4,7 +4,7 @@
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="pure_soil_24"
+BASE_RUN_TYPE="pure_soil_ddq2m_24"
 HW_PERCENTILE=98
 MERGED_FILE="updated_local_hour_adjusted_variables_HW${HW_PERCENTILE}.feather"
 FEATURE_COLUMN="hourly_selected"
