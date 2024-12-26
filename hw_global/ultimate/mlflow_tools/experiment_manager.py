@@ -5,6 +5,7 @@ import logging
 import pandas as pd
 import os
 
+
 class ExperimentManager:
     def __init__(self, pattern: str, tracking_uri: str = "http://192.168.4.85:8080"):
         """
@@ -23,16 +24,24 @@ class ExperimentManager:
         """Sets up the MLflow tracking URI."""
         mlflow.set_tracking_uri(uri=self.tracking_uri)
 
-    def _load_and_process_experiment(self, experiment_name: str, generate_funcs: list[callable], output_path: str = None, model_subdur: str = "hourly_model"):
+    def _load_and_process_experiment(
+        self,
+        experiment_name: str,
+        generate_funcs: list[callable],
+        output_path: str = None,
+        model_subdur: str = "hourly_model",
+    ):
         """Loads an experiment, processes it, and then removes it from memory."""
-        logging.info(f"Announcing the start of processing experiment '{experiment_name}'")
+        logging.info(
+            f"Announcing the start of processing experiment '{experiment_name}'"
+        )
         experiment = mlflow.get_experiment_by_name(experiment_name)
-        
+
         # Fetch only the latest run
         runs = mlflow.search_runs(
             experiment_ids=[experiment.experiment_id],
             order_by=["start_time desc"],
-            max_results=1  # Fetch only the latest run
+            max_results=1,  # Fetch only the latest run
         )
 
         if runs.empty:
@@ -54,7 +63,12 @@ class ExperimentManager:
         except FileNotFoundError as e:
             print(e)
 
-    def process_experiments(self, generate_types: list[str] = ["summary"], output_path: str = None, args = None):
+    def process_experiments(
+        self,
+        generate_types: list[str] = ["summary"],
+        output_path: str = None,
+        args=None,
+    ):
         """
         Processes experiments sequentially based on the specified generation types.
 
@@ -74,38 +88,50 @@ class ExperimentManager:
         generate_funcs: list[callable] = []
         if "combine_shap" in generate_types:
             self._combine_shap_values(experiment_names)
-        
+
         if "all" in generate_types:
-            generate_funcs.extend([
-                lambda exp: exp.generate_summary_shap_plot(),
-                lambda exp: exp.generate_summary_shap_plot_by_group(),
-                lambda exp: exp.generate_dependency_plots(),
-                lambda exp: exp.generate_marginal_effects_plot(),
-                lambda exp: exp.generate_waterfall_plot()
-            ])
-        other_generate_types = [gen_type for gen_type in generate_types if gen_type not in {"combine_shap", "all"}]
+            generate_funcs.extend(
+                [
+                    lambda exp: exp.generate_summary_shap_plot(),
+                    lambda exp: exp.generate_summary_shap_plot_by_group(),
+                    lambda exp: exp.generate_dependency_plots(),
+                    lambda exp: exp.generate_marginal_effects_plot(),
+                    lambda exp: exp.generate_waterfall_plot(),
+                ]
+            )
+        other_generate_types = [
+            gen_type
+            for gen_type in generate_types
+            if gen_type not in {"combine_shap", "all"}
+        ]
         if other_generate_types:
             for gen_type in other_generate_types:
                 if gen_type == "summary":
                     generate_funcs.append(lambda exp: exp.generate_summary_shap_plot())
                 elif gen_type == "group_summary":
-                    generate_funcs.append(lambda exp: exp.generate_summary_shap_plot_by_group())
+                    generate_funcs.append(
+                        lambda exp: exp.generate_summary_shap_plot_by_group()
+                    )
                 elif gen_type == "dependency":
                     generate_funcs.append(lambda exp: exp.generate_dependency_plots())
                 elif gen_type == "marginal_effects":
-                    generate_funcs.append(lambda exp: exp.generate_marginal_effects_plot())
+                    generate_funcs.append(
+                        lambda exp: exp.generate_marginal_effects_plot()
+                    )
                 elif gen_type == "waterfall":
                     generate_funcs.append(lambda exp: exp.generate_waterfall_plot())
                 else:
                     raise ValueError(f"Invalid generate_type: {gen_type}")
-                
-        if  generate_funcs:
+
+        if generate_funcs:
             for experiment_name in experiment_names:
-                self._load_and_process_experiment(experiment_name, generate_funcs, output_path, args.model_subdur)
+                self._load_and_process_experiment(
+                    experiment_name, generate_funcs, output_path, args.model_subdur
+                )
         else:
-            logging.warning("No generation functions specified. Skipping experiment processing.")   
-
-
+            logging.warning(
+                "No generation functions specified. Skipping experiment processing."
+            )
 
     def _combine_shap_values(self, experiment_names: list[str]):
         """
@@ -128,11 +154,13 @@ class ExperimentManager:
             runs = mlflow.search_runs(
                 experiment_ids=[experiment.experiment_id],
                 order_by=["start_time desc"],
-                max_results=1  # Fetch only the latest run
+                max_results=1,  # Fetch only the latest run
             )
 
             if runs.empty:
-                logging.warning(f"No runs found for experiment '{experiment_name}'. Skipping.")
+                logging.warning(
+                    f"No runs found for experiment '{experiment_name}'. Skipping."
+                )
                 continue
 
             # Process only the latest run
@@ -148,13 +176,21 @@ class ExperimentManager:
 
                 if os.path.exists(shap_values_path):
                     shap_df = pd.read_feather(shap_values_path)
-                    combined_shap_df = pd.concat([combined_shap_df, shap_df], ignore_index=True)
-                    logging.info(f"Combined SHAP values from run {run.run_id} of experiment '{experiment_name}'")
+                    combined_shap_df = pd.concat(
+                        [combined_shap_df, shap_df], ignore_index=True
+                    )
+                    logging.info(
+                        f"Combined SHAP values from run {run.run_id} of experiment '{experiment_name}'"
+                    )
                 else:
-                    logging.warning(f"SHAP values file not found for run {run.run_id} of experiment '{experiment_name}'. Skipping.")
+                    logging.warning(
+                        f"SHAP values file not found for run {run.run_id} of experiment '{experiment_name}'. Skipping."
+                    )
 
             except Exception as e:
-                logging.error(f"Error processing run {run.run_id} of experiment '{experiment_name}': {e}")
+                logging.error(
+                    f"Error processing run {run.run_id} of experiment '{experiment_name}': {e}"
+                )
 
         if combined_shap_df.empty:
             logging.warning("No SHAP values were combined.")
@@ -164,22 +200,30 @@ class ExperimentManager:
 
         try:
             new_experiment_id = mlflow.create_experiment(name=new_experiment_name)
-            logging.info(f"Created new experiment '{new_experiment_name}' with ID {new_experiment_id}")
+            logging.info(
+                f"Created new experiment '{new_experiment_name}' with ID {new_experiment_id}"
+            )
         except mlflow.exceptions.MlflowException as e:
             if "already exists" in str(e):
-                logging.warning(f"Experiment '{new_experiment_name}' already exists. Using existing experiment.")
+                logging.warning(
+                    f"Experiment '{new_experiment_name}' already exists. Using existing experiment."
+                )
                 existing_experiment = mlflow.get_experiment_by_name(new_experiment_name)
                 new_experiment_id = existing_experiment.experiment_id
             else:
                 logging.error(f"Error creating experiment '{new_experiment_name}': {e}")
                 return
 
-        with mlflow.start_run(experiment_id=new_experiment_id, run_name="combined_shap_values") as run:
+        with mlflow.start_run(
+            experiment_id=new_experiment_id, run_name="combined_shap_values"
+        ) as run:
             artifact_uri = run.info.artifact_uri.replace(
                 "mlflow-artifacts:",
                 "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts",
             )
-            combined_shap_path = os.path.join(artifact_uri, "shap_values_with_additional_columns.feather")
+            combined_shap_path = os.path.join(
+                artifact_uri, "shap_values_with_additional_columns.feather"
+            )
 
             # Create the necessary directories if they don't exist
             os.makedirs(os.path.dirname(combined_shap_path), exist_ok=True)
@@ -206,6 +250,6 @@ class ExperimentManager:
             return "Combined_SHAP_Values"
 
         # Remove unwanted characters, anything between square brackets, and trailing digits
-        pattern = re.sub(r'\(.*?\)|\[.*?\]|\d+$|[|^$]', '', self.pattern)
+        pattern = re.sub(r"\(.*?\)|\[.*?\]|\d+$|[|^$]", "", self.pattern)
 
         return f"Combined_{pattern}"

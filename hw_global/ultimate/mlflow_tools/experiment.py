@@ -10,7 +10,6 @@ import logging
 import mlflow.catboost
 
 
-
 def get_feature_groups(feature_names):
     """
     Assign features to groups based on specified rules.
@@ -21,13 +20,13 @@ def get_feature_groups(feature_names):
     Returns:
         dict: Mapping from feature names to group names.
     """
-    prefixes = ('delta_', 'hw_nohw_diff_', 'Double_Differencing_')
+    prefixes = ("delta_", "hw_nohw_diff_", "Double_Differencing_")
     feature_groups = {}
     for feature in feature_names:
         group = feature
         for prefix in prefixes:
             if feature.startswith(prefix):
-                group = feature[len(prefix):]
+                group = feature[len(prefix) :]
                 break
         # If feature does not start with any prefix, it is its own group, but name the group feature + "Level"
         if group == feature:
@@ -35,8 +34,14 @@ def get_feature_groups(feature_names):
         feature_groups[feature] = group
     return feature_groups
 
+
 class Experiment:
-    def __init__(self, experiment_name: str, run_id: str, tracking_uri: str = "http://192.168.4.85:8080"):
+    def __init__(
+        self,
+        experiment_name: str,
+        run_id: str,
+        tracking_uri: str = "http://192.168.4.85:8080",
+    ):
         """
         Initializes the Experiment object for a specific run of an experiment.
 
@@ -66,7 +71,7 @@ class Experiment:
         """Loads data for the specific experiment run."""
         run = mlflow.get_run(self.run_id)
         logging.warning(
-                f"experiment_name  {self.experiment_name} run.info.artifact_uri {run.info.artifact_uri}"
+            f"experiment_name  {self.experiment_name} run.info.artifact_uri {run.info.artifact_uri}"
         )
         self.artifact_uri = run.info.artifact_uri.replace(
             "mlflow-artifacts:",
@@ -104,8 +109,12 @@ class Experiment:
             "base_value",
         ]
         # Only drop columns that exist
-        existing_columns_to_drop = [col for col in columns_to_drop if col in self.shap_df.columns]
-        shap_df_cleaned: pd.DataFrame = self.shap_df.drop(columns=existing_columns_to_drop)
+        existing_columns_to_drop = [
+            col for col in columns_to_drop if col in self.shap_df.columns
+        ]
+        shap_df_cleaned: pd.DataFrame = self.shap_df.drop(
+            columns=existing_columns_to_drop
+        )
         self.shap_values = shap_df_cleaned[
             [f + "_shap" for f in self.feature_names]
         ].values
@@ -163,8 +172,12 @@ class Experiment:
         group_feature_values: list[np.ndarray] = []
 
         for group in group_names:
-            group_features: list[str] = [f for f, g in feature_groups.items() if g == group]
-            group_indices: list[int] = [self.feature_names.index(feat) for feat in group_features]
+            group_features: list[str] = [
+                f for f, g in feature_groups.items() if g == group
+            ]
+            group_indices: list[int] = [
+                self.feature_names.index(feat) for feat in group_features
+            ]
 
             group_shap: np.ndarray = self.shap_values[
                 :, [self.feature_names.index(f) for f in group_features]
@@ -204,39 +217,58 @@ class Experiment:
         logging.info(f"Using output directory: {output_dir}")
 
         for feature_index, target_feature_name in enumerate(self.feature_names):
-            logging.info(f"Processing feature: {target_feature_name} (index {feature_index})")
+            logging.info(
+                f"Processing feature: {target_feature_name} (index {feature_index})"
+            )
 
             # Get top 3 interacting features for the target feature
             logging.info("Calculating top 3 interacting features")
-            explanation = shap.Explanation(values=self.shap_values, data=self.feature_values, feature_names=self.feature_names)
-            interaction_indices = shap.utils.potential_interactions(explanation[:, target_feature_name], explanation)
-            
+            explanation = shap.Explanation(
+                values=self.shap_values,
+                data=self.feature_values,
+                feature_names=self.feature_names,
+            )
+            interaction_indices = shap.utils.potential_interactions(
+                explanation[:, target_feature_name], explanation
+            )
+
             # Handle cases with fewer than 3 interactions
-            top_interaction_indices = interaction_indices[:min(3, len(interaction_indices))]
-            top_interacting_features = [
-                self.feature_names[i] for i in top_interaction_indices if self.feature_names[i] != target_feature_name
+            top_interaction_indices = interaction_indices[
+                : min(3, len(interaction_indices))
             ]
-            logging.info(f"Top interacting features for {target_feature_name}: {top_interacting_features}")
+            top_interacting_features = [
+                self.feature_names[i]
+                for i in top_interaction_indices
+                if self.feature_names[i] != target_feature_name
+            ]
+            logging.info(
+                f"Top interacting features for {target_feature_name}: {top_interacting_features}"
+            )
 
             rank: int = 1
             # Create nested directory structure under 'x_dependence_plots'
             full_nested_path = os.path.join(output_dir, target_feature_name)
             os.makedirs(full_nested_path, exist_ok=True)
             for interacting_feature_name in top_interacting_features:
-                logging.info(f"Creating dependency plot for {target_feature_name} vs {interacting_feature_name} (rank {rank})")
+                logging.info(
+                    f"Creating dependency plot for {target_feature_name} vs {interacting_feature_name} (rank {rank})"
+                )
                 shap.plots.scatter(
-                    explanation[:, target_feature_name], color=explanation[:, interacting_feature_name], show=False
+                    explanation[:, target_feature_name],
+                    color=explanation[:, interacting_feature_name],
+                    show=False,
                 )
                 plt.title(
                     f"{target_feature_name} vs {interacting_feature_name} (Interaction Rank: {rank})\n"
                     f"{self.experiment_name}"
                 )
-        
+
                 # plt.tight_layout()
-                
+
                 # Save the plot in the nested directory
                 output_path: str = os.path.join(
-                    full_nested_path, f"{target_feature_name}_vs_{interacting_feature_name}_dependence_plot.png"
+                    full_nested_path,
+                    f"{target_feature_name}_vs_{interacting_feature_name}_dependence_plot.png",
                 )
                 plt.savefig(
                     output_path,
@@ -270,19 +302,24 @@ class Experiment:
         """
         base_dir: str = "marginal_plots"
         logging.info("Starting generate_marginal_effects_plot method")
-        output_path = os.path.join(self.artifact_uri, base_dir, "marginal_effects_vs_shap.png")
+        output_path = os.path.join(
+            self.artifact_uri, base_dir, "marginal_effects_vs_shap.png"
+        )
 
         logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         # Calculate marginal effects if not provided
         if marginal_effects_data is None:
-            from sandbox.econ import generator, marginal_effects  # Assuming you have access to these
+            from sandbox.econ import (
+                generator,
+                marginal_effects,
+            )  # Assuming you have access to these
 
             marginal_effects_data = marginal_effects(
                 generator, num_samples, self.feature_names, max_points, logit, seed
             )
-        
+
         plt.figure(figsize=(12, 8))
         shap.plots.scatter(
             self.shap_values,
@@ -297,7 +334,9 @@ class Experiment:
         plt.close()
         logging.info(f"Generated marginal effects plot at {output_path}")
 
-    def calculate_marginal_effects(self, columns=None, num_samples=100, max_points=20, logit=True, seed=0):
+    def calculate_marginal_effects(
+        self, columns=None, num_samples=100, max_points=20, logit=True, seed=0
+    ):
         """
         Calculates marginal effects based on SHAP values and associated data,
         aligning with the algorithm in econ.py's marginal_effects.
@@ -315,23 +354,29 @@ class Experiment:
                   and y represents the corresponding centered average SHAP values.
         """
         if self.shap_df is None:
-            logging.warning("Warning: SHAP data not loaded. Cannot calculate marginal effects.")
+            logging.warning(
+                "Warning: SHAP data not loaded. Cannot calculate marginal effects."
+            )
             return []
 
         if columns is None:
-            columns = [col for col in self.shap_df.columns if col.endswith('_shap')]
+            columns = [col for col in self.shap_df.columns if col.endswith("_shap")]
 
         np.random.seed(seed)
         results = []
 
         for col in columns:
-            data_col = col.replace('_shap', '')
+            data_col = col.replace("_shap", "")
             if data_col not in self.shap_df.columns:
-                logging.warning(f"Data column '{data_col}' not found for SHAP column '{col}'. Skipping.")
+                logging.warning(
+                    f"Data column '{data_col}' not found for SHAP column '{col}'. Skipping."
+                )
                 continue
 
             # Sample data points and select unique values using linspace directly
-            x_values = np.linspace(self.shap_df[data_col].min(), self.shap_df[data_col].max(), max_points)
+            x_values = np.linspace(
+                self.shap_df[data_col].min(), self.shap_df[data_col].max(), max_points
+            )
 
             y_values = []
             for x in x_values:
@@ -351,7 +396,7 @@ class Experiment:
             y_values = y_values - np.nanmean(y_values)
             results.append((x_values, y_values))
 
-        return results 
+        return results
 
     def generate_waterfall_plot(self):
         """
@@ -359,9 +404,7 @@ class Experiment:
         """
         base_dir: str = "."
         logging.info("Starting generate_waterfall_plot method")
-        output_path = os.path.join(
-            self.artifact_uri, base_dir, "waterfall_plot.png"
-        )
+        output_path = os.path.join(self.artifact_uri, base_dir, "waterfall_plot.png")
 
         logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -371,7 +414,7 @@ class Experiment:
             values=self.shap_values[0, :],
             base_values=self.shap_df["base_value"].iloc[0],
             data=self.feature_values[0, :],
-            feature_names=self.feature_names
+            feature_names=self.feature_names,
         )
 
         # Generate the waterfall plot
@@ -381,4 +424,4 @@ class Experiment:
         plt.tight_layout()
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
         plt.close()
-        logging.info(f"Generated waterfall plot at {output_path}") 
+        logging.info(f"Generated waterfall plot at {output_path}")
