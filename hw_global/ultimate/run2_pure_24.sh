@@ -4,13 +4,13 @@
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="Final_noFSA"
+BASE_RUN_TYPE="pure2_soil_ddq2m_24"
 HW_PERCENTILE=98
 MERGED_FILE="updated_local_hour_adjusted_variables_HW${HW_PERCENTILE}.feather"
-FEATURE_COLUMN="hourly_selected"
-DELTA_COLUMN="hourly_delta_selected"
-HW_NOHW_DIFF_COLUMN="hourly_Hw_no_hw_selected"
-DOUBLE_DIFF_COLUMN="hourly_DD_selected"
+FEATURE_COLUMN="hourly2_selected"
+DELTA_COLUMN="hourly2_delta_selected"
+HW_NOHW_DIFF_COLUMN="hourly2_Hw_no_hw_selected"
+DOUBLE_DIFF_COLUMN="hourly2_DD_selected"
 
 # Function to run the experiment
 run_experiment() {
@@ -41,17 +41,17 @@ run_experiment() {
 }
 
 # Run experiments for hours 6, 9, and 18
-for local_hour in 6 10 18; do
+for local_hour in 9 ; do
     echo "Running experiment for Local Hour: ${local_hour}"
     run_experiment "$local_hour"
 done
 
-# Run experiments for the remaining hours
-for local_hour in $(seq 0 23); do
-    if [[ ! " 6 10 18 " =~ " ${local_hour} " ]]; then
-        echo "Running experiment for Local Hour: ${local_hour}"
-        run_experiment "$local_hour"
-    fi
-done
+# # Run experiments for the remaining hours
+# for local_hour in $(seq 0 23); do
+#     if [[ ! " 6 9 18 " =~ " ${local_hour} " ]]; then
+#         echo "Running experiment for Local Hour: ${local_hour}"
+#         run_experiment "$local_hour"
+#     fi
+# done
 
 echo "All experiments completed." 

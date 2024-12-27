@@ -615,6 +615,58 @@ def calculate_double_differencing(local_hour_adjusted_df, double_diff_vars):
             logging.warning(f"{var_U} or {var_R} not found in dataframe columns.")
     return local_hour_adjusted_df
 
+def sort_features(feature_list):
+    """
+    Sorts a list of features based on a predefined logic:
+    1. Splits each feature into prefix and variable name.
+    2. Sorts primarily by variable name in the order:
+       Q2M > SOILWATER_10CM > FSH > EFLX_LH_TOT > U10 > FIRA > FGR > anything else.
+    3. Secondarily sorts by prefix in the order:
+       Double_Differencing > hw_nohw_diff > delta > no prefix.
+
+    Args:
+        feature_list: A list of feature names (strings).
+
+    Returns:
+        A new list containing the sorted feature names.
+    """
+
+    def get_prefix_and_var_name(feature_name):
+        """Helper function to split feature name into prefix and var_name."""
+        prefixes = ['Double_Differencing_', 'hw_nohw_diff_', 'delta_']
+        for prefix in prefixes:
+            if feature_name.startswith(prefix):
+                return prefix, feature_name[len(prefix):]
+        return "", feature_name
+
+    def sort_key(feature_name):
+        """Key function for sorting."""
+        prefix, var_name = get_prefix_and_var_name(feature_name)
+
+        # Define the order of variable names
+        var_name_order = {
+            "Q2M": 0,
+            "SOILWATER_10CM": 1,
+            "FSH": 2,
+            "EFLX_LH_TOT": 3,
+            "U10": 4,
+            "FIRA": 5,
+            "FGR": 6
+        }
+
+        # Define the order of prefixes
+        prefix_order = {
+            "Double_Differencing_": 0,
+            "hw_nohw_diff_": 1,
+            "delta_": 2,
+            "": 3
+        }
+
+        return var_name_order.get(var_name, 7), prefix_order.get(prefix, 4)
+
+    return sorted(feature_list, key=sort_key)
+
+
 def prepare_data(local_hour_adjusted_df, daily_var_lst, time_period, daily_freq):
     """
     Prepares the dataset based on the time period and returns the features and target variable.
@@ -643,6 +695,7 @@ def prepare_data(local_hour_adjusted_df, daily_var_lst, time_period, daily_freq)
         # Now perform the grouping and aggregation
         uhi_diff = uhi_diff.groupby(['lat', 'lon', 'date']).mean().reset_index()
 
+    daily_var_lst = sort_features(daily_var_lst)    
     X = uhi_diff[daily_var_lst]
     y = uhi_diff['UHI_diff']
     logging.info(f"X shape: {X.shape}, y shape: {y.shape}")
@@ -871,6 +924,7 @@ def create_and_log_shap_dependence_plots(shap_values, X, feature_names, time_per
 
         mlflow.log_artifact(dependence_plot_path)
         logging.info(f"Saved SHAP dependence plot for {feature_name} to {dependence_plot_path}")
+
 
 def main():
     args = parse_arguments()
