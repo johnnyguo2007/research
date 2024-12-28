@@ -136,12 +136,7 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
                 kg_class
             )
     
-    # Step 1: Drop specified columns
-    columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'base_value']
-    shap_df = shap_df.drop(columns=columns_to_drop, errors='ignore')
-    logging.info(f"Dropped columns: {columns_to_drop}")
-    
-    # Step 2: Group by 'local_hour' and 'KGMajorClass' and calculate mean (instead of sum) of all shap value columns
+    # Step 1: Group by 'local_hour' and 'KGMajorClass' and calculate mean of all shap value columns
     group_cols = ['local_hour', 'KGMajorClass']
     
     # Identify SHAP value columns: those ending with '_shap' and not in group_cols
@@ -150,9 +145,14 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     if not shap_cols:
         logging.warning("No SHAP columns found after excluding group-related columns.")
     
-    # Group and calculate mean (instead of sum) of the shap value columns
+    # Group and calculate mean of the shap value columns
     df_grouped = shap_df.groupby(group_cols)[shap_cols].mean().reset_index()
     logging.info("Grouped by 'local_hour' and 'KGMajorClass' and calculated mean SHAP value columns.")
+    
+    # Step 2: Drop specified columns after grouping
+    columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'base_value']
+    df_grouped = df_grouped.drop(columns=columns_to_drop, errors='ignore')
+    logging.info(f"Dropped columns: {columns_to_drop}")
     
     # Step 3: Prepare feature group mapping with base feature names
     # Create a mapping from SHAP columns to base feature names
