@@ -9,6 +9,12 @@ import mlflow
 import seaborn as sns
 import shap
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 def get_feature_groups(feature_names):
     """
@@ -300,7 +306,7 @@ def save_plot_data(df, total_values, output_path, plot_type):
     # Save to CSV
     output_df.to_csv(f"{base_path}_{plot_type}_data.csv")
     
-    print(f"Saved {plot_type} data to {base_path}_{plot_type}_data.csv")
+    logging.info(f"Saved {plot_type} data to {base_path}_{plot_type}_data.csv")
 
 def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, return_fig=False, base_value=0):
     """
@@ -348,7 +354,7 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
     else:
         plt.savefig(output_path, bbox_inches='tight')
         plt.close()
-        print(f"Standalone SHAP stacked bar plot with mean curve saved at '{output_path}'.")
+        logging.info(f"Standalone SHAP stacked bar plot with mean curve saved at '{output_path}'.")
 
     # Save data before plotting
     save_plot_data(
@@ -377,7 +383,7 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
 
     # Check if data is available
     if shap_df.empty or feature_values_df.empty:
-        print(f"No data available for group '{group_name}' in KGMajorClass '{kg_class}'. Skipping.")
+        logging.warning(f"No data available for group '{group_name}' in KGMajorClass '{kg_class}'. Skipping.")
         return
 
     # Create a subdirectory for the current feature group if it doesn't exist
@@ -461,7 +467,7 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches='tight')
     plt.close()
-    print(f"Plot saved as '{output_path}' for group '{group_name}' and KGMajorClass '{kg_class}'.")
+    logging.info(f"Plot saved as '{output_path}' for group '{group_name}' and KGMajorClass '{kg_class}'.")
 
     # Calculate totals
     total_shap = shap_df.sum(axis=1)
@@ -804,27 +810,43 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
     
     # Get feature names (columns ending with '_shap')
     shap_cols = [col for col in shap_df.columns if col.endswith('_shap')]
+    
+    # Check if there are any SHAP values to plot
+    if not shap_cols or shap_df.empty or feature_values_df.empty:
+        logging.warning(f"No SHAP values or feature values available for {kg_class}. Skipping summary plots.")
+        return
+        
     feature_names = [col.replace('_shap', '') for col in shap_cols]
     
     # Convert SHAP values to numpy array
     shap_values = shap_df[shap_cols].values
     
+    # Check if shap_values array is empty
+    if shap_values.size == 0:
+        print(f"Warning: Empty SHAP values array for {kg_class}. Skipping summary plots.")
+        return
+        
     # Convert feature values to numpy array
     feature_values = feature_values_df[feature_names].values
     
-    # Generate feature summary plot
-    plt.figure(figsize=(12, 8))
-    shap.summary_plot(
-        shap_values,
-        feature_values,
-        feature_names=feature_names,
-        show=False,
-        plot_size=(12, 8)
-    )
-    plt.title(f'Feature Summary Plot - {kg_class}')
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, f'feature_summary_plot_{kg_class}.png'), bbox_inches='tight', dpi=300)
-    plt.close()
+    try:
+        # Generate feature summary plot
+        plt.figure(figsize=(12, 8))
+        shap.summary_plot(
+            shap_values,
+            feature_values,
+            feature_names=feature_names,
+            show=False,
+            plot_size=(12, 8)
+        )
+        plt.title(f'Feature Summary Plot - {kg_class}')
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f'feature_summary_plot_{kg_class}.png'), bbox_inches='tight', dpi=300)
+        plt.close()
+        logging.info(f"Generated feature summary plot for {kg_class}")
+    except Exception as e:
+        logging.error(f"Failed to generate feature summary plot for {kg_class}: {str(e)}")
+        plt.close()
     
     # Get feature groups
     feature_groups = get_feature_groups(feature_names)
@@ -838,7 +860,7 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
         # Get features in this group
         group_features = [f for f, g in feature_groups.items() if g == group]
         
-        # Get corresponding SHAP columns for this group
+        # Get corresponding SHAP columns
         group_shap_cols = [f"{f}_shap" for f in group_features]
         
         # Sum SHAP values for features in the group
@@ -853,48 +875,63 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
     group_shap_values = np.array(group_shap_values).T
     group_feature_values = np.array(group_feature_values).T
     
-    # Generate feature group summary plot
-    plt.figure(figsize=(12, 8))
-    shap.summary_plot(
-        group_shap_values,
-        group_feature_values,
-        feature_names=group_names,
-        show=False,
-        plot_size=(12, 8)
-    )
-    plt.title(f'Feature Group Summary Plot - {kg_class}')
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, f'feature_group_summary_plot_{kg_class}.png'), bbox_inches='tight', dpi=300)
-    plt.close()
+    # Check if group arrays are empty
+    if group_shap_values.size == 0 or group_feature_values.size == 0:
+        print(f"Warning: Empty group SHAP values or feature values array for {kg_class}. Skipping group summary plots.")
+        return
     
-    # Calculate mean absolute SHAP values for waterfall plot
-    mean_abs_shap = np.abs(group_shap_values).mean(axis=0)
-    total_shap = mean_abs_shap.sum()
-    shap_percentages = (mean_abs_shap / total_shap) * 100
+    try:
+        # Generate feature group summary plot
+        plt.figure(figsize=(12, 8))
+        shap.summary_plot(
+            group_shap_values,
+            group_feature_values,
+            feature_names=group_names,
+            show=False,
+            plot_size=(12, 8)
+        )
+        plt.title(f'Feature Group Summary Plot - {kg_class}')
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f'feature_group_summary_plot_{kg_class}.png'), bbox_inches='tight', dpi=300)
+        plt.close()
+    except Exception as e:
+        print(f"Warning: Failed to generate feature group summary plot for {kg_class}: {str(e)}")
+        plt.close()
     
-    # Generate waterfall plot
-    plt.figure(figsize=(12, 8))
-    shap.waterfall_plot(
-        shap.Explanation(
-            values=shap_percentages,
-            base_values=0,
-            data=None,
-            feature_names=[get_latex_label(name) for name in group_names]
-        ),
-        show=False
-    )
-    plt.title(f'Feature Group Contribution Waterfall Plot - {kg_class}')
-    plt.xlabel('Percentage Contribution')
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, f'feature_group_waterfall_plot_{kg_class}.png'), bbox_inches='tight', dpi=300)
-    plt.close()
+    try:
+        # Calculate mean absolute SHAP values for waterfall plot
+        mean_abs_shap = np.abs(group_shap_values).mean(axis=0)
+        total_shap = mean_abs_shap.sum()
+        
+        if total_shap == 0:
+            print(f"Warning: Zero total SHAP value for {kg_class}. Skipping waterfall plot.")
+            return
+            
+        shap_percentages = (mean_abs_shap / total_shap) * 100
+        
+        # Generate waterfall plot
+        plt.figure(figsize=(12, 8))
+        shap.waterfall_plot(
+            shap.Explanation(
+                values=shap_percentages,
+                base_values=0,
+                data=None,
+                feature_names=[get_latex_label(name) for name in group_names]
+            ),
+            show=False
+        )
+        plt.title(f'Feature Group Contribution Waterfall Plot - {kg_class}')
+        plt.xlabel('Percentage Contribution')
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f'feature_group_waterfall_plot_{kg_class}.png'), bbox_inches='tight', dpi=300)
+        plt.close()
+    except Exception as e:
+        print(f"Warning: Failed to generate waterfall plot for {kg_class}: {str(e)}")
+        plt.close()
 
 def main():
-    import argparse
-    import mlflow
-    import logging
-    import os
-
+    logging.info("Starting feature contribution analysis...")
+    
     # Initialize the argument parser
     parser = argparse.ArgumentParser(
         description="Report and plot SHAP value contributions by feature group and hour."
@@ -918,29 +955,32 @@ def main():
         action='store_true',
         help='Hide the total feature value line in feature value plots.'
     )
-    # Add new argument for day/night summary only
     parser.add_argument(
         '--day-night-summary-only',
         action='store_true',
         default=False,
         help='Only generate the day/night summary without creating other plots.'
     )
-    # Add new argument for summary plots only
     parser.add_argument(
         '--summary-plots-only',
         action='store_true',
         default=False,
-        help='Only generate the summary plots (feature summary, group summary, and waterfall plots) then exit.'
+        help='Only generate the summary plots then exit.'
     )
 
     # Parse the arguments
     args = parser.parse_args()
+    logging.info(f"Parsed command line arguments: {vars(args)}")
 
     mlflow.set_tracking_uri(uri="http://192.168.4.85:8080")
+    logging.info("Set MLflow tracking URI")
 
     # Extract arguments
     experiment_name = args.experiment_name
     top_features = args.top_features
+    logging.info(f"Processing experiment: {experiment_name}")
+    if top_features:
+        logging.info(f"Will process top {top_features} features")
 
     # Process a single experiment by loading the necessary data
     experiment = mlflow.get_experiment_by_name(experiment_name)
@@ -949,33 +989,41 @@ def main():
         return
 
     experiment_id = experiment.experiment_id
+    logging.info(f"Found experiment with ID: {experiment_id}")
 
     runs = mlflow.search_runs(
         experiment_ids=[experiment_id], order_by=["start_time desc"], max_results=1
     )
     if len(runs) == 0:
-        logging.error(f"No runs found in experiment '{experiment_name}'. Please check the experiment name and make sure it contains runs.")
+        logging.error(f"No runs found in experiment '{experiment_name}'. Please check the experiment name.")
         return
 
     run = runs.iloc[0]
     run_id = run.run_id
+    logging.info(f"Processing latest run with ID: {run_id}")
 
     artifact_uri = mlflow.get_run(run_id).info.artifact_uri
-    # Replace the placeholder with the actual path in your environment
+    # Replace the placeholder with the actual path
     artifact_uri = artifact_uri.replace(
         "mlflow-artifacts:",
         "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts"
     )
+    logging.info(f"Artifact URI: {artifact_uri}")
 
     shap_values_feather_path = os.path.join(artifact_uri, "shap_values_with_additional_columns.feather")
     output_dir = os.path.join(artifact_uri, '24_hourly_plot')
+    logging.info(f"SHAP values file path: {shap_values_feather_path}")
+    logging.info(f"Output directory: {output_dir}")
 
     os.makedirs(output_dir, exist_ok=True)
+    logging.info(f"Created output directory: {output_dir}")
 
-    # If summary plots only flag is set, generate only summary plots and exit
+    # If summary plots only flag is set
     if args.summary_plots_only:
+        logging.info("Generating summary plots only...")
         # Load the shap values with additional columns
         shap_df = pd.read_feather(shap_values_feather_path)
+        logging.info("Loaded SHAP values from feather file")
         
         # Create a copy of the original data before dropping columns
         feature_values_df = shap_df.copy()
@@ -983,17 +1031,20 @@ def main():
         # Generate summary plots for global data
         summary_dir = os.path.join(output_dir, 'summary_plots')
         os.makedirs(summary_dir, exist_ok=True)
+        logging.info(f"Created summary plots directory: {summary_dir}")
         
         # Get SHAP columns and corresponding feature columns
         shap_cols = [col for col in shap_df.columns if col.endswith('_shap')]
         feature_cols = [col.replace('_shap', '') for col in shap_cols]
+        logging.info(f"Found {len(shap_cols)} SHAP columns")
         
         # Drop non-feature columns for SHAP values
         columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'base_value']
         shap_df_cleaned = shap_df.drop(columns=columns_to_drop, errors='ignore')
+        logging.info("Cleaned SHAP dataframe by dropping non-feature columns")
         
         # Generate summary plots for global data
-        print("Generating global summary plots...")
+        logging.info("Generating global summary plots...")
         generate_summary_plots(
             shap_df_cleaned[shap_cols],
             feature_values_df[feature_cols],
@@ -1002,8 +1053,10 @@ def main():
         
         # Generate summary plots for each KGMajorClass
         if 'KGMajorClass' in feature_values_df.columns:
-            for kg_class in feature_values_df['KGMajorClass'].unique():
-                print(f"Generating summary plots for {kg_class}...")
+            kg_classes = feature_values_df['KGMajorClass'].unique()
+            logging.info(f"Found {len(kg_classes)} climate zones: {kg_classes}")
+            for kg_class in kg_classes:
+                logging.info(f"Generating summary plots for climate zone: {kg_class}")
                 kg_mask = feature_values_df['KGMajorClass'] == kg_class
                 generate_summary_plots(
                     shap_df_cleaned[kg_mask][shap_cols],
@@ -1012,14 +1065,16 @@ def main():
                     kg_class
                 )
         
-        print(f"Summary plots have been generated in {summary_dir}")
+        logging.info(f"Summary plots have been generated in {summary_dir}")
         return
 
     output_feature_group = os.path.join(output_dir, 'shap_feature_group.feather')
     output_pivot = os.path.join(output_dir, 'shap_pivot.feather')
     output_feature = os.path.join(output_dir, 'shap_feature.feather')
+    logging.info("Defined output file paths for feature group, pivot, and feature data")
 
     # Report SHAP contribution
+    logging.info("Generating SHAP contribution analysis...")
     df_feature_group, df_feature, base_value = report_shap_contribution_from_feather(
         shap_values_feather_path,
         output_dir,
@@ -1027,28 +1082,33 @@ def main():
         output_pivot,
         output_feature
     )
-    print("SHAP contribution by hour generated.")
+    logging.info(f"SHAP contribution analysis completed. Base value: {base_value}")
 
     if args.day_night_summary_only:
-        # Only generate the day/night summary
+        logging.info("Generating day/night summary only...")
         summary_df, pivot_df = create_day_night_summary(df_feature_group, output_dir)
-        print("\nFeature Group Day/Night Summary:")
-        print(pivot_df)
+        logging.info("\nFeature Group Day/Night Summary:")
+        logging.info("\n" + str(pivot_df))
         return
 
-    # Rest of the code for generating plots (only runs if day_night_summary_only is False)
+    # Load feature values
+    logging.info("Loading feature values...")
     feature_values_melted = load_feature_values(shap_values_feather_path)
+    logging.info(f"Loaded {len(feature_values_melted)} feature value records")
 
-    # Optionally select top features
+    # Process top features if specified
     if top_features is not None:
-        # Get top features based on total SHAP values
+        logging.info(f"Selecting top {top_features} features...")
         top_features_list = get_top_features(df_feature, top_features)
+        logging.info(f"Selected features: {top_features_list}")
         df_feature = df_feature[df_feature['Feature'].isin(top_features_list)]
         feature_values_melted = feature_values_melted[feature_values_melted['Feature'].isin(top_features_list)]
 
     # Generate plots for global data and each KGMajorClass
     kg_major_classes = df_feature['KGMajorClass'].unique().tolist()
+    logging.info(f"Found {len(kg_major_classes)} climate zones for plotting: {kg_major_classes}")
 
+    logging.info("Generating SHAP and feature value plots...")
     plot_shap_and_feature_values(
         df_feature,
         feature_values_melted,
@@ -1058,7 +1118,8 @@ def main():
         show_total_feature_line=not args.hide_total_feature_line
     )
 
-    # Generate stacked bar plot for global data grouped by 'local_hour'
+    # Generate global stacked bar plot
+    logging.info("Generating global stacked bar plot...")
     output_path_global = os.path.join(output_dir, 'feature_group_contribution_by_hour_global.png')
     plot_feature_group_stacked_bar(
         df_feature_group,
@@ -1068,9 +1129,11 @@ def main():
         base_value=base_value
     )
 
-    # Generate stacked bar plot for each KGMajorClass grouped by 'local_hour'
+    # Generate plots for each climate zone
+    logging.info("Generating climate zone-specific stacked bar plots...")
     kg_classes = df_feature_group['KGMajorClass'].unique()
     for kg_major_class in kg_classes:
+        logging.info(f"Processing climate zone: {kg_major_class}")
         kg_hourly_data = df_feature_group[df_feature_group['KGMajorClass'] == kg_major_class]
         output_path_kg = os.path.join(output_dir, f'feature_group_contribution_by_hour_{kg_major_class}.png')
         plot_feature_group_stacked_bar(
@@ -1081,12 +1144,14 @@ def main():
             base_value=base_value
         )
 
-    # After generating all the plots, create the day/night summary
+    # Create final summary
+    logging.info("Generating final day/night summary...")
     summary_df, pivot_df = create_day_night_summary(df_feature_group, output_dir)
-    
-    # Print the summary to console
-    print("\nFeature Group Day/Night Summary:")
-    print(pivot_df)
+    logging.info("\nFeature Group Day/Night Summary:")
+    logging.info("\n" + str(pivot_df))
+
+    logging.info("Analysis completed successfully.")
+    logging.info(f"All outputs have been saved to: {output_dir}")
 
 if __name__ == "__main__":
     main()
