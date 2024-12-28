@@ -802,11 +802,12 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
-    # Get feature names (removing '_shap' suffix)
-    feature_names = [col.replace('_shap', '') for col in shap_df.columns]
+    # Get feature names (columns ending with '_shap')
+    shap_cols = [col for col in shap_df.columns if col.endswith('_shap')]
+    feature_names = [col.replace('_shap', '') for col in shap_cols]
     
     # Convert SHAP values to numpy array
-    shap_values = shap_df.values
+    shap_values = shap_df[shap_cols].values
     
     # Convert feature values to numpy array
     feature_values = feature_values_df[feature_names].values
@@ -836,14 +837,16 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
     for group in group_names:
         # Get features in this group
         group_features = [f for f, g in feature_groups.items() if g == group]
-        group_indices = [feature_names.index(feat) for feat in group_features]
+        
+        # Get corresponding SHAP columns for this group
+        group_shap_cols = [f"{f}_shap" for f in group_features]
         
         # Sum SHAP values for features in the group
-        group_shap = shap_values[:, [feature_names.index(f + '_shap') for f in group_features]].sum(axis=1)
+        group_shap = shap_df[group_shap_cols].values.sum(axis=1)
         group_shap_values.append(group_shap)
         
         # Average feature values for the group
-        group_feat = feature_values[:, group_indices].mean(axis=1)
+        group_feat = feature_values_df[group_features].values.mean(axis=1)
         group_feature_values.append(group_feat)
     
     # Convert to numpy arrays
