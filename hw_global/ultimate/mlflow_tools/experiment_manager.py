@@ -45,7 +45,7 @@ class ExperimentManager:
         )
 
         if runs.empty:
-            print(f"No runs found for experiment '{experiment_name}'")
+            logging.warning(f"No runs found for experiment '{experiment_name}'")
             return
 
         # Process only the latest run
@@ -57,11 +57,26 @@ class ExperimentManager:
                 tracking_uri=self.tracking_uri,
             )
             exp_obj._load_model(model_subdur)
+            
+            # Check if shap_df is empty
+            if exp_obj.shap_df is None or exp_obj.shap_df.empty:
+                logging.warning(f"SHAP data is empty for experiment '{experiment_name}', run '{run.run_id}'. Skipping.")
+                return
+
             for generate_func in generate_funcs:
-                generate_func(exp_obj)
+                try:
+                    generate_func(exp_obj)
+                except Exception as e:
+                    logging.error(
+                        f"Error generating plot for experiment '{experiment_name}', run '{run.run_id}': {e}"
+                    )
             del exp_obj
         except FileNotFoundError as e:
-            print(e)
+            logging.error(f"File not found error: {e}")
+        except Exception as e:
+            logging.error(
+                f"Error processing experiment '{experiment_name}', run '{run.run_id}': {e}"
+            )
 
     def process_experiments(
         self,

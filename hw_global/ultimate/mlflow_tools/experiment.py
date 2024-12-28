@@ -1,3 +1,4 @@
+import shutil
 import mlflow
 import pandas as pd
 import os
@@ -59,8 +60,12 @@ class Experiment:
         self.shap_values: np.ndarray = None
         self.feature_values: np.ndarray = None
         self.model = None
+        self.explanation = None
+        self.waterfall_explanation = None
         self._setup_mlflow()
         self._load_data()
+        if self.shap_df is not None:
+            self._create_explanations()
         # self._load_model()
 
     def _setup_mlflow(self):
@@ -125,9 +130,26 @@ class Experiment:
         model_path = os.path.join(self.artifact_uri, model_subdur)
         self.model = mlflow.catboost.load_model(model_path)
 
+    def _create_explanations(self):
+        """Creates SHAP explanation objects for plots"""
+        # Create explanation for full dataset
+        self.explanation = shap.Explanation(
+            values=self.shap_values,
+            data=self.feature_values,
+            feature_names=self.feature_names
+        )
+        
+        # Create explanation for waterfall plot (first row only)
+        self.waterfall_explanation = shap.Explanation(
+            values=self.shap_values[0, :],
+            base_values=self.shap_df["base_value"].iloc[0],
+            data=self.feature_values[0, :],
+            feature_names=self.feature_names,
+        )
+
     def generate_summary_shap_plot(self):
         """
-        Generates a SHAP summary plot for the experiment run.
+        Generates a SHAP beeswarm plot for the experiment run.
         """
         base_dir: str = "."
         logging.info("Starting generate_summary_shap_plot method")
@@ -139,16 +161,10 @@ class Experiment:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         plt.figure(figsize=(12, 8))
-        shap.summary_plot(
-            self.shap_values,
-            self.feature_values,
-            feature_names=self.feature_names,
-            show=False,
-            plot_size=(12, 8),
-        )
+        shap.plots.beeswarm(self.explanation, show=False)
         plt.title(f"Feature Summary Plot - {self.experiment_name}")
         plt.tight_layout()
-        plt.savefig(output_path, bbox_inches="tight", dpi=300)
+        plt.savefig(output_path, dpi=300)
         plt.close()
         logging.info(f"Generated summary SHAP plot at {output_path}")
 
@@ -214,6 +230,16 @@ class Experiment:
 
         # Use base_dir directly under artifact_uri
         output_dir = os.path.join(self.artifact_uri, base_dir)
+        bk_dir = os.path.join(output_dir, 'bk')
+        # Start Generation Here
+        if os.path.exists(bk_dir):
+            shutil.rmtree(bk_dir)
+        os.makedirs(bk_dir, exist_ok=True)
+        for item in os.listdir(output_dir):
+            if item != 'bk':
+                source = os.path.join(output_dir, item)
+                destination = os.path.join(bk_dir, item)
+                shutil.move(source, destination)
         logging.info(f"Using output directory: {output_dir}")
 
         for feature_index, target_feature_name in enumerate(self.feature_names):
@@ -222,19 +248,14 @@ class Experiment:
             )
 
             # Get top 3 interacting features for the target feature
-            logging.info("Calculating top 3 interacting features")
-            explanation = shap.Explanation(
-                values=self.shap_values,
-                data=self.feature_values,
-                feature_names=self.feature_names,
-            )
+            logging.info("Calculating top 5 interacting features")
             interaction_indices = shap.utils.potential_interactions(
-                explanation[:, target_feature_name], explanation
+                self.explanation[:, target_feature_name], self.explanation
             )
 
-            # Handle cases with fewer than 3 interactions
+            # Handle cases with fewer than 5 interactions
             top_interaction_indices = interaction_indices[
-                : min(3, len(interaction_indices))
+                : min(5, len(interaction_indices))
             ]
             top_interacting_features = [
                 self.feature_names[i]
@@ -254,8 +275,8 @@ class Experiment:
                     f"Creating dependency plot for {target_feature_name} vs {interacting_feature_name} (rank {rank})"
                 )
                 shap.plots.scatter(
-                    explanation[:, target_feature_name],
-                    color=explanation[:, interacting_feature_name],
+                    self.explanation[:, target_feature_name],
+                    color=self.explanation[:, interacting_feature_name],
                     show=False,
                 )
                 plt.title(
@@ -409,17 +430,8 @@ class Experiment:
         logging.info(f"Creating directory: {os.path.dirname(output_path)}")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-        # Create a SHAP Explanation object
-        explanation = shap.Explanation(
-            values=self.shap_values[0, :],
-            base_values=self.shap_df["base_value"].iloc[0],
-            data=self.feature_values[0, :],
-            feature_names=self.feature_names,
-        )
-
-        # Generate the waterfall plot
         plt.figure(figsize=(12, 8))
-        shap.plots.waterfall(explanation, show=False)
+        shap.plots.waterfall(self.waterfall_explanation, show=False)
         plt.title(f"Waterfall Plot - {self.experiment_name}")
         plt.tight_layout()
         plt.savefig(output_path, bbox_inches="tight", dpi=300)
