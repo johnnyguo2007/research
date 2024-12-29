@@ -805,6 +805,9 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
         output_dir (str): Directory to save output plots
         kg_class (str): Name of the climate zone (default: 'Global')
     """
+    logging.info(f"Starting generate_summary_plots with shap_df shape: {shap_df.shape} and feature_values_df shape: {feature_values_df.shape}")
+    logging.info(f"SHAP columns: {shap_df.columns}")
+    logging.info(f"Feature values columns: {feature_values_df.columns}")
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
@@ -867,8 +870,8 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
         group_shap = shap_df[group_shap_cols].values.sum(axis=1)
         group_shap_values.append(group_shap)
         
-        # Average feature values for the group
-        group_feat = feature_values_df[group_features].values.mean(axis=1)
+        # sum feature values for the group
+        group_feat = feature_values_df[group_features].values.sum(axis=1)
         group_feature_values.append(group_feat)
     
     # Convert to numpy arrays
@@ -929,15 +932,213 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
         print(f"Warning: Failed to generate waterfall plot for {kg_class}: {str(e)}")
         plt.close()
 
-def main():
-    logging.info("Starting feature contribution analysis...")
+def get_experiment_and_run(experiment_name):
+    """
+    Retrieves the experiment and the latest run from MLflow.
+
+    Args:
+        experiment_name (str): Name of the MLflow experiment.
+
+    Returns:
+        tuple: The experiment ID and the latest run ID.
+    """
+    mlflow.set_tracking_uri(uri="http://192.168.4.85:8080")
+    logging.info("Set MLflow tracking URI")
+
+    experiment = mlflow.get_experiment_by_name(experiment_name)
+    if experiment is None:
+        logging.error(f"Experiment '{experiment_name}' not found.")
+        return None, None
+
+    experiment_id = experiment.experiment_id
+    logging.info(f"Found experiment with ID: {experiment_id}")
+
+    runs = mlflow.search_runs(
+        experiment_ids=[experiment_id], order_by=["start_time desc"], max_results=1
+    )
+    if len(runs) == 0:
+        logging.error(f"No runs found in experiment '{experiment_name}'.")
+        return experiment_id, None
+
+    run = runs.iloc[0]
+    run_id = run.run_id
+    logging.info(f"Processing latest run with ID: {run_id}")
+
+    return experiment_id, run_id
+
+def prepare_shap_data(shap_df, feature_values_df, kg_class=None):
+    """
+    Prepares SHAP data for plotting by filtering and organizing values.
     
-    # Initialize the argument parser
+    Args:
+        shap_df (pd.DataFrame): DataFrame containing SHAP values
+        feature_values_df (pd.DataFrame): DataFrame containing feature values
+        kg_class (str, optional): Climate zone to filter by
+        
+    Returns:
+        tuple: (shap_plot_df, feature_values_plot_df)
+    """
+    # Filter by climate zone if specified
+    if kg_class and kg_class != 'global':
+        mask = feature_values_df['KGMajorClass'] == kg_class
+        shap_df = shap_df[mask]
+        feature_values_df = feature_values_df[mask]
+
+    # Get SHAP columns and corresponding feature columns
+    shap_cols = [col for col in shap_df.columns if col.endswith('_shap')]
+    feature_cols = [col.replace('_shap', '') for col in shap_cols]
+
+    return shap_df[shap_cols], feature_values_df[feature_cols]
+
+def prepare_feature_group_data(df_feature, kg_class=None):
+    """
+    Prepares feature group data for plotting.
+    
+    Args:
+        df_feature (pd.DataFrame): DataFrame containing feature data
+        kg_class (str, optional): Climate zone to filter by
+        
+    Returns:
+        pd.DataFrame: Processed feature group data
+    """
+    if kg_class and kg_class != 'global':
+        df_feature = df_feature[df_feature['KGMajorClass'] == kg_class]
+    
+    return df_feature
+
+def main():
+    """Main function to process SHAP values and generate plots."""
+    logging.info("Starting feature contribution analysis...")
+
+    # Parse arguments
+    args = parse_arguments()
+    logging.info(f"Parsed command line arguments: {vars(args)}")
+
+    # Get experiment and run
+    experiment_id, run_id = get_experiment_and_run(args.experiment_name)
+    if experiment_id is None or run_id is None:
+        return
+
+    # Setup paths
+    artifact_uri = mlflow.get_run(run_id).info.artifact_uri
+    artifact_uri = artifact_uri.replace(
+        "mlflow-artifacts:",
+        "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts"
+    )
+    shap_values_feather_path = os.path.join(artifact_uri, "shap_values_with_additional_columns.feather")
+    output_dir = os.path.join(artifact_uri, '24_hourly_plot')
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load raw data
+    shap_df = pd.read_feather(shap_values_feather_path)
+    feature_values_df = shap_df.copy()
+    base_value = shap_df['base_value'].iloc[0] if 'base_value' in shap_df.columns else 0
+
+    # Clean data
+    columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'base_value']
+    shap_df_cleaned = shap_df.drop(columns=columns_to_drop, errors='ignore')
+
+    # Generate summary plots if requested
+    if args.summary_plots_only:
+        summary_dir = os.path.join(output_dir, 'summary_plots') 
+        os.makedirs(summary_dir, exist_ok=True)
+        
+        # Get SHAP columns and corresponding feature columns
+        shap_cols = [col for col in shap_df_cleaned.columns if col.endswith('_shap')]
+        feature_cols = [col.replace('_shap', '') for col in shap_cols]
+        
+        # Generate summary plots for global data
+        generate_summary_plots(
+            shap_df_cleaned[shap_cols],
+            feature_values_df[feature_cols],
+            summary_dir
+        )
+        
+        # Generate summary plots for each KGMajorClass
+        if 'KGMajorClass' in feature_values_df.columns:
+            for kg_class in feature_values_df['KGMajorClass'].unique():
+                kg_mask = feature_values_df['KGMajorClass'] == kg_class
+                generate_summary_plots(
+                    shap_df_cleaned[kg_mask][shap_cols],
+                    feature_values_df[kg_mask][feature_cols], 
+                    summary_dir,
+                    kg_class
+                )
+        return
+
+    # Process SHAP values and generate feature group data
+    df_feature_group, df_feature, base_value = report_shap_contribution_from_feather(
+        shap_values_feather_path,
+        output_dir,
+        os.path.join(output_dir, 'shap_feature_group.feather'),
+        os.path.join(output_dir, 'shap_pivot.feather'),
+        os.path.join(output_dir, 'shap_feature.feather')
+    )
+
+    # Generate day/night summary if requested
+    if args.day_night_summary_only:
+        summary_df, pivot_df = create_day_night_summary(df_feature_group, output_dir)
+        logging.info("\nFeature Group Day/Night Summary:")
+        logging.info("\n" + str(pivot_df))
+        return
+
+    # Load and prepare feature values for plotting
+    feature_values_melted = load_feature_values(shap_values_feather_path)
+    
+    # Generate plots for each climate zone
+    kg_classes = ['global'] + df_feature['KGMajorClass'].unique().tolist()
+    for kg_class in kg_classes:
+        # Prepare data for current climate zone
+        feature_group_data = prepare_feature_group_data(df_feature, kg_class)
+        
+        # Generate stacked bar plot
+        plot_title = 'Global Feature Group Contribution by Hour' if kg_class == 'global' else \
+                    f'Feature Group Contribution by Hour for {kg_class}'
+        output_path = os.path.join(output_dir, f'feature_group_contribution_by_hour_{kg_class}.png')
+        
+        plot_feature_group_stacked_bar(
+            feature_group_data,
+            'local_hour',
+            output_path,
+            plot_title,
+            base_value
+        )
+        
+        # Generate SHAP and feature value plots
+        plot_shap_and_feature_values_for_group(
+            shap_df=feature_group_data.pivot_table(
+                index='local_hour',
+                columns='Feature',
+                values='Value',
+                fill_value=0
+            ),
+            feature_values_df=feature_values_melted[feature_values_melted['KGMajorClass'] == kg_class] if kg_class != 'global' else feature_values_melted,
+            group_name=kg_class,
+            output_dir=output_dir,
+            kg_class=kg_class,
+            color_mapping=dict(zip(feature_group_data['Feature'].unique(), sns.color_palette('tab20'))),
+            base_value=base_value,
+            show_total_feature_line=not args.hide_total_feature_line
+        )
+
+    # Create final summary
+    summary_df, pivot_df = create_day_night_summary(df_feature_group, output_dir)
+    logging.info("\nFeature Group Day/Night Summary:")
+    logging.info("\n" + str(pivot_df))
+    
+    logging.info("Analysis completed successfully.")
+    logging.info(f"All outputs have been saved to: {output_dir}")
+
+def parse_arguments():
+    """
+    Parses command-line arguments.
+
+    Returns:
+        argparse.Namespace: Parsed arguments.
+    """
     parser = argparse.ArgumentParser(
         description="Report and plot SHAP value contributions by feature group and hour."
     )
-
-    # Add command-line arguments
     parser.add_argument(
         '--experiment-name',
         type=str,
@@ -967,191 +1168,7 @@ def main():
         default=False,
         help='Only generate the summary plots then exit.'
     )
-
-    # Parse the arguments
-    args = parser.parse_args()
-    logging.info(f"Parsed command line arguments: {vars(args)}")
-
-    mlflow.set_tracking_uri(uri="http://192.168.4.85:8080")
-    logging.info("Set MLflow tracking URI")
-
-    # Extract arguments
-    experiment_name = args.experiment_name
-    top_features = args.top_features
-    logging.info(f"Processing experiment: {experiment_name}")
-    if top_features:
-        logging.info(f"Will process top {top_features} features")
-
-    # Process a single experiment by loading the necessary data
-    experiment = mlflow.get_experiment_by_name(experiment_name)
-    if experiment is None:
-        logging.error(f"Experiment '{experiment_name}' not found.")
-        return
-
-    experiment_id = experiment.experiment_id
-    logging.info(f"Found experiment with ID: {experiment_id}")
-
-    runs = mlflow.search_runs(
-        experiment_ids=[experiment_id], order_by=["start_time desc"], max_results=1
-    )
-    if len(runs) == 0:
-        logging.error(f"No runs found in experiment '{experiment_name}'. Please check the experiment name.")
-        return
-
-    run = runs.iloc[0]
-    run_id = run.run_id
-    logging.info(f"Processing latest run with ID: {run_id}")
-
-    artifact_uri = mlflow.get_run(run_id).info.artifact_uri
-    # Replace the placeholder with the actual path
-    artifact_uri = artifact_uri.replace(
-        "mlflow-artifacts:",
-        "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts"
-    )
-    logging.info(f"Artifact URI: {artifact_uri}")
-
-    shap_values_feather_path = os.path.join(artifact_uri, "shap_values_with_additional_columns.feather")
-    output_dir = os.path.join(artifact_uri, '24_hourly_plot')
-    logging.info(f"SHAP values file path: {shap_values_feather_path}")
-    logging.info(f"Output directory: {output_dir}")
-
-    os.makedirs(output_dir, exist_ok=True)
-    logging.info(f"Created output directory: {output_dir}")
-
-    # If summary plots only flag is set
-    if args.summary_plots_only:
-        logging.info("Generating summary plots only...")
-        # Load the shap values with additional columns
-        shap_df = pd.read_feather(shap_values_feather_path)
-        logging.info("Loaded SHAP values from feather file")
-        
-        # Create a copy of the original data before dropping columns
-        feature_values_df = shap_df.copy()
-        
-        # Generate summary plots for global data
-        summary_dir = os.path.join(output_dir, 'summary_plots')
-        os.makedirs(summary_dir, exist_ok=True)
-        logging.info(f"Created summary plots directory: {summary_dir}")
-        
-        # Get SHAP columns and corresponding feature columns
-        shap_cols = [col for col in shap_df.columns if col.endswith('_shap')]
-        feature_cols = [col.replace('_shap', '') for col in shap_cols]
-        logging.info(f"Found {len(shap_cols)} SHAP columns")
-        
-        # Drop non-feature columns for SHAP values
-        columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'base_value']
-        shap_df_cleaned = shap_df.drop(columns=columns_to_drop, errors='ignore')
-        logging.info("Cleaned SHAP dataframe by dropping non-feature columns")
-        
-        # Generate summary plots for global data
-        logging.info("Generating global summary plots...")
-        generate_summary_plots(
-            shap_df_cleaned[shap_cols],
-            feature_values_df[feature_cols],
-            summary_dir
-        )
-        
-        # Generate summary plots for each KGMajorClass
-        if 'KGMajorClass' in feature_values_df.columns:
-            kg_classes = feature_values_df['KGMajorClass'].unique()
-            logging.info(f"Found {len(kg_classes)} climate zones: {kg_classes}")
-            for kg_class in kg_classes:
-                logging.info(f"Generating summary plots for climate zone: {kg_class}")
-                kg_mask = feature_values_df['KGMajorClass'] == kg_class
-                generate_summary_plots(
-                    shap_df_cleaned[kg_mask][shap_cols],
-                    feature_values_df[kg_mask][feature_cols],
-                    summary_dir,
-                    kg_class
-                )
-        
-        logging.info(f"Summary plots have been generated in {summary_dir}")
-        return
-
-    output_feature_group = os.path.join(output_dir, 'shap_feature_group.feather')
-    output_pivot = os.path.join(output_dir, 'shap_pivot.feather')
-    output_feature = os.path.join(output_dir, 'shap_feature.feather')
-    logging.info("Defined output file paths for feature group, pivot, and feature data")
-
-    # Report SHAP contribution
-    logging.info("Generating SHAP contribution analysis...")
-    df_feature_group, df_feature, base_value = report_shap_contribution_from_feather(
-        shap_values_feather_path,
-        output_dir,
-        output_feature_group,
-        output_pivot,
-        output_feature
-    )
-    logging.info(f"SHAP contribution analysis completed. Base value: {base_value}")
-
-    if args.day_night_summary_only:
-        logging.info("Generating day/night summary only...")
-        summary_df, pivot_df = create_day_night_summary(df_feature_group, output_dir)
-        logging.info("\nFeature Group Day/Night Summary:")
-        logging.info("\n" + str(pivot_df))
-        return
-
-    # Load feature values
-    logging.info("Loading feature values...")
-    feature_values_melted = load_feature_values(shap_values_feather_path)
-    logging.info(f"Loaded {len(feature_values_melted)} feature value records")
-
-    # Process top features if specified
-    if top_features is not None:
-        logging.info(f"Selecting top {top_features} features...")
-        top_features_list = get_top_features(df_feature, top_features)
-        logging.info(f"Selected features: {top_features_list}")
-        df_feature = df_feature[df_feature['Feature'].isin(top_features_list)]
-        feature_values_melted = feature_values_melted[feature_values_melted['Feature'].isin(top_features_list)]
-
-    # Generate plots for global data and each KGMajorClass
-    kg_major_classes = df_feature['KGMajorClass'].unique().tolist()
-    logging.info(f"Found {len(kg_major_classes)} climate zones for plotting: {kg_major_classes}")
-
-    logging.info("Generating SHAP and feature value plots...")
-    plot_shap_and_feature_values(
-        df_feature,
-        feature_values_melted,
-        kg_major_classes,
-        output_dir,
-        base_value=base_value,
-        show_total_feature_line=not args.hide_total_feature_line
-    )
-
-    # Generate global stacked bar plot
-    logging.info("Generating global stacked bar plot...")
-    output_path_global = os.path.join(output_dir, 'feature_group_contribution_by_hour_global.png')
-    plot_feature_group_stacked_bar(
-        df_feature_group,
-        group_by_column='local_hour',
-        output_path=output_path_global,
-        title='Global Feature Group Contribution by Hour',
-        base_value=base_value
-    )
-
-    # Generate plots for each climate zone
-    logging.info("Generating climate zone-specific stacked bar plots...")
-    kg_classes = df_feature_group['KGMajorClass'].unique()
-    for kg_major_class in kg_classes:
-        logging.info(f"Processing climate zone: {kg_major_class}")
-        kg_hourly_data = df_feature_group[df_feature_group['KGMajorClass'] == kg_major_class]
-        output_path_kg = os.path.join(output_dir, f'feature_group_contribution_by_hour_{kg_major_class}.png')
-        plot_feature_group_stacked_bar(
-            kg_hourly_data,
-            group_by_column='local_hour',
-            output_path=output_path_kg,
-            title=f'Feature Group Contribution by Hour for {kg_major_class}',
-            base_value=base_value
-        )
-
-    # Create final summary
-    logging.info("Generating final day/night summary...")
-    summary_df, pivot_df = create_day_night_summary(df_feature_group, output_dir)
-    logging.info("\nFeature Group Day/Night Summary:")
-    logging.info("\n" + str(pivot_df))
-
-    logging.info("Analysis completed successfully.")
-    logging.info(f"All outputs have been saved to: {output_dir}")
+    return parser.parse_args()
 
 if __name__ == "__main__":
     main()
