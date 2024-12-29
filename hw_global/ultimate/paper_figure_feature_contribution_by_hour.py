@@ -8,6 +8,7 @@ import logging
 import mlflow
 import seaborn as sns
 import shap
+from typing import List, Dict, Tuple, Optional
 
 # Configure logging
 logging.basicConfig(
@@ -16,7 +17,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-def get_feature_groups(feature_names):
+def get_feature_groups(feature_names: List[str]) -> Dict[str, str]:
     """
     Assign features to groups based on specified rules.
 
@@ -40,7 +41,16 @@ def get_feature_groups(feature_names):
         feature_groups[feature] = group
     return feature_groups
 
-def replace_cold_with_continental(kg_main_group):
+def replace_cold_with_continental(kg_main_group: str) -> str:
+    """
+    Replaces 'Cold' with 'Continental' in the given string.
+
+    Args:
+        kg_main_group (str): The input string.
+
+    Returns:
+        str: The modified string with 'Cold' replaced by 'Continental'.
+    """
     if kg_main_group == 'Cold':
         return 'Continental'
     return kg_main_group
@@ -49,7 +59,7 @@ def replace_cold_with_continental(kg_main_group):
 lookup_df = pd.read_excel('/home/jguo/research/hw_global/Data/var_name_unit_lookup.xlsx')
 lookup_dict = dict(zip(lookup_df['Variable'], lookup_df['LaTeX']))
 
-def get_latex_label(feature_name):
+def get_latex_label(feature_name: str) -> str:
     """
     Retrieves the LaTeX label for a given feature based on its feature group.
     
@@ -85,7 +95,7 @@ def get_latex_label(feature_name):
     final_label = f"{symbol}{latex_label}".strip()
     return final_label
 
-def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, output_feature_group, output_pivot, output_feature):
+def report_shap_contribution_from_feather(shap_values_feather_path: str, output_dir: str, output_feature_group: str, output_pivot: str, output_feature: str) -> Tuple[pd.DataFrame, pd.DataFrame, float]:
     """
     Reports SHAP value contributions from each feature group and feature by hour and by KGMajorClass
     using data from a Feather file.
@@ -100,15 +110,8 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     # Load the shap values with additional columns
     shap_df = pd.read_feather(shap_values_feather_path)
     
-    # Extract base_value before dropping columns
-    base_value = shap_df['base_value'].iloc[0] if 'base_value' in shap_df.columns else 0
-    
-    # Create a copy of the original data before dropping columns
-    feature_values_df = shap_df.copy()
-    
-    # Drop specified columns
-    columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'base_value']
-    shap_df = shap_df.drop(columns=columns_to_drop, errors='ignore')
+    # Extract SHAP and feature columns
+    shap_cols, feature_cols = extract_shap_and_feature_columns(shap_df)
     
     # Generate summary plots for global data
     summary_dir = os.path.join(output_dir, 'summary_plots')
@@ -119,19 +122,20 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     feature_cols = [col.replace('_shap', '') for col in shap_cols]
     
     # Generate summary plots for global data
+    feature_values_df = shap_df[feature_cols + ['KGMajorClass']] if 'KGMajorClass' in shap_df.columns else shap_df[feature_cols]
     generate_summary_plots(
         shap_df[shap_cols],
-        feature_values_df[feature_cols],
+        feature_values_df,
         summary_dir
     )
     
     # Generate summary plots for each KGMajorClass
-    if 'KGMajorClass' in feature_values_df.columns:
-        for kg_class in feature_values_df['KGMajorClass'].unique():
-            kg_mask = feature_values_df['KGMajorClass'] == kg_class
+    if 'KGMajorClass' in shap_df.columns:
+        for kg_class in shap_df['KGMajorClass'].unique():
+            kg_mask = shap_df['KGMajorClass'] == kg_class
             generate_summary_plots(
                 shap_df[kg_mask][shap_cols],
-                feature_values_df[kg_mask][feature_cols],
+                feature_values_df[kg_mask],
                 summary_dir,
                 kg_class
             )
@@ -222,9 +226,11 @@ def report_shap_contribution_from_feather(shap_values_feather_path, output_dir, 
     df_feature.to_feather(output_feature)
     logging.info(f"Saved per-feature dataframe to Feather file at {output_feature}")
     
+    base_value = shap_df['base_value'].iloc[0] if 'base_value' in shap_df.columns else 0
+    
     return df_feature_group, df_feature, base_value
 
-def load_feature_values(shap_values_feather_path):
+def load_feature_values(shap_values_feather_path: str) -> pd.DataFrame:
     """
     Loads feature values from the shap_values_with_additional_columns.feather file.
 
@@ -268,7 +274,7 @@ def load_feature_values(shap_values_feather_path):
 
     return feature_values_melted
 
-def get_top_features(df, top_n):
+def get_top_features(df: pd.DataFrame, top_n: int) -> List[str]:
     """
     Gets the list of top features based on total contribution.
 
@@ -283,8 +289,7 @@ def get_top_features(df, top_n):
     top_features_list = feature_totals.sort_values(ascending=False).head(top_n).index.tolist()
     return top_features_list
 
-
-def save_plot_data(df, total_values, output_path, plot_type):
+def save_plot_data(df: pd.DataFrame, total_values: pd.Series, output_path: str, plot_type: str) -> None:
     """
     Save plot data to CSV files, including both individual values and totals.
     
@@ -308,7 +313,7 @@ def save_plot_data(df, total_values, output_path, plot_type):
     
     logging.info(f"Saved {plot_type} data to {base_path}_{plot_type}_data.csv")
 
-def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, return_fig=False, base_value=0):
+def plot_shap_stacked_bar(shap_df: pd.DataFrame, title: str, output_path: str, color_mapping: Optional[Dict[str, str]] = None, return_fig: bool = False, base_value: float = 0) -> Optional[Tuple[plt.Figure, plt.Axes]]:
     """
     Plots a standalone SHAP stacked bar plot (all features) with a mean SHAP value curve.
     """
@@ -364,7 +369,7 @@ def plot_shap_stacked_bar(shap_df, title, output_path, color_mapping=None, retur
         'shap'
     )
 
-def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_name, output_dir, kg_class, color_mapping, base_value=0, show_total_feature_line=True):
+def plot_shap_and_feature_values_for_group(shap_df: pd.DataFrame, feature_values_df: pd.DataFrame, group_name: str, output_dir: str, kg_class: str, color_mapping: Dict[str, str], base_value: float = 0, show_total_feature_line: bool = True) -> None:
     """
     Plots SHAP value contributions and feature group's values side by side.
     
@@ -487,7 +492,7 @@ def plot_shap_and_feature_values_for_group(shap_df, feature_values_df, group_nam
         'feature'
     )
 
-def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, output_dir, base_value=0, show_total_feature_line=True):
+def plot_shap_and_feature_values(df_feature: pd.DataFrame, feature_values_melted: pd.DataFrame, kg_classes: List[str], output_dir: str, base_value: float = 0, show_total_feature_line: bool = True) -> None:
     """
     Plots SHAP value contributions and feature group's values side by side.
     
@@ -640,7 +645,7 @@ def plot_shap_and_feature_values(df_feature, feature_values_melted, kg_classes, 
             )
 
 # Define the function with 'Value' instead of 'Importance'
-def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base_value=0):
+def plot_feature_group_stacked_bar(df: pd.DataFrame, group_by_column: str, output_path: str, title: str, base_value: float = 0) -> None:
     """
     Plots a stacked bar chart of mean feature group contributions with mean SHAP value line.
     """
@@ -700,7 +705,7 @@ def plot_feature_group_stacked_bar(df, group_by_column, output_path, title, base
     plt.savefig(output_path, bbox_inches='tight')
     plt.close()
 
-def create_day_night_summary(df_feature_group, output_dir):
+def create_day_night_summary(df_feature_group: pd.DataFrame, output_dir: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Creates a summary DataFrame of day and night contributions for each feature group and KGMajorClass.
     
@@ -709,7 +714,7 @@ def create_day_night_summary(df_feature_group, output_dir):
         output_dir: Directory to save the output summary
     """
     # Create empty lists to store results
-    rows = []
+    rows: List[Dict] = []
     
     # Process global data first
     for period, hour_mask in [
@@ -795,7 +800,45 @@ def create_day_night_summary(df_feature_group, output_dir):
     
     return summary_df, pivot_df
 
-def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Global'):
+def calculate_group_shap_values(shap_df: pd.DataFrame, feature_values_df: pd.DataFrame, feature_groups: Dict[str, str]) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    """
+    Calculate group-level SHAP values and feature values.
+    
+    Args:
+        shap_df (pd.DataFrame): DataFrame containing SHAP values
+        feature_values_df (pd.DataFrame): DataFrame containing feature values
+        feature_groups (dict): Mapping from features to their groups
+        
+    Returns:
+        tuple: (group_shap_values, group_feature_values, group_names)
+    """
+    # Get unique group names
+    group_names = list(set(feature_groups.values()))
+    group_shap_values = []
+    group_feature_values = []
+    
+    for group in group_names:
+        # Get features in this group
+        group_features = [f for f, g in feature_groups.items() if g == group]
+        
+        # Get corresponding SHAP columns
+        group_shap_cols = [f"{f}_shap" for f in group_features]
+        
+        # Sum SHAP values for features in the group
+        group_shap = shap_df[group_shap_cols].values.sum(axis=1)
+        group_shap_values.append(group_shap)
+        
+        # Sum feature values for the group
+        group_feat = feature_values_df[group_features].values.sum(axis=1)
+        group_feature_values.append(group_feat)
+    
+    # Convert to numpy arrays
+    group_shap_values = np.array(group_shap_values).T
+    group_feature_values = np.array(group_feature_values).T
+    
+    return group_shap_values, group_feature_values, group_names
+
+def generate_summary_plots(shap_df: pd.DataFrame, feature_values_df: pd.DataFrame, output_dir: str, kg_class: str = 'Global', group_data: Optional[Tuple[np.ndarray, np.ndarray, List[str]]] = None) -> None:
     """
     Generate feature summary plot, feature group summary plot and waterfall plot.
     
@@ -804,10 +847,10 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
         feature_values_df (pd.DataFrame): DataFrame containing feature values
         output_dir (str): Directory to save output plots
         kg_class (str): Name of the climate zone (default: 'Global')
+        group_data (tuple): Optional tuple of (group_shap_values, group_feature_values, group_names)
     """
     logging.info(f"Starting generate_summary_plots with shap_df shape: {shap_df.shape} and feature_values_df shape: {feature_values_df.shape}")
-    logging.info(f"SHAP columns: {shap_df.columns}")
-    logging.info(f"Feature values columns: {feature_values_df.columns}")
+    
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
@@ -851,37 +894,16 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
         logging.error(f"Failed to generate feature summary plot for {kg_class}: {str(e)}")
         plt.close()
     
-    # Get feature groups
-    feature_groups = get_feature_groups(feature_names)
-    
-    # Calculate group-level SHAP values
-    group_names = list(set(feature_groups.values()))
-    group_shap_values = []
-    group_feature_values = []
-    
-    for group in group_names:
-        # Get features in this group
-        group_features = [f for f, g in feature_groups.items() if g == group]
-        
-        # Get corresponding SHAP columns
-        group_shap_cols = [f"{f}_shap" for f in group_features]
-        
-        # Sum SHAP values for features in the group
-        group_shap = shap_df[group_shap_cols].values.sum(axis=1)
-        group_shap_values.append(group_shap)
-        
-        # sum feature values for the group
-        group_feat = feature_values_df[group_features].values.sum(axis=1)
-        group_feature_values.append(group_feat)
-    
-    # Convert to numpy arrays
-    group_shap_values = np.array(group_shap_values).T
-    group_feature_values = np.array(group_feature_values).T
-    
-    # Check if group arrays are empty
-    if group_shap_values.size == 0 or group_feature_values.size == 0:
-        print(f"Warning: Empty group SHAP values or feature values array for {kg_class}. Skipping group summary plots.")
-        return
+    # Use provided group data or calculate if not provided
+    if group_data is None:
+        feature_groups = get_feature_groups(feature_names)
+        group_shap_values, group_feature_values, group_names = calculate_group_shap_values(
+            shap_df,
+            feature_values_df,
+            feature_groups
+        )
+    else:
+        group_shap_values, group_feature_values, group_names = group_data
     
     try:
         # Generate feature group summary plot
@@ -932,7 +954,7 @@ def generate_summary_plots(shap_df, feature_values_df, output_dir, kg_class='Glo
         print(f"Warning: Failed to generate waterfall plot for {kg_class}: {str(e)}")
         plt.close()
 
-def get_experiment_and_run(experiment_name):
+def get_experiment_and_run(experiment_name: str) -> Tuple[Optional[str], Optional[str]]:
     """
     Retrieves the experiment and the latest run from MLflow.
 
@@ -966,7 +988,7 @@ def get_experiment_and_run(experiment_name):
 
     return experiment_id, run_id
 
-def prepare_shap_data(shap_df, feature_values_df, kg_class=None):
+def prepare_shap_data(shap_df: pd.DataFrame, feature_values_df: pd.DataFrame, kg_class: Optional[str] = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Prepares SHAP data for plotting by filtering and organizing values.
     
@@ -990,7 +1012,7 @@ def prepare_shap_data(shap_df, feature_values_df, kg_class=None):
 
     return shap_df[shap_cols], feature_values_df[feature_cols]
 
-def prepare_feature_group_data(df_feature, kg_class=None):
+def prepare_feature_group_data(df_feature: pd.DataFrame, kg_class: Optional[str] = None) -> pd.DataFrame:
     """
     Prepares feature group data for plotting.
     
@@ -1005,6 +1027,63 @@ def prepare_feature_group_data(df_feature, kg_class=None):
         df_feature = df_feature[df_feature['KGMajorClass'] == kg_class]
     
     return df_feature
+
+def extract_shap_and_feature_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
+    """
+    Extracts SHAP and corresponding feature columns from a DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing SHAP values.
+
+    Returns:
+        tuple: (list of SHAP columns, list of feature columns)
+    """
+    shap_cols = [col for col in df.columns if col.endswith('_shap')]
+    feature_cols = [col.replace('_shap', '') for col in shap_cols]
+    return shap_cols, feature_cols
+
+def plot_stacked_bar(df: pd.DataFrame, group_by_column: str, output_path: str, title: str, color_mapping: Optional[Dict[str, str]] = None, base_value: float = 0, show_total_line: bool = True) -> None:
+    """
+    Plots a stacked bar chart with optional total line.
+
+    Args:
+        df (pd.DataFrame): DataFrame to plot.
+        title (str): Title of the plot.
+        output_path (str): Path to save the plot.
+        color_mapping (dict, optional): Mapping of features to colors.
+        base_value (float, optional): Base value for the plot.
+        show_total_line (bool, optional): Whether to show the total line.
+    """
+    fig, ax = plt.subplots(figsize=(12, 8))
+    colors = [color_mapping.get(feature, '#333333') for feature in df.columns] if color_mapping else None
+    df.plot(kind='bar', stacked=True, color=colors, ax=ax, bottom=base_value)
+
+    if show_total_line:
+        total_values = df.sum(axis=1) + base_value
+        total_values.plot(kind='line', color='black', marker='o', linewidth=2, ax=ax, label='Total')
+
+    ax.set_title(title)
+    ax.set_xlabel('Hour of Day')
+    ax.set_ylabel('Value')
+    plt.tight_layout()
+    plt.savefig(output_path, bbox_inches='tight')
+    plt.close()
+
+def prepare_data_for_plotting(df: pd.DataFrame, group_by_column: str, feature_groups: Dict[str, str]) -> pd.DataFrame:
+    """
+    Prepares data for plotting by grouping and pivoting.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing feature data.
+        group_by_column (str): Column to group by.
+        feature_groups (dict): Mapping of features to groups.
+
+    Returns:
+        pd.DataFrame: Prepared DataFrame for plotting.
+    """
+    df_grouped = df.groupby([group_by_column, 'Feature'])['Value'].sum().reset_index()
+    df_pivot = df_grouped.pivot_table(index=group_by_column, columns='Feature', values='Value', fill_value=0)
+    return df_pivot
 
 def main():
     """Main function to process SHAP values and generate plots."""
@@ -1030,39 +1109,56 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # Load raw data
-    shap_df = pd.read_feather(shap_values_feather_path)
-    feature_values_df = shap_df.copy()
-    base_value = shap_df['base_value'].iloc[0] if 'base_value' in shap_df.columns else 0
+    all_df = pd.read_feather(shap_values_feather_path)
+    # feature_values_df = shap_df.copy()
+    base_value = all_df['base_value'].iloc[0] if 'base_value' in all_df.columns else 0
 
     # Clean data
-    columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'base_value']
-    shap_df_cleaned = shap_df.drop(columns=columns_to_drop, errors='ignore')
+    # columns_to_drop = ['global_event_ID', 'lon', 'lat', 'time', 'KGClass', 'KGMajorClass', 'base_value']
+    # shap_df_cleaned = shap_df.drop(columns=columns_to_drop, errors='ignore')
 
+    # Get feature names and groups
+    shap_cols, feature_cols = extract_shap_and_feature_columns(all_df)
+    feature_groups = get_feature_groups(feature_cols)
+    shap_df = all_df[shap_cols]
+    feature_values_df = all_df[feature_cols]
+    
+    # Calculate group SHAP values once
+    group_shap_values, group_feature_values, group_names = calculate_group_shap_values(
+        shap_df,
+        feature_values_df,
+        feature_groups
+    )
+    
     # Generate summary plots if requested
     if args.summary_plots_only:
         summary_dir = os.path.join(output_dir, 'summary_plots') 
         os.makedirs(summary_dir, exist_ok=True)
         
-        # Get SHAP columns and corresponding feature columns
-        shap_cols = [col for col in shap_df_cleaned.columns if col.endswith('_shap')]
-        feature_cols = [col.replace('_shap', '') for col in shap_cols]
-        
         # Generate summary plots for global data
         generate_summary_plots(
-            shap_df_cleaned[shap_cols],
-            feature_values_df[feature_cols],
-            summary_dir
+            shap_df,
+            feature_values_df,
+            summary_dir,
+            group_data=(group_shap_values, group_feature_values, group_names)
         )
         
         # Generate summary plots for each KGMajorClass
-        if 'KGMajorClass' in feature_values_df.columns:
-            for kg_class in feature_values_df['KGMajorClass'].unique():
-                kg_mask = feature_values_df['KGMajorClass'] == kg_class
+        if 'KGMajorClass' in all_df.columns:
+            for kg_class in all_df['KGMajorClass'].unique():
+                kg_mask = all_df['KGMajorClass'] == kg_class
+                # Calculate group values for this climate zone
+                kg_group_shap, kg_group_feat, _ = calculate_group_shap_values(
+                    shap_df[kg_mask],
+                    feature_values_df[kg_mask],
+                    feature_groups
+                )
                 generate_summary_plots(
-                    shap_df_cleaned[kg_mask][shap_cols],
-                    feature_values_df[kg_mask][feature_cols], 
+                    shap_df[kg_mask],
+                    feature_values_df[kg_mask], 
                     summary_dir,
-                    kg_class
+                    kg_class,
+                    group_data=(kg_group_shap, kg_group_feat, group_names)
                 )
         return
 
@@ -1105,18 +1201,11 @@ def main():
         )
         
         # Generate SHAP and feature value plots
-        plot_shap_and_feature_values_for_group(
-            shap_df=feature_group_data.pivot_table(
-                index='local_hour',
-                columns='Feature',
-                values='Value',
-                fill_value=0
-            ),
-            feature_values_df=feature_values_melted[feature_values_melted['KGMajorClass'] == kg_class] if kg_class != 'global' else feature_values_melted,
-            group_name=kg_class,
+        plot_shap_and_feature_values(
+            df_feature=df_feature,
+            feature_values_melted=feature_values_melted,
+            kg_classes=[kg_class],
             output_dir=output_dir,
-            kg_class=kg_class,
-            color_mapping=dict(zip(feature_group_data['Feature'].unique(), sns.color_palette('tab20'))),
             base_value=base_value,
             show_total_feature_line=not args.hide_total_feature_line
         )
@@ -1129,7 +1218,7 @@ def main():
     logging.info("Analysis completed successfully.")
     logging.info(f"All outputs have been saved to: {output_dir}")
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     """
     Parses command-line arguments.
 
