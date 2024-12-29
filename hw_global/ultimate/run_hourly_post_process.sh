@@ -25,9 +25,12 @@ declare -A patterns
 # patterns["^pure_soil_24_Hourly_HW98_Hour([0-9]|1[0-9]|2[0-3])$"]="summary waterfall dependency"
 
 # patterns["^pure2_soil_ddq2m_24_Hourly_HW98_Hour9$"]="summary waterfall dependency"
-patterns["^Final_noFSA_Hourly_HW98_Hour[0-9]{1,2}$"]="summary waterfall dependency"
+# patterns["^Final_noFSA_Hourly_HW98_Hour[0-9]{1,2}$"]="summary waterfall dependency"
+# patterns["^Final_noFSA_Hourly_HW98_Hour[0-9]+$"]="combine_shap"
 
-# patterns["^mixed_FSA_Hourly_HW98_Hour(9|12)$"]="summary waterfall dependency"
+# patterns["^mixed_FSA_Hourly_HW98_Hour[0-9]{1,2}$"]="summary"
+patterns["^Final3_NO_LE_Hourly_HW98_Hour(10|6|12)$"]="summary waterfall dependency"
+
 # Loop through the patterns and generate types
 for pattern in "${!patterns[@]}"; do
     generate_types="${patterns[$pattern]}"

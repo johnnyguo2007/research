@@ -163,7 +163,7 @@ class Experiment:
         plt.figure(figsize=(12, 8))
         shap.plots.beeswarm(self.explanation, show=False)
         plt.title(f"Feature Summary Plot - {self.experiment_name}")
-        plt.tight_layout()
+        # plt.tight_layout()
         plt.savefig(output_path, dpi=300)
         plt.close()
         logging.info(f"Generated summary SHAP plot at {output_path}")

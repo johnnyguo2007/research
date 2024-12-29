@@ -264,7 +264,10 @@ class ExperimentManager:
         if not experiment_names:
             return "Combined_SHAP_Values"
 
-        # Remove unwanted characters, anything between square brackets, and trailing digits
-        pattern = re.sub(r"\(.*?\)|\[.*?\]|\d+$|[|^$]", "", self.pattern)
+        # Start Generation Here
+        if len(experiment_names) == 1:
+            pattern = experiment_names[0]
+        else:
+            pattern = os.path.commonprefix(experiment_names)
 
         return f"Combined_{pattern}"

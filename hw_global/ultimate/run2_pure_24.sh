@@ -41,7 +41,7 @@ run_experiment() {
 }
 
 # Run experiments for hours 6, 9, and 18
-for local_hour in 9 ; do
+for local_hour in 9 12 3; do
     echo "Running experiment for Local Hour: ${local_hour}"
     run_experiment "$local_hour"
 done

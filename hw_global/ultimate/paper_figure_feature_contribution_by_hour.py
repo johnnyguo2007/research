@@ -1044,8 +1044,8 @@ def generate_feature_summary_plot(
 
 
 def generate_feature_group_summary_plot(
-    group_shap_values: np.ndarray,
-    group_feature_values: np.ndarray,
+    group_shap_df: pd.DataFrame,
+    group_feature_values_df: pd.DataFrame,
     group_names: List[str],
     output_dir: str,
     kg_class: str = "Global",
@@ -1054,40 +1054,32 @@ def generate_feature_group_summary_plot(
     Generate feature group SHAP summary plot.
 
     Args:
-        group_shap_values (np.ndarray): Array containing group SHAP values
-        group_feature_values (np.ndarray): Array containing group feature values
+        group_shap_df (pd.DataFrame): DataFrame containing group SHAP values
+        group_feature_values_df (pd.DataFrame): DataFrame containing group feature values
         group_names (List[str]): List of group names
         output_dir (str): Directory to save output plots
         kg_class (str): Name of the climate zone (default: 'Global')
     """
     logging.info(
-        f"Starting generate_feature_group_summary_plot for {kg_class} with group_shap_values shape: {group_shap_values.shape} and group_feature_values shape: {group_feature_values.shape}"
+        f"Starting generate_feature_group_summary_plot for {kg_class} with group_shap_values shape: {group_shap_df.shape} and group_feature_values shape: {group_feature_values_df.shape}"
     )
 
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
     # Check if there are any SHAP values to plot
-    if group_shap_values.size == 0 or group_feature_values.size == 0:
+    if group_shap_df.empty or group_feature_values_df.empty:
         logging.warning(
             f"No group SHAP values or feature values available for {kg_class}. Skipping feature group summary plot."
         )
         return
 
     try:
-        # Convert ndarrays to DataFrames for plotting
-        group_shap_values_df = pd.DataFrame(
-            group_shap_values, columns=group_names
-        )
-        group_feature_values_df = pd.DataFrame(
-            group_feature_values, columns=group_names
-        )
-
         # Generate feature group summary plot
         plt.figure(figsize=(12, 8))
         shap.summary_plot(
-            group_shap_values_df,
-            group_feature_values_df,
+            group_shap_df.values,
+            group_feature_values_df.values,
             feature_names=group_names,
             show=False,
             plot_size=(12, 8),
@@ -1335,9 +1327,10 @@ def main():
         generate_feature_summary_plot(
             shap_df.values, feature_values_df.values, feature_cols, summary_dir
         )
+        
         generate_feature_group_summary_plot(
-            group_shap_df.values,
-            group_feature_values_df.values,
+            group_shap_df,
+            group_feature_values_df,
             group_names,
             summary_dir,
         )
@@ -1349,6 +1342,9 @@ def main():
                 # Use boolean indexing to filter DataFrames
                 kg_group_shap = group_shap_df[kg_mask]
                 kg_group_feat = group_feature_values_df[kg_mask]
+                # Start Generation Here
+                logging.info(f"kg_group_shap for {kg_class}:\n{kg_group_shap}")
+                logging.info(f"kg_group_feat for {kg_class}:\n{kg_group_feat}")
                 generate_feature_summary_plot(
                     shap_df[kg_mask].values,
                     feature_values_df[kg_mask].values,
@@ -1357,8 +1353,8 @@ def main():
                     kg_class,
                 )
                 generate_feature_group_summary_plot(
-                    kg_group_shap.values,
-                    kg_group_feat.values,
+                    kg_group_shap,
+                    kg_group_feat,
                     group_names,
                     summary_dir,
                     kg_class,

@@ -4,7 +4,7 @@
 ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
-BASE_RUN_TYPE="Final_noFSA"
+BASE_RUN_TYPE="Final3_NO_LE"
 HW_PERCENTILE=98
 MERGED_FILE="updated_local_hour_adjusted_variables_HW${HW_PERCENTILE}.feather"
 FEATURE_COLUMN="hourly_selected"
@@ -41,14 +41,14 @@ run_experiment() {
 }
 
 # Run experiments for hours 6, 9, and 18
-for local_hour in 6 10 18; do
+for local_hour in 10 6 12 18; do
     echo "Running experiment for Local Hour: ${local_hour}"
     run_experiment "$local_hour"
 done
 
 # Run experiments for the remaining hours
 for local_hour in $(seq 0 23); do
-    if [[ ! " 6 10 18 " =~ " ${local_hour} " ]]; then
+    if [[ ! " 6 10 12 18 " =~ " ${local_hour} " ]]; then
         echo "Running experiment for Local Hour: ${local_hour}"
         run_experiment "$local_hour"
     fi
