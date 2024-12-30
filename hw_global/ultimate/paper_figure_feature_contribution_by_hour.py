@@ -782,29 +782,9 @@ def create_day_night_summary(
     output_path = os.path.join(output_dir, "feature_group_day_night_summary.csv")
     summary_df.to_csv(output_path, index=False)
 
-    # Create a pivot table for better visualization
-    pivot_df = summary_df.pivot_table(
-        index=["KGMajorClass", "Period"],
-        values=[
-            col for col in summary_df.columns if col not in ["KGMajorClass", "Period"]
-        ],
-        aggfunc="first",
-    )
-
-    # Reorder columns to put Total at the end in pivot_df
-    cols = [col for col in pivot_df.columns if col != "Total"] + ["Total"]
-    pivot_df = pivot_df[cols]
-
-    # Save pivot table to CSV
-    pivot_output_path = os.path.join(
-        output_dir, "feature_group_day_night_summary_pivot.csv"
-    )
-    pivot_df.to_csv(pivot_output_path)
-
     print(f"Day/night summary saved to {output_path}")
-    print(f"Day/night summary pivot table saved to {pivot_output_path}")
 
-    return summary_df, pivot_df
+    return summary_df
 
 
 def calculate_group_shap_values(
@@ -1069,11 +1049,11 @@ def main():
 
     # Generate day/night summary if requested
     if args.day_night_summary:
-        summary_df, pivot_df = create_day_night_summary(
+        summary_df= create_day_night_summary(
             group_shap_df, all_df, output_dir
         )
         logging.info("\nFeature Group Day/Night Summary:")
-        logging.info("\n" + str(pivot_df))
+        logging.info("\n" + str(summary_df))
         return
 
     # Load and prepare feature values for plotting
@@ -1108,11 +1088,6 @@ def main():
             base_value=base_value,
             show_total_feature_line=not args.hide_total_feature_line,
         )
-
-    # Create final summary
-    summary_df, pivot_df = create_day_night_summary(group_shap_df, all_df, output_dir)
-    logging.info("\nFeature Group Day/Night Summary:")
-    logging.info("\n" + str(pivot_df))
 
     logging.info("Analysis completed successfully.")
     logging.info(f"All outputs have been saved to: {output_dir}")
