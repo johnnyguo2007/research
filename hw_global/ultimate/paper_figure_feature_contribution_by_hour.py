@@ -449,7 +449,7 @@ def plot_shap_and_feature_values(
     Plots SHAP value contributions and feature group's values side by side.
 
     Args:
-        df_feature: DataFrame containing feature data
+        df_feature: DataFrame containing feature data with features as columns
         feature_values_melted: Melted DataFrame containing feature values
         kg_classes: List of KGMajorClasses
         output_dir: Directory to save output
@@ -459,8 +459,8 @@ def plot_shap_and_feature_values(
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    # Prepare a list of all feature groups
-    feature_names = df_feature["Feature"].unique().tolist()
+    # Get feature names (all columns except local_hour and KGMajorClass)
+    feature_names = [col for col in df_feature.columns if col not in ['local_hour', 'KGMajorClass']]
     feature_groups = get_feature_groups(feature_names)
     unique_groups = set(feature_groups.values())
 
@@ -474,10 +474,7 @@ def plot_shap_and_feature_values(
 
     # Generate and save the standalone SHAP stacked bar plot for global data (all features)
     print("Generating global standalone SHAP stacked bar plot (all features)...")
-    shap_plot_df_global = df_feature.pivot_table(
-        index="local_hour", columns="Feature", values="Value", fill_value=0
-    ).reset_index()
-    shap_plot_df_global.set_index("local_hour", inplace=True)
+    shap_plot_df_global = df_feature.set_index('local_hour')[feature_names]
 
     # Plot and save the standalone SHAP stacked bar plot for global data
     plot_shap_stacked_bar(
@@ -492,20 +489,13 @@ def plot_shap_and_feature_values(
     # Generate side-by-side plots for each feature group in global data
     print("Generating global plots for each feature group...")
     for group_name in unique_groups:
-        # Filter df_feature for features in the current group
+        # Get features in the current group
         group_features = [f for f, g in feature_groups.items() if g == group_name]
 
-        shap_plot_df_group = df_feature[df_feature["Feature"].isin(group_features)]
-        shap_plot_df_group = (
-            shap_plot_df_group.groupby(["local_hour", "Feature"])["Value"]
-            .sum()
-            .reset_index()
-        )
-        shap_plot_df_group = shap_plot_df_group.pivot_table(
-            index="local_hour", columns="Feature", values="Value", fill_value=0
-        ).reset_index()
-        shap_plot_df_group.set_index("local_hour", inplace=True)
+        # Select only the features for this group
+        shap_plot_df_group = df_feature.set_index('local_hour')[group_features]
 
+        # Get corresponding feature values
         feature_values_plot_df_group = feature_values_melted[
             feature_values_melted["Feature"].isin(group_features)
         ]
@@ -518,8 +508,7 @@ def plot_shap_and_feature_values(
         )
         feature_values_plot_df_group = feature_values_plot_df_group.pivot_table(
             index="local_hour", columns="Feature", values="FeatureValue", fill_value=0
-        ).reset_index()
-        feature_values_plot_df_group.set_index("local_hour", inplace=True)
+        )
 
         plot_shap_and_feature_values_for_group(
             shap_df=shap_plot_df_group,
@@ -534,6 +523,9 @@ def plot_shap_and_feature_values(
 
     # Plot for each KGMajorClass
     for kg_class in kg_classes:
+        if kg_class == "global":
+            continue
+
         print(f"Generating plots for KGMajorClass '{kg_class}'...")
         # Create subdirectory for the current kg_class
         kg_class_dir = os.path.join(output_dir, kg_class)
@@ -554,10 +546,7 @@ def plot_shap_and_feature_values(
         print(
             f"Generating standalone SHAP stacked bar plot for KGMajorClass '{kg_class}'..."
         )
-        shap_plot_df_kg = df_feature_subset.pivot_table(
-            index="local_hour", columns="Feature", values="Value", fill_value=0
-        ).reset_index()
-        shap_plot_df_kg.set_index("local_hour", inplace=True)
+        shap_plot_df_kg = df_feature_subset.set_index('local_hour')[feature_names]
 
         plot_shap_stacked_bar(
             shap_df=shap_plot_df_kg,
@@ -570,22 +559,13 @@ def plot_shap_and_feature_values(
 
         # Generate side-by-side plots for each feature group
         for group_name in unique_groups:
-            # Filter df_feature_subset for features in the current group
+            # Get features in the current group
             group_features = [f for f, g in feature_groups.items() if g == group_name]
 
-            shap_plot_df = df_feature_subset[
-                df_feature_subset["Feature"].isin(group_features)
-            ]
-            shap_plot_df = (
-                shap_plot_df.groupby(["local_hour", "Feature"])["Value"]
-                .sum()
-                .reset_index()
-            )
-            shap_plot_df = shap_plot_df.pivot_table(
-                index="local_hour", columns="Feature", values="Value", fill_value=0
-            ).reset_index()
-            shap_plot_df.set_index("local_hour", inplace=True)
+            # Select only the features for this group
+            shap_plot_df = df_feature_subset.set_index('local_hour')[group_features]
 
+            # Get corresponding feature values
             feature_values_plot_df = feature_values_subset[
                 feature_values_subset["Feature"].isin(group_features)
             ]
@@ -601,8 +581,7 @@ def plot_shap_and_feature_values(
                 columns="Feature",
                 values="FeatureValue",
                 fill_value=0,
-            ).reset_index()
-            feature_values_plot_df.set_index("local_hour", inplace=True)
+            )
 
             plot_shap_and_feature_values_for_group(
                 shap_df=shap_plot_df,
@@ -627,14 +606,8 @@ def plot_feature_group_stacked_bar(
     """
     Plots a stacked bar chart of mean feature group contributions with mean SHAP value line.
     """
-    # Pivot and prepare data - calculate mean instead of sum
-    pivot_df = df.pivot_table(
-        index=group_by_column,
-        columns="Feature Group",
-        values="Value",
-        aggfunc="mean",
-        fill_value=0,
-    )
+    # Group by the specified column and compute means
+    pivot_df = df.groupby(group_by_column).mean()
 
     # Calculate means including base_value
     mean_values = pivot_df.sum(axis=1) + base_value
@@ -964,7 +937,10 @@ def main():
 
     # Load and prepare feature values for plotting
     feature_values_melted = load_feature_values(shap_values_feather_path)
-
+    # Add local_hour from all_df
+    group_shap_df['local_hour'] = all_df['local_hour']
+    feature_values_df['local_hour'] = all_df['local_hour']
+    
     # Generate plots for each climate zone
     kg_classes = ["global"] + all_df["KGMajorClass"].unique().tolist()
     for kg_class in kg_classes:
