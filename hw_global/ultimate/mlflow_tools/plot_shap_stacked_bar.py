@@ -124,11 +124,14 @@ def plot_feature_group_stacked_bar(
 ) -> None:
     """
     Plots a stacked bar chart of mean feature group contributions with mean SHAP value line.
-    df: dataframe containing shap values with local_hour col
-    EFLX_LH_TOT U10 Q2M ...... local_hour
+    df: dataframe containing group shap values with local_hour col
+    group_shap_cols: list of group SHAP value column names
     """
+    # Get group SHAP columns (all columns except local_hour)
+    group_shap_cols = [col for col in df.columns if col != group_by_column]
+    
     # Group by the specified column and compute means
-    pivot_df = df.groupby(group_by_column).mean()
+    pivot_df = df.groupby(group_by_column)[group_shap_cols].mean()
 
     # Calculate means including base_values
     mean_values = pivot_df.sum(axis=1) + base_values
@@ -143,8 +146,6 @@ def plot_feature_group_stacked_bar(
     fig, ax = plt.subplots(figsize=(12, 8))
 
     # Plot stacked bars starting from base_values
-    # the group_by command earlier set the index, 
-    # each index valuae is a local_hour and one stacked bar
     pivot_df.plot(kind="bar", stacked=True, ax=ax, bottom=base_values)
 
     # Plot mean values including base_values for feature group reports
@@ -168,7 +169,9 @@ def plot_feature_group_stacked_bar(
         if label.startswith("Mean SHAP") or label.startswith("Base Value"):
             new_labels.append(label)
         else:
-            new_labels.append(get_latex_label(label))
+            # Remove the '_shap' suffix from the group name before converting to LaTeX label
+            clean_label = label.replace('_shap', '')
+            new_labels.append(get_latex_label(clean_label))
 
     ax.legend(handles, new_labels, bbox_to_anchor=(1.05, 1), loc="upper left")
 
