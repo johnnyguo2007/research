@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import logging
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, List
 from mlflow_tools.plot_util import get_latex_label
 
 
@@ -39,7 +39,7 @@ def plot_shap_stacked_bar(
     output_path: str,
     color_mapping: Optional[Dict[str, str]] = None,
     return_fig: bool = False,
-    base_value: float = 0,
+    base_values: Optional[pd.Series] = None,
 ) -> Optional[Tuple[plt.Figure, plt.Axes]]:
     """
     Plots a standalone SHAP stacked bar plot (all features) with a mean SHAP value curve.
@@ -52,14 +52,14 @@ def plot_shap_stacked_bar(
         sorted_columns = sorted(shap_df.columns, key=lambda x: x)
         colors = [color_mapping.get(feature, "#333333") for feature in sorted_columns]
         shap_df = shap_df[sorted_columns]
-        shap_df.plot(kind="bar", stacked=True, color=colors, ax=ax, bottom=base_value)
+        shap_df.plot(kind="bar", stacked=True, color=colors, ax=ax, bottom=base_values)
     else:
         shap_df.plot(
-            kind="bar", stacked=True, colormap="tab20", ax=ax, bottom=base_value
+            kind="bar", stacked=True, colormap="tab20", ax=ax, bottom=base_values
         )
 
-    # Calculate mean SHAP values and add base_value
-    mean_shap = shap_df.sum(axis=1) + base_value
+    # Calculate mean SHAP values and add base_values
+    mean_shap = shap_df.sum(axis=1) + base_values
 
     # Plot the mean SHAP values as a line on the same axis
     mean_shap.plot(
@@ -73,10 +73,10 @@ def plot_shap_stacked_bar(
 
     # Add base value line
     ax.axhline(
-        y=base_value,
+        y=base_values.iloc[0],  # Assuming the first base value for the line
         color="red",
         linestyle="--",
-        label=f"Base Value ({base_value:.3f})",
+        label=f"Base Value ({base_values.iloc[0]:.3f})",
     )
 
     # Get handles and labels, convert feature names to LaTeX labels
@@ -116,20 +116,22 @@ def plot_shap_stacked_bar(
 
 
 def plot_feature_group_stacked_bar(
-    df: pd.DataFrame,
+    df: pd.DataFrame, #has local_hour col but does not contain KGMajorClass col
     group_by_column: str,
     output_path: str,
     title: str,
-    base_value: float = 0,
+    base_values: Optional[pd.Series] = None,
 ) -> None:
     """
     Plots a stacked bar chart of mean feature group contributions with mean SHAP value line.
+    df: dataframe containing shap values with local_hour col
+    EFLX_LH_TOT U10 Q2M ...... local_hour
     """
     # Group by the specified column and compute means
     pivot_df = df.groupby(group_by_column).mean()
 
-    # Calculate means including base_value
-    mean_values = pivot_df.sum(axis=1) + base_value
+    # Calculate means including base_values
+    mean_values = pivot_df.sum(axis=1) + base_values
 
     # Save data before plotting
     _save_plot_data(pivot_df, mean_values, output_path, "group")
@@ -140,21 +142,23 @@ def plot_feature_group_stacked_bar(
     # Create figure and axis
     fig, ax = plt.subplots(figsize=(12, 8))
 
-    # Plot stacked bars starting from base_value
-    pivot_df.plot(kind="bar", stacked=True, ax=ax, bottom=base_value)
+    # Plot stacked bars starting from base_values
+    # the group_by command earlier set the index, 
+    # each index valuae is a local_hour and one stacked bar
+    pivot_df.plot(kind="bar", stacked=True, ax=ax, bottom=base_values)
 
-    # Plot mean values including base_value for feature group reports
-    mean_values = pivot_df.sum(axis=1) + base_value
+    # Plot mean values including base_values for feature group reports
+    mean_values = pivot_df.sum(axis=1) + base_values
     mean_values.plot(
         color="black", marker="o", linewidth=2, ax=ax, label="Mean SHAP + Base Value"
     )
 
     # Add base value line
     ax.axhline(
-        y=base_value,
+        y=base_values.iloc[0],  # Assuming the first base value for the line
         color="red",
         linestyle="--",
-        label=f"Base Value ({base_value:.3f})",
+        label=f"Base Value ({base_values.iloc[0]:.3f})",
     )
 
     # Get handles and labels, convert feature group names to LaTeX labels
