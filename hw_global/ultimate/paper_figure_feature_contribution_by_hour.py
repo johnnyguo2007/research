@@ -150,7 +150,7 @@ def calculate_group_shap_values(
         # Sum feature values for the group, directly assign to new column
         group_feature_values_df[group] = feature_values_df[group_features].sum(axis=1)
 
-    return group_shap_df, group_feature_values_df, group_names
+    return group_shap_df.reset_index(drop=True), group_feature_values_df.reset_index(drop=True), group_names
 
 
 def get_experiment_and_run(experiment_name: str) -> Tuple[Optional[str], Optional[str]]:
@@ -319,6 +319,18 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # Load raw data
+    # the raw_df looks like this:
+    # shap_cols, feature_val_cols, local_hour,  base_value,
+        # "global_event_ID",
+        # "lon",
+        # "lat",
+        # "time",
+        # "KGClass",
+        # "KGMajorClass",
+        # "local_hour",
+        # "UHI_diff",
+        # "Estimation_Error",
+
     all_df = pd.read_feather(shap_values_feather_path)
     base_value = all_df["base_value"].iloc[0] if "base_value" in all_df.columns else 0
 
@@ -378,17 +390,60 @@ def main():
         logging.info("\n" + str(summary_df))
         return
 
+
+    raw_df = all_df
+    # base_value is the different for each hour, so we need to get the base_value for each hour 
+    base_values: pd.Series = raw_df.groupby("local_hour")["base_value"].first()
+
+    # group all_df by local_hour and KGMajorClass, exclude  "global_event_ID",  "lon",  "lat",  "time", "KGClass",
+    exclude_cols = ["global_event_ID", "lon", "lat", "time", "KGClass"]
+    #drop the exclude_cols then group by local_hour and KGMajorClass    
+    all_df_by_hour_kg = raw_df.drop(columns=exclude_cols).groupby(["local_hour", "KGMajorClass"]).sum().reset_index()
+    # include ["local_hour", "KGMajorClass"] in the shap_cols and feature_cols  
+    shap_df = all_df_by_hour_kg[shap_cols]
+    feature_values_df = all_df_by_hour_kg[feature_cols]
+    
+    # we report data based on local_hour and KGMajorClass, so we need to group by local_hour and KGMajorClass and then sum the shap_cols and feature_val_cols
+
+    # the feature group data looks like this: please note there is not group_feature_val_cols, it is just feature_val_cols  
+    # group_shap_cols, feature_val_cols, local_hour, KGClass, KGMajorClass, global_event_ID, lon, lat, time, base_value
+    # we report data based on local_hour and KGMajorClass, so we need to group by local_hour and KGMajorClass and then sum the group_shap_cols andfeature_val_cols  
+
+    # Calculate group SHAP values once, get DataFrames. Please note the group_feature_values_df is just a direct sum of feature values, for the feature in the group
+    group_shap_df, group_feature_values_df, group_names = calculate_group_shap_values(
+        shap_df, feature_values_df, feature_groups
+    )
+    
+    # add local_hour and KGMajorClass to the group_shap_df and group_feature_values_df
+    group_shap_df["local_hour"] = all_df_by_hour_kg["local_hour"]
+    group_shap_df["KGMajorClass"] = all_df_by_hour_kg["KGMajorClass"]
+    group_feature_values_df["local_hour"] = all_df_by_hour_kg["local_hour"]
+    group_feature_values_df["KGMajorClass"] = all_df_by_hour_kg["KGMajorClass"] 
+
+    logging.info(f"all_df_by_hour_kg columns: {all_df_by_hour_kg.columns.tolist()}, shape: {all_df_by_hour_kg.shape}")
+    logging.info(f"shap_cols: {shap_cols}, shape: {shap_df.shape}")
+    logging.info(f"feature_cols: {feature_cols}, shape: {feature_values_df.shape}")
+    logging.info(
+        f"group_shap_df columns: {group_shap_df.columns.tolist()}, shape: {group_shap_df.shape}"
+    )
+    logging.info(
+        f"group_feature_values_df columns: {group_feature_values_df.columns.tolist()}, shape: {group_feature_values_df.shape}"
+    )
+    logging.info(f"group_names: {group_names}")
+
+
     # Load and prepare feature values for plotting
     feature_values_melted = load_feature_values(shap_values_feather_path)
     # Add local_hour from all_df
-    group_shap_df["local_hour"] = all_df["local_hour"]
-    feature_values_df["local_hour"] = all_df["local_hour"]
+    # group_shap_df["local_hour"] = all_df_by_hour_kg["local_hour"]
+    # feature_values_df["local_hour"] = all_df_by_hour_kg["local_hour"]
 
     # Generate plots for each climate zone
-    kg_classes = ["global"] + all_df["KGMajorClass"].unique().tolist()
+    kg_classes = ["global"] + all_df_by_hour_kg["KGMajorClass"].unique().tolist()
     for kg_class in kg_classes:
         # Prepare data for current climate zone
         feature_group_data = prepare_feature_group_data(group_shap_df, kg_class)
+        feature_group_data = feature_group_data.drop(columns=["KGMajorClass"])
 
         # Generate stacked bar plot
         plot_title = (
@@ -401,16 +456,16 @@ def main():
         )
 
         plot_feature_group_stacked_bar(
-            feature_group_data, "local_hour", output_path, plot_title, base_value
+            feature_group_data, "local_hour", output_path, plot_title, base_values
         )
 
         # Generate SHAP and feature value plots
         plot_shap_and_feature_values(
-            df_feature=feature_values_df,
+            df_feature=shap_df,
             feature_values_melted=feature_values_melted,
             kg_classes=[kg_class],
             output_dir=output_dir,
-            base_value=base_value,
+            base_value=base_values,
             show_total_feature_line=not args.hide_total_feature_line,
         )
 

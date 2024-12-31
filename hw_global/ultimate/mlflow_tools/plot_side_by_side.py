@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from .plot_shap_stacked_bar import plot_shap_stacked_bar
+from .plot_shap_stacked_bar import plot_shap_stacked_bar, _save_plot_data
 from .plot_util import get_feature_groups, get_latex_label, replace_cold_with_continental
 
 
@@ -308,6 +308,6 @@ def plot_shap_and_feature_values_for_group(
     )
 
     # Save data before plotting
-    # save_plot_data(shap_df, total_shap, output_path, "shap")
-    # save_plot_data(feature_values_df, total_features, output_path, "feature")
+    _save_plot_data(shap_df, total_shap, output_path, "shap")
+    _save_plot_data(feature_values_df, total_features, output_path, "feature")
 
