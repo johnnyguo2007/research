@@ -13,7 +13,6 @@ from mlflow_tools import (
     generate_summary_and_kg_plots,
     create_day_night_summary,
     plot_shap_stacked_bar,
-    _save_plot_data,
     plot_feature_group_stacked_bar,
     get_feature_groups,
     get_latex_label,
@@ -328,6 +327,14 @@ def main():
     feature_groups = get_feature_groups(feature_cols)
     shap_df = all_df[shap_cols]
     feature_values_df = all_df[feature_cols]
+
+    # the feature data looks like this:
+    # shap_cols, feature_val_cols, local_hour, KGClass, KGMajorClass, global_event_ID, lon, lat, time, base_value
+    # we report data based on local_hour and KGMajorClass, so we need to group by local_hour and KGMajorClass and then sum the shap_cols and feature_val_cols
+
+    # the feature group data looks like this: please note there is not group_feature_val_cols, it is just feature_val_cols  
+    # group_shap_cols, feature_val_cols, local_hour, KGClass, KGMajorClass, global_event_ID, lon, lat, time, base_value
+    # we report data based on local_hour and KGMajorClass, so we need to group by local_hour and KGMajorClass and then sum the group_shap_cols andfeature_val_cols  
 
     # Calculate group SHAP values once, get DataFrames
     group_shap_df, group_feature_values_df, group_names = calculate_group_shap_values(
