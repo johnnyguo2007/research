@@ -36,6 +36,8 @@ def plot_summary(
     logging.info(
         f"Starting plot_{plot_type}_summary for {kg_class} with shap_values shape: {shap_values_df.shape} and feature_values shape: {feature_values_df.shape}"
     )
+    logging.info(f"shap_values_df columns: {shap_values_df.columns.tolist()}")
+    logging.info(f"feature_values_df columns: {feature_values_df.columns.tolist()}")
     output_dir = _create_output_dir(output_dir)
     plt.figure()
     shap.summary_plot(
