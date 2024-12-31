@@ -308,6 +308,6 @@ def plot_shap_and_feature_values_for_group(
     )
 
     # Save data before plotting
-    save_plot_data(shap_df, total_shap, output_path, "shap")
-    save_plot_data(feature_values_df, total_features, output_path, "feature")
+    # save_plot_data(shap_df, total_shap, output_path, "shap")
+    # save_plot_data(feature_values_df, total_features, output_path, "feature")
 
