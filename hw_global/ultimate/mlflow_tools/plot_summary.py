@@ -6,6 +6,8 @@ import shap
 import matplotlib.pyplot as plt
 from typing import List
 
+from .group_data import GroupData
+
 def _create_output_dir(output_dir: str, kg_class: str = None) -> str:
     """
     Creates the output directory if it doesn't exist.
@@ -54,25 +56,29 @@ def plot_summary(
     plt.close()
 
 def generate_summary_and_kg_plots(
-    shap_df: pd.DataFrame,
-    feature_values_df: pd.DataFrame,
-    feature_names: List[str],
+    group_data: GroupData,
     output_dir: str,
-    all_df: pd.DataFrame,
     plot_type: str
 ) -> None:
     """
-    Generates summary plots for global data and each KGMajorClass.
+    Generates summary plots for global data and each KGMajorClass using GroupData.
 
     Args:
-        shap_df (pd.DataFrame): DataFrame containing SHAP values.
-        feature_values_df (pd.DataFrame): DataFrame containing feature values.
-        feature_names (List[str]): List of feature names (or group names).
+        group_data (GroupData): GroupData object containing SHAP values and feature values.
         output_dir (str): Directory to save output plots.
-        all_df (pd.DataFrame): DataFrame containing all data.
         plot_type (str): Type of plot ('feature' or 'group').
     """
     summary_dir = _create_output_dir(os.path.join(output_dir, "summary_plots"))
+
+    # Get appropriate data based on plot type
+    if plot_type == 'feature':
+        shap_df = group_data.shap_detail_df
+        feature_values_df = group_data.feature_detail_df
+        feature_names = group_data.feature_cols_names
+    else:  # plot_type == 'group'
+        shap_df = group_data.shap_group_detail_df
+        feature_values_df = group_data.feature_group_detail_df
+        feature_names = group_data.group_names
 
     # Generate summary plots for global data
     logging.info(f"Generating {plot_type} summary plot for global data")
@@ -81,16 +87,16 @@ def generate_summary_and_kg_plots(
     )
 
     # Generate summary plots for each KGMajorClass
-    if "KGMajorClass" in all_df.columns:
-        for kg_class in all_df["KGMajorClass"].dropna().unique():
-            kg_mask = all_df["KGMajorClass"] == kg_class
-            logging.info(f"Generating {plot_type} summary plot for {kg_class}")
-            kg_output_dir = _create_output_dir(summary_dir, kg_class)
-            plot_summary(
-                shap_df[kg_mask],
-                feature_values_df[kg_mask],
-                feature_names,
-                kg_output_dir,
-                kg_class,
-                plot_type=plot_type
-            )
+    kg_classes = group_data.df["KGMajorClass"].dropna().unique()
+    for kg_class in kg_classes:
+        kg_mask = group_data.df["KGMajorClass"] == kg_class
+        logging.info(f"Generating {plot_type} summary plot for {kg_class}")
+        kg_output_dir = _create_output_dir(summary_dir, kg_class)
+        plot_summary(
+            shap_df[kg_mask],
+            feature_values_df[kg_mask],
+            feature_names,
+            kg_output_dir,
+            kg_class,
+            plot_type=plot_type
+        )

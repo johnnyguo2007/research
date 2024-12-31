@@ -378,19 +378,13 @@ def main():
     # Generate summary plots if requested
     if args.summary_plots:
         generate_summary_and_kg_plots(
-            shap_df,
-            feature_values_df,
-            feature_cols,
+            obj_group_data,
             output_dir,
-            all_df,
             plot_type="feature",
         )
         generate_summary_and_kg_plots(
-            obj_group_data.shap_detail_df,
-            obj_group_data.feature_detail_df,
-            obj_group_data.group_names,
+            obj_group_data,
             output_dir,
-            all_df,
             plot_type="group",
         )
         return
