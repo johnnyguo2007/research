@@ -115,16 +115,14 @@ def get_top_features(df: pd.DataFrame, top_n: int) -> List[str]:
 # Define the function with 'Value' instead of 'Importance'
 
 def calculate_group_shap_values(
-    shap_df: pd.DataFrame,
-    feature_values_df: pd.DataFrame,
+    both_shap_and_feature_df: pd.DataFrame,
     feature_groups: Dict[str, str],
 ) -> Tuple[pd.DataFrame, pd.DataFrame, List[str]]:
     """
     Calculate group-level SHAP values and feature values, returning DataFrames.
 
     Args:
-        shap_df (pd.DataFrame): DataFrame containing SHAP values
-        feature_values_df (pd.DataFrame): DataFrame containing feature values
+        both_shap_and_feature_df (pd.DataFrame): DataFrame containing both SHAP and feature values
         feature_groups (dict): Mapping from features to their groups
 
     Returns:
@@ -141,14 +139,15 @@ def calculate_group_shap_values(
         # Get features in this group
         group_features: List[str] = [f for f, g in feature_groups.items() if g == group]
 
-        # Get corresponding SHAP columns
+        # Get corresponding SHAP and feature columns
         group_shap_cols: List[str] = [f"{f}_shap" for f in group_features]
+        group_feature_cols: List[str] = group_features
 
         # Sum SHAP values for features in the group, directly assign to new column
-        group_shap_df[group] = shap_df[group_shap_cols].sum(axis=1)
+        group_shap_df[group] = both_shap_and_feature_df[group_shap_cols].sum(axis=1)
 
         # Sum feature values for the group, directly assign to new column
-        group_feature_values_df[group] = feature_values_df[group_features].sum(axis=1)
+        group_feature_values_df[group] = both_shap_and_feature_df[group_feature_cols].sum(axis=1)
 
     return group_shap_df.reset_index(drop=True), group_feature_values_df.reset_index(drop=True), group_names
 
@@ -350,7 +349,7 @@ def main():
 
     # Calculate group SHAP values once, get DataFrames
     group_shap_df, group_feature_values_df, group_names = calculate_group_shap_values(
-        shap_df, feature_values_df, feature_groups
+        all_df, feature_groups
     )
     logging.info(f"all_df columns: {all_df.columns.tolist()}, shape: {all_df.shape}")
     logging.info(f"shap_cols: {shap_cols}, shape: {shap_df.shape}")
@@ -411,7 +410,7 @@ def main():
 
     # Calculate group SHAP values once, get DataFrames. Please note the group_feature_values_df is just a direct sum of feature values, for the feature in the group
     group_shap_df, group_feature_values_df, group_names = calculate_group_shap_values(
-        shap_df, feature_values_df, feature_groups
+        all_df_by_hour_kg, feature_groups
     )
     
     # add local_hour and KGMajorClass to the group_shap_df and group_feature_values_df
