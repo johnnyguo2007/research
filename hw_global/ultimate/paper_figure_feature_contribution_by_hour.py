@@ -241,6 +241,12 @@ def main():
     args = parse_arguments()
     logging.info(f"Parsed command line arguments: {vars(args)}")
 
+    # Set flags based on --all argument if provided
+    if args.all:
+        args.summary_plots = True
+        args.day_night_summary = True
+        args.group_shap_plots = True
+
     # Get experiment and run
     experiment_id, run_id = get_experiment_and_run(args.experiment_name)
     if experiment_id is None or run_id is None:
@@ -289,14 +295,12 @@ def main():
             output_dir,
             plot_type="group",
         )
-        return
 
     # Generate day/night summary if requested
     if args.day_night_summary:
         summary_df = create_day_night_summary(obj_group_data.shap_detail_df, all_df, output_dir)
         logging.info("\nFeature Group Day/Night Summary:")
         logging.info("\n" + str(summary_df))
-        return
 
     raw_df = all_df
     # base_value is different for each hour, so we need to get the base_value for each hour 
@@ -309,39 +313,39 @@ def main():
     
     # Calculate group values for the grouped data
     obj_group_data = calculate_group_shap_values(all_df_by_hour_kg, feature_to_group_mapping)
-    
 
     # # Load and prepare feature values for plotting
     # feature_values_melted = load_feature_values(shap_values_feather_path)
 
     # Generate plots for each climate zone
     kg_classes = ["global"] + all_df_by_hour_kg["KGMajorClass"].unique().tolist()
-    for kg_class in kg_classes:
-        # Prepare data for current climate zone
-        feature_group_data = obj_group_data.shap_group_hourly_mean_df(kg_class)
+    if args.group_shap_plots:
+        for kg_class in kg_classes:
+            # Prepare data for current climate zone
+            feature_group_data = obj_group_data.shap_group_hourly_mean_df(kg_class)
 
-        # Generate stacked bar plot
-        plot_title = (
-            "Global Feature Group Contribution by Hour"
-            if kg_class == "global"
-            else f"Feature Group Contribution by Hour for {kg_class}"
-        )
-        output_path = os.path.join(
-            output_dir, f"feature_group_contribution_by_hour_{kg_class}.png"
-        )
+            # Generate stacked bar plot
+            plot_title = (
+                "Global Feature Group Contribution by Hour"
+                if kg_class == "global"
+                else f"Feature Group Contribution by Hour for {kg_class}"
+            )
+            output_path = os.path.join(
+                output_dir, f"feature_group_contribution_by_hour_{kg_class}.png"
+            )
 
-        plot_feature_group_stacked_bar(
-            feature_group_data, "local_hour", output_path, plot_title, base_values
-        )
+            plot_feature_group_stacked_bar(
+                feature_group_data, "local_hour", output_path, plot_title, base_values
+            )
 
-        # Generate SHAP and feature value plots
-        generate_group_shap_plots_by_climate_zone(
-            obj_group_data=obj_group_data,
-            kg_classes=[kg_class],
-            output_dir=output_dir,
-            base_values=base_values,
-            show_total_feature_line=not args.hide_total_feature_line,
-        )
+            # Generate SHAP and feature value plots
+            generate_group_shap_plots_by_climate_zone(
+                obj_group_data=obj_group_data,
+                kg_classes=[kg_class],
+                output_dir=output_dir,
+                base_values=base_values,
+                show_total_feature_line=not args.hide_total_feature_line,
+            )
 
     logging.info("Analysis completed successfully.")
     logging.info(f"All outputs have been saved to: {output_dir}")
@@ -377,13 +381,25 @@ def parse_arguments() -> argparse.Namespace:
         "--day-night-summary",
         action="store_true",
         default=False,
-        help="Only generate the day/night summary without creating other plots.",
+        help="Generate the day/night summary.",
     )
     parser.add_argument(
         "--summary-plots",
         action="store_true",
         default=False,
-        help="Only generate the summary plots then exit.",
+        help="Generate the summary plots.",
+    )
+    parser.add_argument(
+        "--group-shap-plots",
+        action="store_true",
+        default=False,
+        help="Generate the group SHAP plots by climate zone.",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        default=False,
+        help="Run all analyses (summary plots, day/night summary, and group SHAP plots).",
     )
     return parser.parse_args()
 
