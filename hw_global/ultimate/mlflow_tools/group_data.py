@@ -203,12 +203,13 @@ class GroupData:
     def shap_hourly_mean_df(self, kg_class: Optional[str] = None) -> pd.DataFrame:
         """
         Calculates the hourly mean of SHAP values, returning only SHAP columns.
+        'local_hour' will be the index.
 
         Args:
             kg_class (str, optional): KGMajorClass to filter by.
 
         Returns:
-            pd.DataFrame: Hourly mean of SHAP values (only SHAP columns).
+            pd.DataFrame: Hourly mean of SHAP values (only SHAP columns). 'local_hour' is the index.
         """
         if kg_class not in self._shap_hourly_mean_cache:
             df = pd.concat(
@@ -220,16 +221,15 @@ class GroupData:
                     df.drop("KGMajorClass", axis=1)
                     .groupby(["local_hour"])
                     .mean()
-                    .reset_index()
                 )
             else:
                 df = df[df["KGMajorClass"] == kg_class]
                 df = df.drop("KGMajorClass", axis=1)
-                result = df.groupby("local_hour").mean().reset_index()
+                result = df.groupby("local_hour").mean()
 
             # Rename columns and select only SHAP columns before caching
             result = result.rename(columns={col: col.replace("_shap", "") for col in result.columns})
-            result = result[["local_hour"] + self.shap_col_names]
+            result = result[self.shap_col_names]
             self._shap_hourly_mean_cache[kg_class] = result
 
         return self._shap_hourly_mean_cache[kg_class]
@@ -237,12 +237,13 @@ class GroupData:
     def feature_hourly_mean_df(self, kg_class: Optional[str] = None) -> pd.DataFrame:
         """
         Calculates the hourly mean of feature values, returning only feature columns.
-
+        'local_hour' will be the index.
+        
         Args:
             kg_class (str, optional): KGMajorClass to filter by.
 
         Returns:
-            pd.DataFrame: Hourly mean of feature values (only feature columns).
+            pd.DataFrame: Hourly mean of feature values (only feature columns). 'local_hour' is the index.
         """
         if kg_class not in self._feature_hourly_mean_cache:
             df = pd.concat(
@@ -254,15 +255,14 @@ class GroupData:
                     df.drop("KGMajorClass", axis=1)
                     .groupby(["local_hour"])
                     .mean()
-                    .reset_index()
                 )
             else:
                 df = df[df["KGMajorClass"] == kg_class]
                 df = df.drop("KGMajorClass", axis=1)
-                result = df.groupby("local_hour").mean().reset_index()
-            
+                result = df.groupby("local_hour").mean()
+
             # Select only feature columns before caching
-            result = result[["local_hour"] + self.feature_cols_names]
+            result = result[self.feature_cols_names]
             self._feature_hourly_mean_cache[kg_class] = result
 
         return self._feature_hourly_mean_cache[kg_class]
@@ -270,12 +270,13 @@ class GroupData:
     def shap_group_hourly_mean_df(self, kg_class: Optional[str] = None) -> pd.DataFrame:
         """
         Calculates the hourly mean of group SHAP values, returning only group SHAP columns.
-
+        'local_hour' will be the index.
+        
         Args:
             kg_class (str, optional): KGMajorClass to filter by.
 
         Returns:
-            pd.DataFrame: Hourly mean of group SHAP values (only group SHAP columns).
+            pd.DataFrame: Hourly mean of group SHAP values (only group SHAP columns). 'local_hour' is the index.
         """
         if kg_class not in self._shap_group_hourly_mean_cache:
             df = self._df.copy()
@@ -284,16 +285,15 @@ class GroupData:
                     df.drop("KGMajorClass", axis=1)
                     .groupby(["local_hour"])
                     .mean()
-                    .reset_index()
                 )
             else:
                 df = df[df["KGMajorClass"] == kg_class]
                 df = df.drop("KGMajorClass", axis=1)
-                result = df.groupby("local_hour").mean().reset_index()
+                result = df.groupby("local_hour").mean()
 
             # Rename columns and select only group SHAP columns before caching
             result = result.rename(columns={col: col.replace("_shap", "").replace("_group", "") for col in result.columns})
-            result = result[["local_hour"] + self.shap_group_col_names]
+            result = result[self.shap_group_col_names]
             self._shap_group_hourly_mean_cache[kg_class] = result
 
         return self._shap_group_hourly_mean_cache[kg_class]
@@ -303,12 +303,13 @@ class GroupData:
     ) -> pd.DataFrame:
         """
         Calculates the hourly mean of group feature values, returning only group feature columns.
+        'local_hour' will be the index.
 
         Args:
             kg_class (str, optional): KGMajorClass to filter by.
 
         Returns:
-            pd.DataFrame: Hourly mean of group feature values (only group feature columns).
+            pd.DataFrame: Hourly mean of group feature values (only group feature columns). 'local_hour' is the index.
         """
         if kg_class not in self._feature_group_hourly_mean_cache:
             df = self._df.copy()
@@ -317,16 +318,15 @@ class GroupData:
                     df.drop("KGMajorClass", axis=1)
                     .groupby(["local_hour"])
                     .mean()
-                    .reset_index()
                 )
             else:
                 df = df[df["KGMajorClass"] == kg_class]
                 df = df.drop("KGMajorClass", axis=1)
-                result = df.groupby("local_hour").mean().reset_index()
+                result = df.groupby("local_hour").mean()
 
             # Rename columns and select only group feature columns before caching
             result = result.rename(columns={col: col.replace("_feature", "").replace("_group", "") for col in result.columns})
-            result = result[["local_hour"] + self.feature_group_cols_names]
+            result = result[self.feature_group_cols_names]
             self._feature_group_hourly_mean_cache[kg_class] = result
 
         return self._feature_group_hourly_mean_cache[kg_class]
