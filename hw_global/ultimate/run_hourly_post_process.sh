@@ -30,7 +30,8 @@ declare -A patterns
 
 # patterns["^mixed_FSA_Hourly_HW98_Hour[0-9]{1,2}$"]="summary"
 # patterns["^Final3_NO_LE_Hourly_HW98_Hour(10|6|12)$"]="summary waterfall dependency"
-patterns["^Final3_NO_LE_Hourly_HW98_Hour[0-9]+$"]="summary waterfall dependency"
+# patterns["^Final3_NO_LE_Hourly_HW98_Hour[0-9]+$"]="summary waterfall dependency"
+patterns["^Final3_NO_LE_Hourly_HW98_Hour[0-9]+$"]="combine_shap"
 
 # Loop through the patterns and generate types
 for pattern in "${!patterns[@]}"; do

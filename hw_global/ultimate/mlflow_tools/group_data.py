@@ -50,6 +50,8 @@ class GroupData:
 
         self._shap_group_detail_df = self._df[self._group_shap_cols]
         self._feature_group_detail_df = self._df[self._group_feature_cols]
+        
+        self._feature_to_group_mapping = feature_to_group_mapping
 
         # Caches for DataFrames with modified column names
         self._processed_df_cache: Optional[pd.DataFrame] = None
@@ -63,6 +65,7 @@ class GroupData:
         self._feature_hourly_mean_cache: Dict[Optional[str], pd.DataFrame] = {}
         self._shap_group_hourly_mean_cache: Dict[Optional[str], pd.DataFrame] = {}
         self._feature_group_hourly_mean_cache: Dict[Optional[str], pd.DataFrame] = {}
+        self._feature_hourly_mean_by_group_cache: Dict[Tuple[Optional[str], str], pd.DataFrame] = {}
 
     def _process_data(
         self,
@@ -297,6 +300,47 @@ class GroupData:
             self._shap_group_hourly_mean_cache[kg_class] = result
 
         return self._shap_group_hourly_mean_cache[kg_class]
+    
+    def feature_hourly_mean_for_a_given_group_df(
+        self, kg_class: str, group_name: str
+    ) -> pd.DataFrame:
+        """
+        Calculates the hourly mean of feature values for a specific group, returning only the feature columns within that group.
+        'local_hour' will be the index.
+
+        Args:
+            kg_class (str, optional): KGMajorClass to filter by.
+            group_name (str): The name of the group to filter by.
+
+        Returns:
+            pd.DataFrame: Hourly mean of feature values for the specified group (only feature columns of that group). 'local_hour' is the index.
+        """
+        if (kg_class, group_name) not in self._feature_hourly_mean_by_group_cache:
+            
+            if group_name not in self._group_names:
+                raise ValueError(f"Group '{group_name}' not found in group_names.")
+
+            # Identify features within the specified group
+            group_features = [f for f, g in self._feature_to_group_mapping.items() if g == group_name]
+
+            df = pd.concat(
+                [self._feature_detail_df, self._df[["local_hour", "KGMajorClass"]]],
+                axis=1,
+            )
+
+            # Filter for the specific features within the group
+            df = df[df.columns[df.columns.isin(group_features + ["local_hour", "KGMajorClass"])]]
+
+            if not kg_class or kg_class == "global":
+                result = df.drop("KGMajorClass", axis=1).groupby(["local_hour"]).mean()
+            else:
+                df = df[df["KGMajorClass"] == kg_class]
+                df = df.drop("KGMajorClass", axis=1)
+                result = df.groupby("local_hour").mean()
+
+            self._feature_hourly_mean_by_group_cache[(kg_class, group_name)] = result
+
+        return self._feature_hourly_mean_by_group_cache[(kg_class, group_name)]
 
     def feature_group_hourly_mean_df(
         self, kg_class: Optional[str] = None

@@ -58,28 +58,8 @@ def generate_group_shap_plots_by_climate_zone(
         color_mapping=color_mapping,
     )
 
-    # Generate side-by-side plots for each feature group in global data
-    print("Generating global plots for each feature group...")
-    for group_name in obj_group_data.group_names:
-        # Get corresponding SHAP and feature columns for this group
-        shap_plot_df_group = obj_group_data.shap_group_hourly_mean_df("global")
-        feature_values_plot_df_group = obj_group_data.feature_group_hourly_mean_df("global")
-        create_side_by_side_group_plot(
-            shap_df=shap_plot_df_group,
-            feature_values_df=feature_values_plot_df_group,
-            group_name=group_name,
-            output_dir=global_dir,
-            kg_class="global",
-            color_mapping=color_mapping,
-            base_value=base_values,
-            show_total_feature_line=show_total_feature_line,
-        )
-
     # Plot for each KGMajorClass
     for kg_class in kg_classes:
-        if kg_class == "global":
-            continue
-
         print(f"Generating plots for KGMajorClass '{kg_class}'...")
         # Create subdirectory for the current kg_class
         kg_class_dir = os.path.join(output_dir, kg_class)
@@ -105,8 +85,8 @@ def generate_group_shap_plots_by_climate_zone(
         # Generate side-by-side plots for each feature group
         for group_name in obj_group_data.group_names:
             # Get SHAP and feature data for this group and kg_class
-            shap_plot_df = obj_group_data.shap_group_hourly_mean_df(kg_class)
-            feature_values_plot_df = obj_group_data.feature_group_hourly_mean_df(kg_class)
+            shap_plot_df = obj_group_data.shap_group_hourly_mean_df(kg_class)[[group_name]]  # Only select current group
+            feature_values_plot_df = obj_group_data.feature_hourly_mean_for_a_given_group_df(kg_class, group_name)  # Only select current group
 
             create_side_by_side_group_plot(
                 shap_df=shap_plot_df,

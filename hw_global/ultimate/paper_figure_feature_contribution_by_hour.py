@@ -228,6 +228,12 @@ def plot_stacked_bar(
 
 
 def main():
+
+    ''' 
+    Sample command:
+    python paper_figure_feature_contribution_by_hour.py --experiment-name Combined_Final_noFSA_Hourly_HW98_Hour 2>&1 | tee rlog
+    '''
+
     """Main function to process SHAP values and generate plots."""
     logging.info("Starting feature contribution analysis...")
 
