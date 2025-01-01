@@ -52,14 +52,15 @@ def plot_shap_stacked_bar(
         sorted_columns = sorted(shap_df.columns, key=lambda x: x)
         colors = [color_mapping.get(feature, "#333333") for feature in sorted_columns]
         shap_df = shap_df[sorted_columns]
-        shap_df.plot(kind="bar", stacked=True, color=colors, ax=ax, bottom=base_values)
+        base_value = base_values.iloc[0] if base_values is not None else 0
+        shap_df.plot(kind="bar", stacked=True, color=colors, ax=ax, bottom=base_value)
     else:
-        shap_df.plot(
-            kind="bar", stacked=True, colormap="tab20", ax=ax, bottom=base_values
-        )
+        base_value = base_values.iloc[0] if base_values is not None else 0
+        shap_df.plot(kind="bar", stacked=True, colormap="tab20", ax=ax, bottom=base_value)
 
     # Calculate mean SHAP values and add base_values
-    mean_shap = shap_df.sum(axis=1) + base_values
+    base_value = base_values.iloc[0] if base_values is not None else 0
+    mean_shap = shap_df.sum(axis=1) + base_value
 
     # Plot the mean SHAP values as a line on the same axis
     mean_shap.plot(
@@ -73,10 +74,10 @@ def plot_shap_stacked_bar(
 
     # Add base value line
     ax.axhline(
-        y=base_values.iloc[0],  # Assuming the first base value for the line
+        y=base_value,  # Using the base_value we calculated above
         color="red",
         linestyle="--",
-        label=f"Base Value ({base_values.iloc[0]:.3f})",
+        label=f"Base Value ({base_value:.3f})",
     )
 
     # Get handles and labels, convert feature names to LaTeX labels

@@ -3,4 +3,5 @@ from .plot_summary import generate_summary_and_kg_plots
 from .create_night_day_summary import create_day_night_summary
 from .plot_shap_stacked_bar import plot_shap_stacked_bar, _save_plot_data, plot_feature_group_stacked_bar
 from .plot_util import get_feature_groups, get_latex_label
-from .plot_side_by_side import plot_shap_and_feature_values, plot_shap_and_feature_values_for_group
+from .plot_side_by_side import generate_group_shap_plots_by_climate_zone, create_side_by_side_group_plot
+from .group_data import calculate_group_shap_values, GroupData

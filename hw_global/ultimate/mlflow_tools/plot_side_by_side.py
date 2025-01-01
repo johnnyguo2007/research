@@ -6,6 +6,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from .group_data import GroupData
+
 from .plot_shap_stacked_bar import plot_shap_stacked_bar, _save_plot_data
 from .plot_util import (
     get_feature_groups,
@@ -13,42 +15,30 @@ from .plot_util import (
     replace_cold_with_continental,
 )
 
-
-def plot_shap_and_feature_values(
-    df_feature: pd.DataFrame,
-    feature_values_melted: pd.DataFrame,
+def generate_group_shap_plots_by_climate_zone(
+    obj_group_data: GroupData,
     kg_classes: List[str],
     output_dir: str,
-    base_value: float = 0,
+    base_values: pd.Series,
     show_total_feature_line: bool = True,
 ) -> None:
     """
-    Plots SHAP value contributions and feature group's values side by side.
+    Generates SHAP value contribution plots for feature groups across different climate zones.
+    Creates both global and per-climate-zone visualizations of group-level SHAP contributions.
 
     Args:
-        df_feature: DataFrame containing feature data with features as columns
-        feature_values_melted: Melted DataFrame containing feature values
+        obj_group_data: GroupData object containing processed data
         kg_classes: List of KGMajorClasses
         output_dir: Directory to save output
-        base_value: Base value for SHAP contributions (default: 0)
+        base_values: Base values for SHAP contributions
         show_total_feature_line: Whether to show total feature value line (default: True)
     """
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    logging.info(
-        f"plot_shap_and_feature_values: df_feature columns: {df_feature.columns.tolist()}"
-    )
-    # Get feature names (all columns except local_hour and KGMajorClass)
-    feature_names = [
-        col for col in df_feature.columns if col not in ["local_hour", "KGMajorClass"]
-    ]
-    feature_to_group_mapping = get_feature_groups(feature_names)
-    unique_groups = set(feature_to_group_mapping.values())
-
     # Create a color palette
-    palette = sns.color_palette("tab20", n_colors=len(feature_names))
-    color_mapping = dict(zip(sorted(feature_names), palette))
+    palette = sns.color_palette("tab20", n_colors=len(obj_group_data.group_names))
+    color_mapping = dict(zip(sorted(obj_group_data.group_names), palette))
 
     # Create a global subdirectory
     global_dir = os.path.join(output_dir, "global")
@@ -56,7 +46,7 @@ def plot_shap_and_feature_values(
 
     # Generate and save the standalone SHAP stacked bar plot for global data (all features)
     print("Generating global standalone SHAP stacked bar plot (all features)...")
-    shap_plot_df_global = df_feature.set_index("local_hour")[feature_names]
+    shap_plot_df_global = obj_group_data.shap_group_hourly_mean_df("global")
 
     # Plot and save the standalone SHAP stacked bar plot for global data
     plot_shap_stacked_bar(
@@ -70,38 +60,18 @@ def plot_shap_and_feature_values(
 
     # Generate side-by-side plots for each feature group in global data
     print("Generating global plots for each feature group...")
-    for group_name in unique_groups:
-        # Get features in the current group
-        group_features = [
-            f for f, g in feature_to_group_mapping.items() if g == group_name
-        ]
-
-        # Select only the features for this group
-        shap_plot_df_group = df_feature.set_index("local_hour")[group_features]
-
-        # Get corresponding feature values
-        feature_values_plot_df_group = feature_values_melted[
-            feature_values_melted["Feature"].isin(group_features)
-        ]
-        feature_values_plot_df_group = (
-            feature_values_plot_df_group.groupby(["local_hour", "Feature"])[
-                "FeatureValue"
-            ]
-            .mean()
-            .reset_index()
-        )
-        feature_values_plot_df_group = feature_values_plot_df_group.pivot_table(
-            index="local_hour", columns="Feature", values="FeatureValue", fill_value=0
-        )
-
-        plot_shap_and_feature_values_for_group(
+    for i, group_name in enumerate(obj_group_data.group_names):
+        # Get corresponding SHAP and feature columns for this group
+        shap_plot_df_group = obj_group_data.shap_group_hourly_mean_df("global")
+        feature_values_plot_df_group = obj_group_data.feature_group_hourly_mean_df("global")
+        create_side_by_side_group_plot(
             shap_df=shap_plot_df_group,
             feature_values_df=feature_values_plot_df_group,
             group_name=group_name,
             output_dir=global_dir,
             kg_class="global",
             color_mapping=color_mapping,
-            base_value=base_value,
+            base_value=base_values,
             show_total_feature_line=show_total_feature_line,
         )
 
@@ -115,25 +85,16 @@ def plot_shap_and_feature_values(
         kg_class_dir = os.path.join(output_dir, kg_class)
         os.makedirs(kg_class_dir, exist_ok=True)
 
-        # Filter data for the current kg_class
-        df_feature_subset = df_feature[df_feature["KGMajorClass"] == kg_class]
-        feature_values_subset = feature_values_melted[
-            feature_values_melted["KGMajorClass"] == kg_class
-        ]
-
+        # Get SHAP data for the current kg_class
+        shap_plot_df_kg = obj_group_data.shap_group_hourly_mean_df(kg_class)
+        
         # Check if there's data for the current kg_class
-        if df_feature_subset.empty:
+        if shap_plot_df_kg.empty:
             print(f"No data for KGMajorClass '{kg_class}'. Skipping.")
             continue
 
-        # Generate and save the standalone SHAP stacked bar plot for the current kg_class (all features)
-        print(
-            f"Generating standalone SHAP stacked bar plot for KGMajorClass '{kg_class}'..."
-        )
-        shap_plot_df_kg = df_feature_subset.set_index("local_hour")[feature_names]
-
         plot_shap_stacked_bar(
-            shap_df=shap_plot_df_kg,
+            shap_df=shap_plot_df_kg.set_index("local_hour")[obj_group_data.shap_group_col_names],
             title=f"SHAP Value Contributions (All Features) - KGMajorClass {kg_class}",
             output_path=os.path.join(
                 kg_class_dir, f"{kg_class}_shap_stacked_bar_all_features.png"
@@ -142,46 +103,24 @@ def plot_shap_and_feature_values(
         )
 
         # Generate side-by-side plots for each feature group
-        for group_name in unique_groups:
-            # Get features in the current group
-            group_features = [
-                f for f, g in feature_to_group_mapping.items() if g == group_name
-            ]
+        for group_name in obj_group_data.group_names:
+            # Get SHAP and feature data for this group and kg_class
+            shap_plot_df = obj_group_data.shap_group_hourly_mean_df(kg_class)
+            feature_values_plot_df = obj_group_data.feature_group_hourly_mean_df(kg_class)
 
-            # Select only the features for this group
-            shap_plot_df = df_feature_subset.set_index("local_hour")[group_features]
-
-            # Get corresponding feature values
-            feature_values_plot_df = feature_values_subset[
-                feature_values_subset["Feature"].isin(group_features)
-            ]
-            feature_values_plot_df = (
-                feature_values_plot_df.groupby(["local_hour", "Feature"])[
-                    "FeatureValue"
-                ]
-                .mean()
-                .reset_index()
-            )
-            feature_values_plot_df = feature_values_plot_df.pivot_table(
-                index="local_hour",
-                columns="Feature",
-                values="FeatureValue",
-                fill_value=0,
-            )
-
-            plot_shap_and_feature_values_for_group(
+            create_side_by_side_group_plot(
                 shap_df=shap_plot_df,
                 feature_values_df=feature_values_plot_df,
                 group_name=group_name,
                 output_dir=kg_class_dir,
                 kg_class=kg_class,
                 color_mapping=color_mapping,
-                base_value=base_value,
+                base_value=base_values,
                 show_total_feature_line=show_total_feature_line,
             )
 
 
-def plot_shap_and_feature_values_for_group(
+def create_side_by_side_group_plot(
     shap_df: pd.DataFrame,
     feature_values_df: pd.DataFrame,
     group_name: str,
@@ -192,11 +131,12 @@ def plot_shap_and_feature_values_for_group(
     show_total_feature_line: bool = True,
 ) -> None:
     """
-    Plots SHAP value contributions and feature group's values side by side.
+    Creates a side-by-side visualization comparing SHAP contributions and actual values for a feature group.
+    Left plot shows stacked SHAP values, right plot shows the actual feature values within the group.
 
     Args:
-        shap_df: DataFrame containing SHAP values
-        feature_values_df: DataFrame containing feature values
+        shap_df: DataFrame containing SHAP values for the feature group
+        feature_values_df: DataFrame containing feature values for the group
         group_name: Name of the feature group
         output_dir: Directory to save output
         kg_class: KGMajorClass name
