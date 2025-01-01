@@ -1,6 +1,7 @@
 import pandas as pd
 from typing import Dict, List, Optional, Tuple
 
+
 class GroupData:
     """
     A class to encapsulate group data with a single DataFrame and associated group information.
@@ -36,14 +37,26 @@ class GroupData:
             both_shap_and_feature_df (pd.DataFrame): DataFrame containing both SHAP and feature values
             feature_to_group_mapping (Dict[str, str]): Mapping from features to their groups
         """
-        if not all(col in both_shap_and_feature_df.columns for col in ["local_hour", "KGMajorClass"]):
-            raise ValueError("DataFrame must contain 'local_hour' and 'KGMajorClass' columns.")
-        
-        self.df, self.group_names, self.group_shap_cols, self.group_feature_cols = self._process_data(
-            both_shap_and_feature_df, feature_to_group_mapping
+        if not all(
+            col in both_shap_and_feature_df.columns
+            for col in ["local_hour", "KGMajorClass"]
+        ):
+            raise ValueError(
+                "DataFrame must contain 'local_hour' and 'KGMajorClass' columns."
+            )
+
+        self.df, self.group_names, self.group_shap_cols, self.group_feature_cols = (
+            self._process_data(both_shap_and_feature_df, feature_to_group_mapping)
         )
-        self.shap_col_names = [col for col in both_shap_and_feature_df.columns if "_shap" in col and "group" not in col]
-        self.feature_cols_names = [col for col in both_shap_and_feature_df.columns if "_shap" not in col and col not in ["KGMajorClass", "local_hour", "KGClass", "global_event_ID", "lon", "lat", "time", "UHI_diff", "Estimation_Error", "base_value"]]
+        self.shap_col_names = [
+            col
+            for col in both_shap_and_feature_df.columns
+            if "_shap" in col and "group" not in col
+        ]
+        self.feature_cols_names = [
+            col.replace("_shap", "") for col in self.shap_col_names
+        ]
+
         self.shap_group_col_names = self.group_shap_cols
         self.feature_group_cols_names = self.group_feature_cols
 
@@ -114,15 +127,22 @@ class GroupData:
             pd.DataFrame: Hourly mean of SHAP values.
         """
         if kg_class not in self._shap_hourly_mean_cache:
-            df = pd.concat([self.shap_detail_df, self.df[["local_hour", "KGMajorClass"]]], axis=1)
+            df = pd.concat(
+                [self.shap_detail_df, self.df[["local_hour", "KGMajorClass"]]], axis=1
+            )
 
             if not kg_class or kg_class == "global":
-                result = df.drop("KGMajorClass", axis=1).groupby(["local_hour"]).mean().reset_index()
+                result = (
+                    df.drop("KGMajorClass", axis=1)
+                    .groupby(["local_hour"])
+                    .mean()
+                    .reset_index()
+                )
             else:
                 df = df[df["KGMajorClass"] == kg_class]
                 df = df.drop("KGMajorClass", axis=1)
                 result = df.groupby("local_hour").mean().reset_index()
-            
+
             self._shap_hourly_mean_cache[kg_class] = result
 
         return self._shap_hourly_mean_cache[kg_class]
@@ -138,16 +158,24 @@ class GroupData:
             pd.DataFrame: Hourly mean of feature values.
         """
         if kg_class not in self._feature_hourly_mean_cache:
-            df = pd.concat([self.feature_detail_df, self.df[["local_hour", "KGMajorClass"]]], axis=1)
+            df = pd.concat(
+                [self.feature_detail_df, self.df[["local_hour", "KGMajorClass"]]],
+                axis=1,
+            )
             if not kg_class or kg_class == "global":
-                result = df.drop("KGMajorClass", axis=1).groupby(["local_hour"]).mean().reset_index()
+                result = (
+                    df.drop("KGMajorClass", axis=1)
+                    .groupby(["local_hour"])
+                    .mean()
+                    .reset_index()
+                )
             else:
                 df = df[df["KGMajorClass"] == kg_class]
                 df = df.drop("KGMajorClass", axis=1)
                 result = df.groupby("local_hour").mean().reset_index()
 
             self._feature_hourly_mean_cache[kg_class] = result
-        
+
         return self._feature_hourly_mean_cache[kg_class]
 
     def shap_group_hourly_mean_df(self, kg_class: Optional[str] = None) -> pd.DataFrame:
@@ -163,7 +191,12 @@ class GroupData:
         if kg_class not in self._shap_group_hourly_mean_cache:
             df = self.df.copy()
             if not kg_class or kg_class == "global":
-                result = df.drop("KGMajorClass", axis=1).groupby(["local_hour"]).mean().reset_index()
+                result = (
+                    df.drop("KGMajorClass", axis=1)
+                    .groupby(["local_hour"])
+                    .mean()
+                    .reset_index()
+                )
             else:
                 df = df[df["KGMajorClass"] == kg_class]
                 df = df.drop("KGMajorClass", axis=1)
@@ -173,7 +206,9 @@ class GroupData:
 
         return self._shap_group_hourly_mean_cache[kg_class]
 
-    def feature_group_hourly_mean_df(self, kg_class: Optional[str] = None) -> pd.DataFrame:
+    def feature_group_hourly_mean_df(
+        self, kg_class: Optional[str] = None
+    ) -> pd.DataFrame:
         """
         Calculates the hourly mean of group feature values.
 
@@ -186,7 +221,12 @@ class GroupData:
         if kg_class not in self._feature_group_hourly_mean_cache:
             df = self.df.copy()
             if not kg_class or kg_class == "global":
-                result = df.drop("KGMajorClass", axis=1).groupby(["local_hour"]).mean().reset_index()
+                result = (
+                    df.drop("KGMajorClass", axis=1)
+                    .groupby(["local_hour"])
+                    .mean()
+                    .reset_index()
+                )
             else:
                 df = df[df["KGMajorClass"] == kg_class]
                 df = df.drop("KGMajorClass", axis=1)
@@ -195,6 +235,7 @@ class GroupData:
             self._feature_group_hourly_mean_cache[kg_class] = result
 
         return self._feature_group_hourly_mean_cache[kg_class]
+
 
 def calculate_group_shap_values(
     both_shap_and_feature_df: pd.DataFrame,

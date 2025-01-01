@@ -7,7 +7,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from .plot_shap_stacked_bar import plot_shap_stacked_bar, _save_plot_data
-from .plot_util import get_feature_groups, get_latex_label, replace_cold_with_continental
+from .plot_util import (
+    get_feature_groups,
+    get_latex_label,
+    replace_cold_with_continental,
+)
 
 
 def plot_shap_and_feature_values(
@@ -32,12 +36,15 @@ def plot_shap_and_feature_values(
     import matplotlib.pyplot as plt
     import seaborn as sns
 
+    logging.info(
+        f"plot_shap_and_feature_values: df_feature columns: {df_feature.columns.tolist()}"
+    )
     # Get feature names (all columns except local_hour and KGMajorClass)
     feature_names = [
         col for col in df_feature.columns if col not in ["local_hour", "KGMajorClass"]
     ]
-    feature_groups = get_feature_groups(feature_names)
-    unique_groups = set(feature_groups.values())
+    feature_to_group_mapping = get_feature_groups(feature_names)
+    unique_groups = set(feature_to_group_mapping.values())
 
     # Create a color palette
     palette = sns.color_palette("tab20", n_colors=len(feature_names))
@@ -65,7 +72,9 @@ def plot_shap_and_feature_values(
     print("Generating global plots for each feature group...")
     for group_name in unique_groups:
         # Get features in the current group
-        group_features = [f for f, g in feature_groups.items() if g == group_name]
+        group_features = [
+            f for f, g in feature_to_group_mapping.items() if g == group_name
+        ]
 
         # Select only the features for this group
         shap_plot_df_group = df_feature.set_index("local_hour")[group_features]
@@ -135,7 +144,9 @@ def plot_shap_and_feature_values(
         # Generate side-by-side plots for each feature group
         for group_name in unique_groups:
             # Get features in the current group
-            group_features = [f for f, g in feature_groups.items() if g == group_name]
+            group_features = [
+                f for f, g in feature_to_group_mapping.items() if g == group_name
+            ]
 
             # Select only the features for this group
             shap_plot_df = df_feature_subset.set_index("local_hour")[group_features]
@@ -310,4 +321,3 @@ def plot_shap_and_feature_values_for_group(
     # Save data before plotting
     _save_plot_data(shap_df, total_shap, output_path, "shap")
     _save_plot_data(feature_values_df, total_features, output_path, "feature")
-
