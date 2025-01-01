@@ -60,7 +60,7 @@ def generate_group_shap_plots_by_climate_zone(
 
     # Generate side-by-side plots for each feature group in global data
     print("Generating global plots for each feature group...")
-    for i, group_name in enumerate(obj_group_data.group_names):
+    for group_name in obj_group_data.group_names:
         # Get corresponding SHAP and feature columns for this group
         shap_plot_df_group = obj_group_data.shap_group_hourly_mean_df("global")
         feature_values_plot_df_group = obj_group_data.feature_group_hourly_mean_df("global")
@@ -94,7 +94,7 @@ def generate_group_shap_plots_by_climate_zone(
             continue
 
         plot_shap_stacked_bar(
-            shap_df=shap_plot_df_kg.set_index("local_hour")[obj_group_data.shap_group_col_names],
+            shap_df=shap_plot_df_kg,
             title=f"SHAP Value Contributions (All Features) - KGMajorClass {kg_class}",
             output_path=os.path.join(
                 kg_class_dir, f"{kg_class}_shap_stacked_bar_all_features.png"

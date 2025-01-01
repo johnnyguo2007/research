@@ -17,7 +17,6 @@ from mlflow_tools import (
     get_feature_groups,
     get_latex_label,
     generate_group_shap_plots_by_climate_zone,
-    create_side_by_side_group_plot
 )
 from mlflow_tools.group_data import calculate_group_shap_values, GroupData
 
@@ -269,7 +268,7 @@ def main():
     logging.info(f"all_df columns: {all_df.columns.tolist()}, shape: {all_df.shape}")
     logging.info(f"shap_cols: {shap_cols}, shape: {shap_df.shape}")
     logging.info(f"feature_cols: {feature_cols}, shape: {feature_values_df.shape}")
-    logging.info(f"group_data df columns: {obj_group_data.df.columns.tolist()}, shape: {obj_group_data.df.shape}")
+    # logging.info(f"group_data df columns: {obj_group_data.df.columns.tolist()}, shape: {obj_group_data.df.shape}")
     logging.info(f"group_names: {obj_group_data.group_names}")
 
     # Generate summary plots if requested
