@@ -8,7 +8,7 @@ ITERATIONS=100000
 LEARNING_RATE=0.01
 DEPTH=10
 # BASE_RUN_TYPE="Hourly_final_kg_model"
-BASE_RUN_TYPE="3type_delta_model"
+BASE_RUN_TYPE="Selection_Final"
 
 
 # Function to run the experiment
@@ -55,8 +55,9 @@ run_experiment() {
 
 # Run experiments for HW95 and HW90, for day and night
 for hw_percentile in 98; do
-    merged_file="updated_local_hour_adjusted_variables_HW${hw_percentile}.feather"    
-    for time_period in "day" "night"; do
+    merged_file="updated_local_hour_adjusted_variables_HW${hw_percentile}.feather"
+    # for time_period in "day" "night"; do    
+    for time_period in "night"; do
     # for time_period in "hourly"; do
         echo "Running experiment for ${time_period}, HW${hw_percentile}"
         run_experiment "${time_period}" $hw_percentile $merged_file

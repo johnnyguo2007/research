@@ -56,7 +56,7 @@ class ExperimentManager:
                 run_id=run.run_id,
                 tracking_uri=self.tracking_uri,
             )
-            exp_obj._load_model(model_subdur)
+            # exp_obj._load_model(model_subdur)
             
             # Check if shap_df is empty
             if exp_obj.shap_df is None or exp_obj.shap_df.empty:

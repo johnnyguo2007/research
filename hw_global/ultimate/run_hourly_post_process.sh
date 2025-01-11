@@ -31,7 +31,11 @@ declare -A patterns
 # patterns["^mixed_FSA_Hourly_HW98_Hour[0-9]{1,2}$"]="summary"
 # patterns["^Final3_NO_LE_Hourly_HW98_Hour(10|6|12)$"]="summary waterfall dependency"
 # patterns["^Final3_NO_LE_Hourly_HW98_Hour[0-9]+$"]="summary waterfall dependency"
-patterns["^Final3_NO_LE_Hourly_HW98_Hour[0-9]+$"]="combine_shap"
+# patterns["^Final3_NO_LE_Hourly_HW98_Hour[0-9]+$"]="combine_shap"
+
+# patterns["^Selection_Final_Day_HW98_no_filter$"]="summary waterfall dependency"
+# patterns["^Selection_Final_Night_HW98_no_filter$"]="summary waterfall dependency"
+patterns["^Selection_Final_(Day|Night)_HW98_no_filter$"]="combine_shap"
 
 # Loop through the patterns and generate types
 for pattern in "${!patterns[@]}"; do
@@ -45,7 +49,7 @@ for pattern in "${!patterns[@]}"; do
         --generate_types "$generate_types" \
         --tracking_uri "$TRACKING_URI" \
         --output_path "$OUTPUT_PATH" \
-        --model_subdur "hourly_model"
+        --model_subdur "night_model"
 done
 
 echo "All experiments processed." 

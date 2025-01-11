@@ -82,6 +82,25 @@ def get_paper_info_from_doi(doi):
         logger.error(f"Error fetching info for DOI {doi}: {str(e)}")
         return None
 
+def remove_doi_url_from_bibtex(bibtex):
+    """
+    Removes DOI and URL fields from BibTeX entry.
+    """
+    if not bibtex or bibtex == "Not Found":
+        return bibtex
+        
+    try:
+        # Remove url={...}, and one space after it
+        bibtex = re.sub(r'url={[^}]+},\s', '', bibtex)
+        
+        # Remove DOI={...}, and one space after it
+        bibtex = re.sub(r'DOI={[^}]+},\s', '', bibtex)
+        
+        return bibtex.strip()
+    except Exception as e:
+        logger.error(f"Error removing DOI/URL from BibTeX: {str(e)}")
+        return bibtex
+
 def process_excel_file(input_file="paper_information.xlsx", output_file="paper_information_out.xlsx"):
     """
     Processes the input Excel file and creates an output file with DOI responses.
@@ -105,7 +124,7 @@ def process_excel_file(input_file="paper_information.xlsx", output_file="paper_i
             raise
             
         # Create new headers with only Filename, DOI and the new fields
-        new_headers = ['Filename', 'DOI', 'title', 'author', 'year', 'journal', 'bibtex', 'raw_response']
+        new_headers = ['Filename', 'DOI', 'title', 'author', 'year', 'journal', 'bibtex', 'bibtex_nodoi', 'raw_response']
         new_sheet.append(new_headers)
         
         # Process each row
@@ -117,7 +136,7 @@ def process_excel_file(input_file="paper_information.xlsx", output_file="paper_i
             logger.info(f"Processing file: {filename}")
             
             # Initialize empty values for new columns
-            title = author = year = journal = bibtex = raw_response = "Not Found"
+            title = author = year = journal = bibtex = bibtex_nodoi = raw_response = "Not Found"
             
             if doi_url:
                 doi = extract_doi_from_url(doi_url)
@@ -132,6 +151,7 @@ def process_excel_file(input_file="paper_information.xlsx", output_file="paper_i
                         year = response_data.get('year', 'Not Found')
                         journal = response_data.get('journal', 'Not Found')
                         bibtex = response_data.get('bibtex', 'Not Found')
+                        bibtex_nodoi = remove_doi_url_from_bibtex(bibtex)
                         raw_response = json.dumps(response_data, ensure_ascii=False)
                     else:
                         raw_response = "Failed to fetch data"
@@ -141,7 +161,7 @@ def process_excel_file(input_file="paper_information.xlsx", output_file="paper_i
                 raw_response = "No DOI provided"
                 
             # Only include Filename, DOI and the new fields
-            new_row = [filename, doi_url, title, author, year, journal, bibtex, raw_response]
+            new_row = [filename, doi_url, title, author, year, journal, bibtex, bibtex_nodoi, raw_response]
             new_sheet.append(new_row)
             
             # Log progress
