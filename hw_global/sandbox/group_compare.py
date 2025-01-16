@@ -257,15 +257,10 @@ if len(df_germinated_fertilized) > 0 and len(df_germinated_no_fertilizer) > 0:
     
     # Add statistical test results for seeds including zeros
     if len(df_germinated_fertilized) > 1 and len(df_germinated_no_fertilizer) > 1:
-        shapiro_fertilized = stats.shapiro(df_germinated_fertilized['num_of_seeds'])
-        shapiro_no_fertilizer = stats.shapiro(df_germinated_no_fertilizer['num_of_seeds'])
-        
         if shapiro_fertilized.pvalue > 0.05 and shapiro_no_fertilizer.pvalue > 0.05:
-            ttest = stats.ttest_ind(df_germinated_fertilized['num_of_seeds'], df_germinated_no_fertilizer['num_of_seeds'], equal_var=False)
-            print(f"  Statistical significance (t-test): p = {ttest.pvalue:.3f}")
+            print(f"  T-test results: t = {ttest.statistic:.3f}, p = {ttest.pvalue:.3f}")
         else:
-            mwu = stats.mannwhitneyu(df_germinated_fertilized['num_of_seeds'], df_germinated_no_fertilizer['num_of_seeds'], alternative='two-sided')
-            print(f"  Statistical significance (Mann-Whitney U): p = {mwu.pvalue:.3f}")
+            print(f"  Mann-Whitney U test results: U = {mwu.statistic:.3f}, p = {mwu.pvalue:.3f}")
 
 if len(df_germinated_positive_seeds_fertilized) > 0 and len(df_germinated_positive_seeds_no_fertilizer) > 0:
     mean_seeds_fertilized_excl_zero = df_germinated_positive_seeds_fertilized['num_of_seeds'].mean()
@@ -274,12 +269,58 @@ if len(df_germinated_positive_seeds_fertilized) > 0 and len(df_germinated_positi
     
     # Add statistical test results for seeds excluding zeros
     if len(df_germinated_positive_seeds_fertilized) > 1 and len(df_germinated_positive_seeds_no_fertilizer) > 1:
-        shapiro_pos_fertilized = stats.shapiro(df_germinated_positive_seeds_fertilized['num_of_seeds'])
-        shapiro_pos_no_fertilizer = stats.shapiro(df_germinated_positive_seeds_no_fertilizer['num_of_seeds'])
-        
         if shapiro_pos_fertilized.pvalue > 0.05 and shapiro_pos_no_fertilizer.pvalue > 0.05:
-            ttest_pos = stats.ttest_ind(df_germinated_positive_seeds_fertilized['num_of_seeds'], df_germinated_positive_seeds_no_fertilizer['num_of_seeds'], equal_var=False)
-            print(f"  Statistical significance (t-test): p = {ttest_pos.pvalue:.3f}")
+            print(f"  T-test results: t = {ttest_pos.statistic:.3f}, p = {ttest_pos.pvalue:.3f}")
         else:
-            mwu_pos = stats.mannwhitneyu(df_germinated_positive_seeds_fertilized['num_of_seeds'], df_germinated_positive_seeds_no_fertilizer['num_of_seeds'], alternative='two-sided')
-            print(f"  Statistical significance (Mann-Whitney U): p = {mwu_pos.pvalue:.3f}")
+            print(f"  Mann-Whitney U test results: U = {mwu_pos.statistic:.3f}, p = {mwu_pos.pvalue:.3f}")
+
+# --- Overall Summary and Conclusions ---
+print("\n--- Overall Summary and Conclusions ---")
+print("This study investigated the impact of fertilizer on seed production, considering both the effect on germination and the number of seeds produced by germinated plants.")
+
+print("\n**Germination:**")
+print(f"- The overall germination rate was {overall_germination_rate:.2f}%. Plants treated with fertilizer had a germination rate of {germination_rate_fertilized:.2f}%, while those without fertilizer had a rate of {germination_rate_no_fertilizer:.2f}%.")
+if p < 0.05:
+    print(f"- A chi-squared test revealed a statistically significant association between fertilizer use and germination (Chi2 = {chi2:.2f}, p = {p:.3f}).")
+    if germination_rate_fertilized > germination_rate_no_fertilizer:
+      print("- This suggests that fertilizer use is associated with a higher likelihood of germination.")
+    else:
+      print("- This suggests that fertilizer use is associated with a lower likelihood of germination.")
+else:
+    print("- A chi-squared test found no statistically significant association between fertilizer use and germination.")
+
+print("\n- The logistic regression model further explored the relationship between fertilizer mass and the probability of germination, showing how the odds of germination change with increasing fertilizer.")
+
+print("\n**Seed Production:**")
+if len(df_germinated_fertilized) > 0 and len(df_germinated_no_fertilizer) > 0:
+    print(f"- Among germinated plants, those treated with fertilizer produced an average of {mean_seeds_fertilized_incl_zero:.2f} seeds (including zeros), while those without fertilizer produced {mean_seeds_no_fertilizer_incl_zero:.2f} seeds.")
+    if len(df_germinated_fertilized) > 1 and len(df_germinated_no_fertilizer) > 1:
+        if shapiro_fertilized.pvalue > 0.05 and shapiro_no_fertilizer.pvalue > 0.05:
+            if ttest.pvalue < 0.05:
+                print(f"  - A t-test indicated a statistically significant difference in seed production between the two groups (t = {ttest.statistic:.3f}, p = {ttest.pvalue:.3f}).")
+            else:
+                print(f"  - A t-test did not find a statistically significant difference in seed production between the two groups (t = {ttest.statistic:.3f}, p = {ttest.pvalue:.3f}).")
+        else:
+            if mwu.pvalue < 0.05:
+                print(f"  - A Mann-Whitney U test indicated a statistically significant difference in seed production between the two groups (U = {mwu.statistic:.3f}, p = {mwu.pvalue:.3f}).")
+            else:
+                print(f"  - A Mann-Whitney U test did not find a statistically significant difference in seed production between the two groups (U = {mwu.statistic:.3f}, p = {mwu.pvalue:.3f}).")
+
+if len(df_germinated_positive_seeds_fertilized) > 0 and len(df_germinated_positive_seeds_no_fertilizer) > 0:
+    print(f"- When considering only plants that produced seeds (excluding zeros), those treated with fertilizer produced an average of {mean_seeds_fertilized_excl_zero:.2f} seeds, while those without fertilizer produced {mean_seeds_no_fertilizer_excl_zero:.2f} seeds.")
+    if len(df_germinated_positive_seeds_fertilized) > 1 and len(df_germinated_positive_seeds_no_fertilizer) > 1:
+        if shapiro_pos_fertilized.pvalue > 0.05 and shapiro_pos_no_fertilizer.pvalue > 0.05:
+            if ttest_pos.pvalue < 0.05:
+                print(f"  - A t-test indicated a statistically significant difference in seed production between the two groups (t = {ttest_pos.statistic:.3f}, p = {ttest_pos.pvalue:.3f}).")
+            else:
+                print(f"  - A t-test did not find a statistically significant difference in seed production between the two groups (t = {ttest_pos.statistic:.3f}, p = {ttest_pos.pvalue:.3f}).")
+        else:
+            if mwu_pos.pvalue < 0.05:
+                print(f"  - A Mann-Whitney U test indicated a statistically significant difference in seed production between the two groups (U = {mwu_pos.statistic:.3f}, p = {mwu_pos.pvalue:.3f}).")
+            else:
+                print(f"  - A Mann-Whitney U test did not find a statistically significant difference in seed production between the two groups (U = {mwu_pos.statistic:.3f}, p = {mwu_pos.pvalue:.3f}).")
+
+print("\n- The linear regression models further investigated the relationship between fertilizer mass and the number of seeds produced, both including and excluding plants with zero seeds. These models help to quantify the effect of fertilizer mass on seed production.")
+
+print("\n**Overall Conclusion:**")
+print("In conclusion, this study provides a comprehensive analysis of the impact of fertilizer on seed production. The results indicate that [Summarize the key findings regarding the effect of fertilizer on germination and seed production, highlighting whether the effects were statistically significant and the direction of any observed effects. Also mention any insights from the regression models. For example: 'fertilizer use was associated with a significant increase in both germination rates and the number of seeds produced by germinated plants. The positive relationship between fertilizer mass and seed production suggests that higher fertilizer levels may lead to increased seed yield, although further investigation into potential optimal fertilizer levels may be warranted.']. These findings contribute to a better understanding of how fertilizer can be used to potentially optimize seed production.")
