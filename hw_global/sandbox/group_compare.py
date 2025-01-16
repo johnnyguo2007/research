@@ -43,10 +43,55 @@ chi2, p, _, _ = stats.chi2_contingency(observed)
 print(f"Chi-squared test for Germination vs. Fertilizer: Chi2 = {chi2:.2f}, p = {p:.3f}")
 
 # Logistic Regression
-if not df['Fert_Mass'].nunique() == 1: # Avoid error if only one unique value
+if not df['Fert_Mass'].nunique() == 1:
     model_germination = smf.logit('Germinated ~ Fert_Mass', data=df).fit()
     print("\nLogistic Regression for Germination:")
     print(model_germination.summary())
+
+    # Output paragraph for Logistic Regression
+    print("\n--- Logistic Regression Results ---")
+    print("The logistic regression model examines the relationship between fertilizer mass and the probability of germination.")
+    print(f"The model's pseudo R-squared value is {model_germination.prsquared:.3f}, indicating the proportion of variance in the outcome variable explained by the model.")
+    print("The coefficients in the model represent the change in the log-odds of germination associated with a one-unit increase in fertilizer mass.")
+    print(f"In this case, the coefficient for Fert_Mass is {model_germination.params['Fert_Mass']:.3f} (p = {model_germination.pvalues['Fert_Mass']:.3f}).")
+    if model_germination.pvalues['Fert_Mass'] < 0.05:
+        print("This indicates that fertilizer mass has a statistically significant effect on the odds of germination.")
+        if model_germination.params['Fert_Mass'] > 0:
+            print("Specifically, an increase in fertilizer mass is associated with an increase in the odds of germination.")
+        else:
+            print("Specifically, an increase in fertilizer mass is associated with a decrease in the odds of germination.")
+    else:
+        print("This indicates that fertilizer mass does not have a statistically significant effect on the odds of germination.")
+
+    # Explanation of the logistic regression plot
+    print("\n--- Logistic Regression Plot Explanation ---")
+    print("The logistic regression plot visualizes the relationship between fertilizer mass and the probability of germination.")
+    print("The x-axis represents the fertilizer mass (in grams), and the y-axis represents the predicted probability of germination.")
+    print("The blue dots represent the actual data points, where each dot corresponds to an observation in the dataset.")
+    print("The red curve represents the predicted probability of germination based on the logistic regression model.")
+    print("As the red curve moves from left to right along the x-axis (increasing fertilizer mass), the corresponding y-values show how the model estimates the probability of germination changes.")
+    print("The shape of the curve illustrates the non-linear relationship between fertilizer mass and the probability of germination that is characteristic of logistic regression.")
+
+    # Plot for Logistic Regression
+    plt.figure(figsize=(8, 6))
+    plt.scatter(df['Fert_Mass'], df['Germinated'], color='skyblue', label='Data Points')
+
+    # Generate x-values for prediction
+    x_pred = np.linspace(df['Fert_Mass'].min(), df['Fert_Mass'].max(), 100)
+
+    # Predict probabilities
+    y_pred = model_germination.predict(pd.DataFrame({'Fert_Mass': x_pred}))
+
+    # Plot logistic curve
+    plt.plot(x_pred, y_pred, color='red', label='Logistic Regression Curve')
+
+    plt.xlabel('Fertilizer Mass (g)')
+    plt.ylabel('Probability of Germination')
+    plt.title('Logistic Regression: Germination vs. Fertilizer Mass')
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, 'logistic_regression_germination.png'), bbox_inches='tight', dpi=300)
+    plt.close()
+
 else:
     print("\nSkipping Logistic Regression for Germination: Only one unique value in Fert_Mass.")
 
