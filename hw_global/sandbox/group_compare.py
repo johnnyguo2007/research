@@ -2,9 +2,12 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
+import os
 
 # Load the data
 file_path = "/home/jguo/ftp/upload/Seeds_Fert.xlsx"
+output_dir = os.path.dirname(file_path)
 df = pd.read_excel(file_path)
 
 # Print column names for debugging
@@ -47,6 +50,28 @@ if not df['Fert_Mass'].nunique() == 1: # Avoid error if only one unique value
 else:
     print("\nSkipping Logistic Regression for Germination: Only one unique value in Fert_Mass.")
 
+# Summary Paragraph for Germination Analysis
+print("\n--- Germination Analysis Summary ---")
+print(f"The overall germination rate across all plants was {overall_germination_rate:.2f}%.")
+print(f"When comparing plants that received fertilizer to those that did not, the germination rates were {germination_rate_fertilized:.2f}% and {germination_rate_no_fertilizer:.2f}%, respectively.")
+if p < 0.05:
+    print(f"A chi-squared test indicated that this difference in germination rates is statistically significant (Chi2 = {chi2:.2f}, p = {p:.3f}).")
+    print("This suggests that the application of fertilizer has a statistically significant association with the likelihood of germination.")
+else:
+    print(f"A chi-squared test indicated that the difference in germination rates is not statistically significant (Chi2 = {chi2:.2f}, p = {p:.3f}).")
+    print("This suggests that the application of fertilizer does not have a statistically significant association with the likelihood of germination.")
+
+# Plot for Germination Analysis
+plt.figure(figsize=(8, 6))
+plt.bar(["No Fertilizer", "Fertilizer"], [germination_rate_no_fertilizer, germination_rate_fertilized], color=['skyblue', 'lightgreen'])
+plt.ylabel("Germination Rate (%)")
+plt.title("Comparison of Germination Rates")
+for i, v in enumerate([germination_rate_no_fertilizer, germination_rate_fertilized]):
+    plt.text(i, v + 2, f"{v:.2f}%", ha='center', va='bottom')
+plt.ylim(0, 100)
+plt.savefig(os.path.join(output_dir, 'germination_rates.png'), bbox_inches='tight', dpi=300)
+plt.close()
+
 print("\n")
 
 # --- 3. Seed Production Analysis (Among Germinated Plants) ---
@@ -82,6 +107,31 @@ if not df_germinated['Fert_Mass'].nunique() == 1:
     model_seeds_incl_zero_linear = smf.ols('num_of_seeds ~ Fert_Mass', data=df_germinated).fit()
     print("\nLinear Regression for Seed Production (including zeros):")
     print(model_seeds_incl_zero_linear.summary())
+    
+    # Plot for Linear Regression (including zeros) with Confidence Band
+    plt.figure(figsize=(8, 6))
+    plt.scatter(df_germinated['Fert_Mass'], df_germinated['num_of_seeds'], label='Data Points')
+
+    # Generate x-values for prediction
+    x_pred = np.linspace(df_germinated['Fert_Mass'].min(), df_germinated['Fert_Mass'].max(), 50)
+    
+    # Predict y-values and get confidence interval
+    pred_obj = model_seeds_incl_zero_linear.get_prediction(pd.DataFrame({'Fert_Mass': x_pred}))
+    y_pred = pred_obj.predicted_mean
+    conf_int = pred_obj.conf_int(alpha=0.05)  # 95% confidence interval
+
+    # Plot regression line
+    plt.plot(x_pred, y_pred, color='red', label=f'Regression Line: y = {model_seeds_incl_zero_linear.params[1]:.2f}x + {model_seeds_incl_zero_linear.params[0]:.2f}')
+    
+    # Plot confidence band
+    plt.fill_between(x_pred, conf_int[:, 0], conf_int[:, 1], color='gray', alpha=0.3, label='95% Confidence Band')
+
+    plt.xlabel('Fertilizer Mass (g)')
+    plt.ylabel('Number of Seeds')
+    plt.title('Linear Regression for Seed Production (Including Zeros)')
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, 'regression_including_zeros.png'), bbox_inches='tight', dpi=300)
+    plt.close()
 else:
     print("\nSkipping Regression for Seed Production (including zeros): Only one unique value in Fert_Mass among germinated plants.")
 
@@ -119,6 +169,31 @@ if not df_germinated_positive_seeds['Fert_Mass'].nunique() == 1 and len(df_germi
     model_seeds_excl_zero_linear = smf.ols('num_of_seeds ~ Fert_Mass', data=df_germinated_positive_seeds).fit()
     print("\nLinear Regression for Seed Production (excluding zeros):")
     print(model_seeds_excl_zero_linear.summary())
+    
+    # Plot for Linear Regression (excluding zeros) with Confidence Band
+    plt.figure(figsize=(8, 6))
+    plt.scatter(df_germinated_positive_seeds['Fert_Mass'], df_germinated_positive_seeds['num_of_seeds'], label='Data Points')
+    
+    # Generate x-values for prediction
+    x_pred_excl_zero = np.linspace(df_germinated_positive_seeds['Fert_Mass'].min(), df_germinated_positive_seeds['Fert_Mass'].max(), 50)
+    
+    # Predict y-values and get confidence interval
+    pred_obj_excl_zero = model_seeds_excl_zero_linear.get_prediction(pd.DataFrame({'Fert_Mass': x_pred_excl_zero}))
+    y_pred_excl_zero = pred_obj_excl_zero.predicted_mean
+    conf_int_excl_zero = pred_obj_excl_zero.conf_int(alpha=0.05)
+
+    # Plot regression line
+    plt.plot(x_pred_excl_zero, y_pred_excl_zero, color='red', label=f'Regression Line: y = {model_seeds_excl_zero_linear.params[1]:.2f}x + {model_seeds_excl_zero_linear.params[0]:.2f}')
+    
+    # Plot confidence band
+    plt.fill_between(x_pred_excl_zero, conf_int_excl_zero[:, 0], conf_int_excl_zero[:, 1], color='gray', alpha=0.3, label='95% Confidence Band')
+
+    plt.xlabel('Fertilizer Mass (g)')
+    plt.ylabel('Number of Seeds')
+    plt.title('Linear Regression for Seed Production (Excluding Zeros)')
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, 'regression_excluding_zeros.png'), bbox_inches='tight', dpi=300)
+    plt.close()
 else:
     print("\nSkipping Regression for Seed Production (excluding zeros): Either only one unique value in Fert_Mass or no data.")
 
@@ -134,10 +209,32 @@ if len(df_germinated_fertilized) > 0 and len(df_germinated_no_fertilizer) > 0:
     mean_seeds_fertilized_incl_zero = df_germinated_fertilized['num_of_seeds'].mean()
     mean_seeds_no_fertilizer_incl_zero = df_germinated_no_fertilizer['num_of_seeds'].mean()
     print(f"- Mean seed production (including zeros) with fertilizer: {mean_seeds_fertilized_incl_zero:.2f} vs. without: {mean_seeds_no_fertilizer_incl_zero:.2f}.")
+    
+    # Add statistical test results for seeds including zeros
+    if len(df_germinated_fertilized) > 1 and len(df_germinated_no_fertilizer) > 1:
+        shapiro_fertilized = stats.shapiro(df_germinated_fertilized['num_of_seeds'])
+        shapiro_no_fertilizer = stats.shapiro(df_germinated_no_fertilizer['num_of_seeds'])
+        
+        if shapiro_fertilized.pvalue > 0.05 and shapiro_no_fertilizer.pvalue > 0.05:
+            ttest = stats.ttest_ind(df_germinated_fertilized['num_of_seeds'], df_germinated_no_fertilizer['num_of_seeds'], equal_var=False)
+            print(f"  Statistical significance (t-test): p = {ttest.pvalue:.3f}")
+        else:
+            mwu = stats.mannwhitneyu(df_germinated_fertilized['num_of_seeds'], df_germinated_no_fertilizer['num_of_seeds'], alternative='two-sided')
+            print(f"  Statistical significance (Mann-Whitney U): p = {mwu.pvalue:.3f}")
 
 if len(df_germinated_positive_seeds_fertilized) > 0 and len(df_germinated_positive_seeds_no_fertilizer) > 0:
     mean_seeds_fertilized_excl_zero = df_germinated_positive_seeds_fertilized['num_of_seeds'].mean()
     mean_seeds_no_fertilizer_excl_zero = df_germinated_positive_seeds_no_fertilizer['num_of_seeds'].mean()
     print(f"- Mean seed production (excluding zeros) with fertilizer: {mean_seeds_fertilized_excl_zero:.2f} vs. without: {mean_seeds_no_fertilizer_excl_zero:.2f}.")
-
-print("\nFurther analysis of regression models can provide insights into the relationship between fertilizer mass and seed production.")
+    
+    # Add statistical test results for seeds excluding zeros
+    if len(df_germinated_positive_seeds_fertilized) > 1 and len(df_germinated_positive_seeds_no_fertilizer) > 1:
+        shapiro_pos_fertilized = stats.shapiro(df_germinated_positive_seeds_fertilized['num_of_seeds'])
+        shapiro_pos_no_fertilizer = stats.shapiro(df_germinated_positive_seeds_no_fertilizer['num_of_seeds'])
+        
+        if shapiro_pos_fertilized.pvalue > 0.05 and shapiro_pos_no_fertilizer.pvalue > 0.05:
+            ttest_pos = stats.ttest_ind(df_germinated_positive_seeds_fertilized['num_of_seeds'], df_germinated_positive_seeds_no_fertilizer['num_of_seeds'], equal_var=False)
+            print(f"  Statistical significance (t-test): p = {ttest_pos.pvalue:.3f}")
+        else:
+            mwu_pos = stats.mannwhitneyu(df_germinated_positive_seeds_fertilized['num_of_seeds'], df_germinated_positive_seeds_no_fertilizer['num_of_seeds'], alternative='two-sided')
+            print(f"  Statistical significance (Mann-Whitney U): p = {mwu_pos.pvalue:.3f}")
