@@ -15,8 +15,8 @@ print(df.columns)
 
 # --- 1. Data Preparation ---
 df['Germinated'] = np.where(df['num_of_seeds'].isna(), 0, 1)
-df_fertilized = df[df['Fert_Mass'] > 0]
-df_no_fertilizer = df[df['Fert_Mass'] == 0]
+df_fertilized = df[df['Fert_Mass'] > 0].copy()
+df_no_fertilizer = df[df['Fert_Mass'] == 0].copy()
 
 print("--- 1. Data Preparation ---")
 print(f"Total number of observations: {len(df)}")
@@ -35,70 +35,40 @@ germination_rate_no_fertilizer = df_no_fertilizer['Germinated'].mean() * 100
 mean_seeds_fertilized_incl_zero = df_fertilized[df_fertilized['Germinated']==1]['num_of_seeds'].mean()
 mean_seeds_no_fertilizer_incl_zero = df_no_fertilizer[df_no_fertilizer['Germinated']==1]['num_of_seeds'].mean()
 
-# Seed Production (excluding zeros)
-mean_seeds_fertilized_excl_zero = df_fertilized[(df_fertilized['Germinated']==1) & (df_fertilized['num_of_seeds'] > 0)]['num_of_seeds'].mean()
-mean_seeds_no_fertilizer_excl_zero = df_no_fertilizer[(df_no_fertilizer['Germinated']==1) & (df_no_fertilizer['num_of_seeds'] > 0)]['num_of_seeds'].mean()
-
-# Calculate expected seed production per plant (including zeros in seed production average)
+# Calculate expected seed production per plant
 expected_seeds_fertilized = germination_rate_fertilized / 100 * mean_seeds_fertilized_incl_zero
 expected_seeds_no_fertilizer = germination_rate_no_fertilizer / 100 * mean_seeds_no_fertilizer_incl_zero
 
-print(f"Expected seeds per plant (Fertilizer, including zeros): {expected_seeds_fertilized:.2f}")
-print(f"Expected seeds per plant (No Fertilizer, including zeros): {expected_seeds_no_fertilizer:.2f}")
-
-# Calculate expected seed production per plant (excluding zeros in seed production average)
-expected_seeds_fertilized_excl_zero = germination_rate_fertilized / 100 * mean_seeds_fertilized_excl_zero
-expected_seeds_no_fertilizer_excl_zero = germination_rate_no_fertilizer / 100 * mean_seeds_no_fertilizer_excl_zero
-
-print(f"Expected seeds per plant (Fertilizer, excluding zeros): {expected_seeds_fertilized_excl_zero:.2f}")
-print(f"Expected seeds per plant (No Fertilizer, excluding zeros): {expected_seeds_no_fertilizer_excl_zero:.2f}")
+print(f"Expected seeds per plant (Fertilizer): {expected_seeds_fertilized:.2f}")
+print(f"Expected seeds per plant (No Fertilizer): {expected_seeds_no_fertilizer:.2f}")
 
 # Statistical Tests for Expected Seed Production
-# (Create temporary variables for easier calculation within the test)
-df_fertilized['temp_expected_seeds_incl_zero'] = df_fertilized['Germinated'] * df_fertilized['num_of_seeds'].fillna(0)
-df_no_fertilizer['temp_expected_seeds_incl_zero'] = df_no_fertilizer['Germinated'] * df_no_fertilizer['num_of_seeds'].fillna(0)
+# Create temporary variables for calculation
+df_fertilized.loc[:, 'temp_expected_seeds'] = df_fertilized['Germinated'] * df_fertilized['num_of_seeds'].fillna(0)
+df_no_fertilizer.loc[:, 'temp_expected_seeds'] = df_no_fertilizer['Germinated'] * df_no_fertilizer['num_of_seeds'].fillna(0)
 
-df_fertilized['temp_expected_seeds_excl_zero'] = df_fertilized['Germinated'] * df_fertilized['num_of_seeds'].fillna(method='ffill')
-df_no_fertilizer['temp_expected_seeds_excl_zero'] = df_no_fertilizer['Germinated'] * df_no_fertilizer['num_of_seeds'].fillna(method='ffill')
+# Initialize variables for test results
+ttest_expected, mwu_expected = None, None
 
-# Statistical test for expected seed production (including zeros)
+# Statistical test for expected seed production
 if len(df_fertilized) > 1 and len(df_no_fertilizer) > 1:
-    if stats.shapiro(df_fertilized['temp_expected_seeds_incl_zero']).pvalue > 0.05 and stats.shapiro(df_no_fertilizer['temp_expected_seeds_incl_zero']).pvalue > 0.05:
+    if stats.shapiro(df_fertilized['temp_expected_seeds']).pvalue > 0.05 and stats.shapiro(df_no_fertilizer['temp_expected_seeds']).pvalue > 0.05:
         ttest_expected = stats.ttest_ind(
-            df_fertilized['temp_expected_seeds_incl_zero'],
-            df_no_fertilizer['temp_expected_seeds_incl_zero'],
+            df_fertilized['temp_expected_seeds'],
+            df_no_fertilizer['temp_expected_seeds'],
             equal_var=False
         )
-        print(f"T-test for expected seed production (including zeros): t = {ttest_expected.statistic:.3f}, p = {ttest_expected.pvalue:.3f}")
+        print(f"T-test for expected seed production: t = {ttest_expected.statistic:.3f}, p = {ttest_expected.pvalue:.3f}")
     else:
         mwu_expected = stats.mannwhitneyu(
-            df_fertilized['temp_expected_seeds_incl_zero'],
-            df_no_fertilizer['temp_expected_seeds_incl_zero'],
+            df_fertilized['temp_expected_seeds'],
+            df_no_fertilizer['temp_expected_seeds'],
             alternative='two-sided'
         )
-        print(f"Mann-Whitney U test for expected seed production (including zeros): U = {mwu_expected.statistic:.3f}, p = {mwu_expected.pvalue:.3f}")
+        print(f"Mann-Whitney U test for expected seed production: U = {mwu_expected.statistic:.3f}, p = {mwu_expected.pvalue:.3f}")
 else:
-    print("Cannot perform statistical tests for expected seed production (including zeros) due to insufficient data.")
+    print("Cannot perform statistical tests for expected seed production due to insufficient data.")
 
-# Statistical test for expected seed production (excluding zeros)
-if len(df_fertilized) > 1 and len(df_no_fertilizer) > 1:
-    if stats.shapiro(df_fertilized['temp_expected_seeds_excl_zero']).pvalue > 0.05 and stats.shapiro(df_no_fertilizer['temp_expected_seeds_excl_zero']).pvalue > 0.05:
-        ttest_expected_excl_zero = stats.ttest_ind(
-            df_fertilized['temp_expected_seeds_excl_zero'],
-            df_no_fertilizer['temp_expected_seeds_excl_zero'],
-            equal_var=False
-        )
-        print(f"T-test for expected seed production (excluding zeros): t = {ttest_expected_excl_zero.statistic:.3f}, p = {ttest_expected_excl_zero.pvalue:.3f}")
-    else:
-        mwu_expected_excl_zero = stats.mannwhitneyu(
-            df_fertilized['temp_expected_seeds_excl_zero'],
-            df_no_fertilizer['temp_expected_seeds_excl_zero'],
-            alternative='two-sided'
-        )
-        print(f"Mann-Whitney U test for expected seed production (excluding zeros): U = {mwu_expected_excl_zero.statistic:.3f}, p = {mwu_expected_excl_zero.pvalue:.3f}")
-else:
-    print("Cannot perform statistical tests for expected seed production (excluding zeros) due to insufficient data.")
-    
 # --- 3. Germination Analysis ---
 print("\n--- 3. Germination Analysis ---")
 
@@ -238,7 +208,7 @@ if not df_germinated['Fert_Mass'].nunique() == 1:
     conf_int = pred_obj.conf_int(alpha=0.05)  # 95% confidence interval
 
     # Plot regression line
-    plt.plot(x_pred, y_pred, color='red', label=f'Regression Line: y = {model_seeds_incl_zero_linear.params[1]:.2f}x + {model_seeds_incl_zero_linear.params[0]:.2f}')
+    plt.plot(x_pred, y_pred, color='red', label=f'Regression Line: y = {model_seeds_incl_zero_linear.params.iloc[1]:.2f}x + {model_seeds_incl_zero_linear.params.iloc[0]:.2f}')
     
     # Plot confidence band
     plt.fill_between(x_pred, conf_int[:, 0], conf_int[:, 1], color='gray', alpha=0.3, label='95% Confidence Band')
@@ -300,7 +270,7 @@ if not df_germinated_positive_seeds['Fert_Mass'].nunique() == 1 and len(df_germi
     conf_int_excl_zero = pred_obj_excl_zero.conf_int(alpha=0.05)
 
     # Plot regression line
-    plt.plot(x_pred_excl_zero, y_pred_excl_zero, color='red', label=f'Regression Line: y = {model_seeds_excl_zero_linear.params[1]:.2f}x + {model_seeds_excl_zero_linear.params[0]:.2f}')
+    plt.plot(x_pred_excl_zero, y_pred_excl_zero, color='red', label=f'Regression Line: y = {model_seeds_excl_zero_linear.params.iloc[1]:.2f}x + {model_seeds_excl_zero_linear.params.iloc[0]:.2f}')
     
     # Plot confidence band
     plt.fill_between(x_pred_excl_zero, conf_int_excl_zero[:, 0], conf_int_excl_zero[:, 1], color='gray', alpha=0.3, label='95% Confidence Band')
@@ -319,47 +289,26 @@ print("\n--- 5. Overall Summary and Conclusions ---")
 print("This study investigated the impact of fertilizer on seed production, considering both the effect on germination and the number of seeds produced by germinated plants.")
 
 print("\n**Overall Impact:**")
-print(f"- When both germination rates and seed production are considered, the expected number of seeds per plant with fertilizer was {expected_seeds_fertilized:.2f} (including zeros) and {expected_seeds_fertilized_excl_zero:.2f} (excluding zeros).")
-print(f"- Without fertilizer, the expected number of seeds per plant was {expected_seeds_no_fertilizer:.2f} (including zeros) and {expected_seeds_no_fertilizer_excl_zero:.2f} (excluding zeros).")
+print(f"- When both germination rates and seed production are considered, the expected number of seeds per plant with fertilizer was {expected_seeds_fertilized:.2f} and without fertilizer was {expected_seeds_no_fertilizer:.2f}.")
 
-# Check if we have the test results before using them
-if 'ttest_expected' in locals():
+if ttest_expected is not None:
     if ttest_expected.pvalue < 0.05:
-        print("- A statistical test indicated a significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups (including zeros).")
+        print("- A statistical test indicated a significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups.")
         if expected_seeds_fertilized > expected_seeds_no_fertilizer:
-            print("  - This suggests that despite the negative impact on germination, the increase in seed production among germinated plants may compensate for the loss, potentially leading to a net positive effect of fertilizer on overall seed yield (including zeros).")
+            print("  - This suggests that despite any impact on germination, the increase in seed production among germinated plants may compensate for the loss, potentially leading to a net positive effect of fertilizer on overall seed yield.")
         else:
-            print("  - This suggests that the negative impact on germination may outweigh the increase in seed production, potentially leading to a net negative effect of fertilizer on overall seed yield (including zeros).")
+            print("  - This suggests that the impact on germination may outweigh the increase in seed production, potentially leading to a net negative effect of fertilizer on overall seed yield.")
     else:
-        print("- A statistical test found no significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups (including zeros).")
-elif 'mwu_expected' in locals():
+        print("- A statistical test found no significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups.")
+elif mwu_expected is not None:
     if mwu_expected.pvalue < 0.05:
-        print("- A statistical test indicated a significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups (including zeros).")
+        print("- A statistical test indicated a significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups.")
         if expected_seeds_fertilized > expected_seeds_no_fertilizer:
-            print("  - This suggests that despite the negative impact on germination, the increase in seed production among germinated plants may compensate for the loss, potentially leading to a net positive effect of fertilizer on overall seed yield (including zeros).")
+            print("  - This suggests that despite any impact on germination, the increase in seed production among germinated plants may compensate for the loss, potentially leading to a net positive effect of fertilizer on overall seed yield.")
         else:
-            print("  - This suggests that the negative impact on germination may outweigh the increase in seed production, potentially leading to a net negative effect of fertilizer on overall seed yield (including zeros).")
+            print("  - This suggests that the impact on germination may outweigh the increase in seed production, potentially leading to a net negative effect of fertilizer on overall seed yield.")
     else:
-        print("- A statistical test found no significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups (including zeros).")
-
-if 'ttest_expected_excl_zero' in locals():
-    if ttest_expected_excl_zero.pvalue < 0.05:
-        print("- A statistical test indicated a significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups (excluding zeros).")
-        if expected_seeds_fertilized_excl_zero > expected_seeds_no_fertilizer_excl_zero:
-            print("  - This suggests that despite the negative impact on germination, the increase in seed production among germinated plants may compensate for the loss, potentially leading to a net positive effect of fertilizer on overall seed yield (excluding zeros).")
-        else:
-            print("  - This suggests that the negative impact on germination may outweigh the increase in seed production, potentially leading to a net negative effect of fertilizer on overall seed yield (excluding zeros).")
-    else:
-        print("- A statistical test found no significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups (excluding zeros).")
-elif 'mwu_expected_excl_zero' in locals():
-    if mwu_expected_excl_zero.pvalue < 0.05:
-        print("- A statistical test indicated a significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups (excluding zeros).")
-        if expected_seeds_fertilized_excl_zero > expected_seeds_no_fertilizer_excl_zero:
-            print("  - This suggests that despite the negative impact on germination, the increase in seed production among germinated plants may compensate for the loss, potentially leading to a net positive effect of fertilizer on overall seed yield (excluding zeros).")
-        else:
-            print("  - This suggests that the negative impact on germination may outweigh the increase in seed production, potentially leading to a net negative effect of fertilizer on overall seed yield (excluding zeros).")
-    else:
-        print("- A statistical test found no significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups (excluding zeros).")
+        print("- A statistical test found no significant difference in the overall expected seed production per plant between the fertilizer and no-fertilizer groups.")
 
 print("\n**Germination:**")
 print(f"- The overall germination rate was {overall_germination_rate:.2f}%. Plants treated with fertilizer had a germination rate of {germination_rate_fertilized:.2f}%, while those without fertilizer had a rate of {germination_rate_no_fertilizer:.2f}%.")
@@ -376,34 +325,20 @@ print("\n- The logistic regression model further explored the relationship betwe
 
 print("\n**Seed Production (Among Germinated Plants):**")
 if len(df_germinated_fertilized) > 0 and len(df_germinated_no_fertilizer) > 0:
-    print(f"- Among germinated plants, those treated with fertilizer produced an average of {mean_seeds_fertilized_incl_zero:.2f} seeds (including zeros), while those without fertilizer produced {mean_seeds_no_fertilizer_incl_zero:.2f} seeds.")
+    print(f"- Among germinated plants, those treated with fertilizer produced an average of {mean_seeds_fertilized_incl_zero:.2f} seeds, while those without fertilizer produced {mean_seeds_no_fertilizer_incl_zero:.2f} seeds.")
     if len(df_germinated_fertilized) > 1 and len(df_germinated_no_fertilizer) > 1:
-        if 'ttest' in locals():
+        if shapiro_fertilized.pvalue > 0.05 and shapiro_no_fertilizer.pvalue > 0.05:
             if ttest.pvalue < 0.05:
                 print(f"  - A t-test indicated a statistically significant difference in seed production between the two groups (t = {ttest.statistic:.3f}, p = {ttest.pvalue:.3f}).")
             else:
                 print(f"  - A t-test did not find a statistically significant difference in seed production between the two groups (t = {ttest.statistic:.3f}, p = {ttest.pvalue:.3f}).")
-        elif 'mwu' in locals():
+        else:
             if mwu.pvalue < 0.05:
                 print(f"  - A Mann-Whitney U test indicated a statistically significant difference in seed production between the two groups (U = {mwu.statistic:.3f}, p = {mwu.pvalue:.3f}).")
             else:
                 print(f"  - A Mann-Whitney U test did not find a statistically significant difference in seed production between the two groups (U = {mwu.statistic:.3f}, p = {mwu.pvalue:.3f}).")
 
-if len(df_germinated_positive_seeds_fertilized) > 0 and len(df_germinated_positive_seeds_no_fertilizer) > 0:
-    print(f"- When considering only plants that produced seeds (excluding zeros), those treated with fertilizer produced an average of {mean_seeds_fertilized_excl_zero:.2f} seeds, while those without fertilizer produced {mean_seeds_no_fertilizer_excl_zero:.2f} seeds.")
-    if len(df_germinated_positive_seeds_fertilized) > 1 and len(df_germinated_positive_seeds_no_fertilizer) > 1:
-        if 'ttest_pos' in locals():
-            if ttest_pos.pvalue < 0.05:
-                print(f"  - A t-test indicated a statistically significant difference in seed production between the two groups (t = {ttest_pos.statistic:.3f}, p = {ttest_pos.pvalue:.3f}).")
-            else:
-                print(f"  - A t-test did not find a statistically significant difference in seed production between the two groups (t = {ttest_pos.statistic:.3f}, p = {ttest_pos.pvalue:.3f}).")
-        elif 'mwu_pos' in locals():
-            if mwu_pos.pvalue < 0.05:
-                print(f"  - A Mann-Whitney U test indicated a statistically significant difference in seed production between the two groups (U = {mwu_pos.statistic:.3f}, p = {mwu_pos.pvalue:.3f}).")
-            else:
-                print(f"  - A Mann-Whitney U test did not find a statistically significant difference in seed production between the two groups (U = {mwu_pos.statistic:.3f}, p = {mwu_pos.pvalue:.3f}).")
-
-print("\n- The linear regression models further investigated the relationship between fertilizer mass and the number of seeds produced, both including and excluding plants with zero seeds. These models help to quantify the effect of fertilizer mass on seed production.")
+print("\n- The linear regression models further investigated the relationship between fertilizer mass and the number of seeds produced. These models help to quantify the effect of fertilizer mass on seed production.")
 
 print("\n**Conclusion:**")
-print("In conclusion, this study reveals a complex relationship between fertilizer use and seed production. While fertilizer may negatively affect germination rates, it can also enhance seed production in plants that successfully germinate. The overall impact of fertilizer on seed yield depends on the balance between these two opposing effects. The analysis of expected seed production per plant provides a way to assess the net effect of fertilizer. Further research could investigate the optimal fertilizer levels to maximize seed production while minimizing the negative impact on germination.")
+print("In conclusion, this study reveals a complex relationship between fertilizer use and seed production. The analysis considers both germination rates and seed production to assess the overall impact of fertilizer. The analysis of expected seed production per plant provides a way to assess the net effect of fertilizer. Further research could investigate the optimal fertilizer levels to maximize seed production while considering the impact on germination.")
