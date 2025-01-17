@@ -190,17 +190,17 @@ else:
     print("Cannot perform statistical tests for seed production (including zeros) due to insufficient data in one or both groups.")
 
 # Regression (including zeros)
-if not df_germinated['Fert_Mass'].nunique() == 1:
-    model_seeds_incl_zero_linear = smf.ols('num_of_seeds ~ Fert_Mass', data=df_germinated).fit()
-    print("\nLinear Regression for Seed Production (including zeros):")
+if not df_germinated_fertilized['Fert_Mass'].nunique() == 1:
+    model_seeds_incl_zero_linear = smf.ols('num_of_seeds ~ Fert_Mass', data=df_germinated_fertilized).fit()
+    print("\nLinear Regression for Seed Production (including zeros, fertilized group only):")
     print(model_seeds_incl_zero_linear.summary())
     
     # Plot for Linear Regression (including zeros) with Confidence Band
     plt.figure(figsize=(8, 6))
-    plt.scatter(df_germinated['Fert_Mass'], df_germinated['num_of_seeds'], label='Data Points')
+    plt.scatter(df_germinated_fertilized['Fert_Mass'], df_germinated_fertilized['num_of_seeds'], label='Data Points')
 
     # Generate x-values for prediction
-    x_pred = np.linspace(df_germinated['Fert_Mass'].min(), df_germinated['Fert_Mass'].max(), 50)
+    x_pred = np.linspace(df_germinated_fertilized['Fert_Mass'].min(), df_germinated_fertilized['Fert_Mass'].max(), 50)
     
     # Predict y-values and get confidence interval
     pred_obj = model_seeds_incl_zero_linear.get_prediction(pd.DataFrame({'Fert_Mass': x_pred}))
@@ -215,12 +215,12 @@ if not df_germinated['Fert_Mass'].nunique() == 1:
 
     plt.xlabel('Fertilizer Mass (g)')
     plt.ylabel('Number of Seeds')
-    plt.title('Linear Regression for Seed Production (Including Zeros)')
+    plt.title('Linear Regression for Seed Production\n(Including Zeros, Fertilized Group Only)')
     plt.legend()
     plt.savefig(os.path.join(output_dir, 'regression_including_zeros.png'), bbox_inches='tight', dpi=300)
     plt.close()
 else:
-    print("\nSkipping Regression for Seed Production (including zeros): Only one unique value in Fert_Mass among germinated plants.")
+    print("\nSkipping Regression for Seed Production (including zeros): Only one unique value in Fert_Mass among fertilized germinated plants.")
 
 print("\n--- Excluding germinated plants with zero seeds ---")
 df_germinated_positive_seeds = df_germinated[df_germinated['num_of_seeds'] > 0]
@@ -252,17 +252,17 @@ else:
     print("Cannot perform statistical tests for seed production (excluding zeros) as one or both groups are empty.")
 
 # Regression (excluding zeros)
-if not df_germinated_positive_seeds['Fert_Mass'].nunique() == 1 and len(df_germinated_positive_seeds) > 0:
-    model_seeds_excl_zero_linear = smf.ols('num_of_seeds ~ Fert_Mass', data=df_germinated_positive_seeds).fit()
-    print("\nLinear Regression for Seed Production (excluding zeros):")
+if not df_germinated_positive_seeds_fertilized['Fert_Mass'].nunique() == 1 and len(df_germinated_positive_seeds_fertilized) > 0:
+    model_seeds_excl_zero_linear = smf.ols('num_of_seeds ~ Fert_Mass', data=df_germinated_positive_seeds_fertilized).fit()
+    print("\nLinear Regression for Seed Production (excluding zeros, fertilized group only):")
     print(model_seeds_excl_zero_linear.summary())
     
     # Plot for Linear Regression (excluding zeros) with Confidence Band
     plt.figure(figsize=(8, 6))
-    plt.scatter(df_germinated_positive_seeds['Fert_Mass'], df_germinated_positive_seeds['num_of_seeds'], label='Data Points')
+    plt.scatter(df_germinated_positive_seeds_fertilized['Fert_Mass'], df_germinated_positive_seeds_fertilized['num_of_seeds'], label='Data Points')
     
     # Generate x-values for prediction
-    x_pred_excl_zero = np.linspace(df_germinated_positive_seeds['Fert_Mass'].min(), df_germinated_positive_seeds['Fert_Mass'].max(), 50)
+    x_pred_excl_zero = np.linspace(df_germinated_positive_seeds_fertilized['Fert_Mass'].min(), df_germinated_positive_seeds_fertilized['Fert_Mass'].max(), 50)
     
     # Predict y-values and get confidence interval
     pred_obj_excl_zero = model_seeds_excl_zero_linear.get_prediction(pd.DataFrame({'Fert_Mass': x_pred_excl_zero}))
@@ -277,12 +277,12 @@ if not df_germinated_positive_seeds['Fert_Mass'].nunique() == 1 and len(df_germi
 
     plt.xlabel('Fertilizer Mass (g)')
     plt.ylabel('Number of Seeds')
-    plt.title('Linear Regression for Seed Production (Excluding Zeros)')
+    plt.title('Linear Regression for Seed Production\n(Excluding Zeros, Fertilized Group Only)')
     plt.legend()
     plt.savefig(os.path.join(output_dir, 'regression_excluding_zeros.png'), bbox_inches='tight', dpi=300)
     plt.close()
 else:
-    print("\nSkipping Regression for Seed Production (excluding zeros): Either only one unique value in Fert_Mass or no data.")
+    print("\nSkipping Regression for Seed Production (excluding zeros): Either only one unique value in Fert_Mass or no data among fertilized plants.")
 
 # --- 5. Overall Summary and Conclusions ---
 print("\n--- 5. Overall Summary and Conclusions ---")
