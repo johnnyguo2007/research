@@ -69,6 +69,71 @@ if len(df_fertilized) > 1 and len(df_no_fertilizer) > 1:
 else:
     print("Cannot perform statistical tests for expected seed production due to insufficient data.")
 
+# Calculate average seeds per plant for each fertilizer mass range
+# Handle zero fertilizer mass separately
+zero_fert_seeds = df[df['Fert_Mass'] == 0]['num_of_seeds'].fillna(0).mean()
+
+# For non-zero fertilizer mass, create ranges and calculate means
+df_nonzero = df[df['Fert_Mass'] > 0].copy()
+# Create bins for fertilizer mass (adjust the number of bins if needed)
+n_bins = 5  # You can adjust this number based on your data distribution
+fert_bins = np.linspace(df_nonzero['Fert_Mass'].min(), df_nonzero['Fert_Mass'].max(), n_bins + 1)
+df_nonzero['Fert_Range'] = pd.cut(df_nonzero['Fert_Mass'], bins=fert_bins)
+
+# Calculate mean seeds for each range
+range_means = df_nonzero.groupby('Fert_Range')['num_of_seeds'].apply(lambda x: x.fillna(0).mean()).reset_index()
+# Get the center of each bin for plotting
+range_means['Fert_Mass_Center'] = range_means['Fert_Range'].apply(lambda x: x.mid)
+
+# Plot average seed production vs fertilizer mass ranges
+plt.figure(figsize=(10, 6))
+
+# Plot point for zero fertilizer
+plt.scatter(0, zero_fert_seeds, color='blue', s=100, label='No Fertilizer', zorder=5)
+
+# Plot points for fertilizer ranges
+plt.scatter(range_means['Fert_Mass_Center'], 
+           range_means['num_of_seeds'],
+           color='green', 
+           s=100,
+           label='With Fertilizer',
+           zorder=5)
+
+# Add error bars if desired
+for idx, row in range_means.iterrows():
+    fert_range = row['Fert_Range']
+    seeds_in_range = df_nonzero[df_nonzero['Fert_Range'] == fert_range]['num_of_seeds'].fillna(0)
+    if len(seeds_in_range) > 0:
+        stderr = stats.sem(seeds_in_range) if len(seeds_in_range) > 1 else 0
+        plt.errorbar(row['Fert_Mass_Center'], 
+                    row['num_of_seeds'], 
+                    yerr=stderr,
+                    color='gray',
+                    capsize=5,
+                    capthick=1,
+                    zorder=4)
+
+# Add range labels
+for idx, row in range_means.iterrows():
+    plt.annotate(f'n={len(df_nonzero[df_nonzero["Fert_Range"] == row["Fert_Range"]])}',
+                (row['Fert_Mass_Center'], row['num_of_seeds']),
+                xytext=(0, 10), textcoords='offset points',
+                ha='center', va='bottom')
+
+# Add sample size for zero fertilizer
+plt.annotate(f'n={len(df[df["Fert_Mass"] == 0])}',
+            (0, zero_fert_seeds),
+            xytext=(0, 10), textcoords='offset points',
+            ha='center', va='bottom')
+
+plt.xlabel('Fertilizer Mass (g)')
+plt.ylabel('Average Seeds per Plant')
+plt.title('Average Seed Production vs Fertilizer Mass Ranges')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.savefig(os.path.join(output_dir, 'average_seeds_vs_fertilizer_ranges.png'), bbox_inches='tight', dpi=300)
+plt.close()
+
 # --- 3. Germination Analysis ---
 print("\n--- 3. Germination Analysis ---")
 
