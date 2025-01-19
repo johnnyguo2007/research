@@ -70,8 +70,8 @@ else:
     print("Cannot perform statistical tests for expected seed production due to insufficient data.")
 
 # Calculate average seeds per plant for each fertilizer mass range
-# Handle zero fertilizer mass separately
-zero_fert_seeds = df[df['Fert_Mass'] == 0]['num_of_seeds'].fillna(0).mean()
+# Handle zero fertilizer mass using expected seeds calculation
+zero_fert_seeds = expected_seeds_no_fertilizer  # This accounts for both germination rate and seed production
 
 # For non-zero fertilizer mass, create ranges and calculate means
 df_nonzero = df[df['Fert_Mass'] > 0].copy()
