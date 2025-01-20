@@ -40,73 +40,97 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Define dummy data for each category and group
-wet_black = np.random.normal(loc=0.4, scale=0.3, size=17)  # 17 values
-wet_red = np.random.normal(loc=0.3, scale=0.25, size=17)  # 17 values
-wet_blue = np.random.normal(loc=0.0, scale=0.2, size=17)  # 17 values
+# Data (simulated to match the general look of the chart)
+wet_black = np.random.normal(0.4, 0.3, 17)  # 17 values
+wet_red = np.random.normal(0.3, 0.25, 17)
+wet_blue = np.random.normal(0, 0.2, 17)
 
-intermediate_black = np.random.normal(loc=0.6, scale=0.4, size=101)  # 101 values
-intermediate_red = np.random.normal(loc=0.4, scale=0.3, size=101)  # 101 values
-intermediate_blue = np.random.normal(loc=0.0, scale=0.25, size=101)  # 101 values
+intermediate_black = np.random.normal(0.6, 0.4, 101)  # 101 values
+intermediate_red = np.random.normal(0.4, 0.3, 101)
+intermediate_blue = np.random.normal(0, 0.25, 101)
 
-dry_black = np.random.normal(loc=0.7, scale=0.35, size=15)  # 15 values
-dry_red = np.random.normal(loc=0.5, scale=0.3, size=15)  # 15 values
-dry_blue = np.random.normal(loc=0.1, scale=0.2, size=15)  # 15 values
+dry_black = np.random.normal(0.7, 0.35, 15)  # 15 values
+dry_red = np.random.normal(0.5, 0.3, 15)
+dry_blue = np.random.normal(0.1, 0.25, 15)
 
-# Create the box plot
-fig, ax = plt.subplots(figsize=(5, 4))
+# Create the plot
+fig, ax = plt.subplots(figsize=(6, 4))  # Adjust figure size as needed
 
-# Flatten the data structure
-data = [wet_black, wet_red, wet_blue,
-        intermediate_black, intermediate_red, intermediate_blue,
-        dry_black, dry_red, dry_blue]
+# Boxplot data - Flattened structure
+data = [
+    wet_black, wet_red, wet_blue,
+    intermediate_black, intermediate_red, intermediate_blue,
+    dry_black, dry_red, dry_blue,
+]
 
-bplot = ax.boxplot(
+
+# Colors for the boxes
+colors = ['black', 'red', 'blue']*3
+positions = [1,1.25,1.5,2,2.25,2.5,3,3.25,3.5] # Explicit x positions
+
+# Create the box plots
+bp = ax.boxplot(
     data,
-    patch_artist=True,
+    positions=positions,
+    widths=0.2,
+    patch_artist=True,  # Fill with color
     showmeans=True,
-    showfliers=True,
-    positions=[1, 2, 3, 5, 6, 7, 9, 10, 11],
-    widths=0.6,
-    medianprops=dict(color="black", linewidth=1),
-    whiskerprops=dict(color="black", linewidth=1),
-    capprops=dict(color="black", linewidth=1),
-    flierprops=dict(marker="o", markerfacecolor="black", markersize=2, linestyle="none"),
-    meanprops=dict(marker="x", markeredgecolor="black", markersize=6),
-    boxprops=dict(color="black", linewidth=1),
+    showfliers=True,  # Show outliers
+    medianprops={'color': 'black'},
+    meanprops={
+        'marker': 'x',
+        'markeredgecolor': 'black',
+        'markerfacecolor': 'black',
+    },
+    flierprops={'markersize': 3},
 )
 
-# Customize box colors
-colors = ["black", "red", "blue"] * 3
-for patch, color in zip(bplot["boxes"], colors):
-    patch.set_facecolor(color)
-    patch.set_edgecolor(color)
+# Fill boxes with color and set properties
+for box, color in zip(bp['boxes'], colors):
+    box.set_facecolor('white')  # Set to white
+    box.set_edgecolor(color)
+    box.set_linewidth(1)
 
-# Set y-axis limits and ticks
+for median in bp['medians']:
+    median.set_color('black')
+    median.set_linewidth(1)
+    
+for whisker,color in zip(bp['whiskers'], colors*2):
+    whisker.set_color(color)
+    whisker.set_linewidth(1)
+
+for cap,color in zip(bp['caps'], colors*2):
+        cap.set_color(color)
+        cap.set_linewidth(1)
+
+for flier, color in zip(bp['fliers'], colors*9):
+    flier.set_markerfacecolor(color)
+    flier.set_markeredgecolor(color)
+    
+# Customize the plot
+ax.set_xticks([1.25, 2.25, 3.25])
+ax.set_xticklabels(['Wet', 'Intermediate', 'Dry'], fontsize=14)
+ax.set_ylabel('$\u0394T_w$ (°C)', fontsize=14)
 ax.set_ylim(-0.8, 1.5)
-ax.set_yticks([-0.7, 0, 0.7, 1.4])
+ax.axhline(0, color='black', linewidth=0.8)  # Add a horizontal line at y=0
 
-# Set y-axis label
-ax.set_ylabel(r"$\Delta T_w$ (°C)", fontsize=14)
-
-# Add a horizontal line at y=0
-ax.axhline(y=0, color="black", linestyle="-", linewidth=0.8)
-
-# Set x-axis ticks and labels
-ax.set_xticks([2, 6, 10])
-ax.set_xticklabels(["Wet", "Intermediate", "Dry"], fontsize=14)
-
-# Add sample sizes
+# Sample sizes (as shown in the image)
 sample_sizes = [17, 101, 15]
 for i, size in enumerate(sample_sizes):
-    ax.text(2 + i * 4, -0.9, size, ha="center", va="top", fontsize=14)
+    ax.text(
+        positions[i*3+1] ,
+        -0.9,
+        str(size),
+        ha='center',
+        va='top',
+        fontsize=14,
+    )
 
-# Add triangles below the x-axis
-ax.plot([2, 6, 10], [-1.1, -1.1, -1.1], marker="^", markersize=10, color="black", linestyle="none")
+# Add triangles below x-axis labels
+triangle_positions = [1.25, 2.25, 3.25]
+for pos in triangle_positions:
+    ax.plot(pos, -1.1, marker='^', color='black', markersize=8)
 
-# Remove x-axis ticks
-ax.tick_params(axis="x", which="both", bottom=False, top=False)
-
-# Adjust layout and display the plot
+# Adjust layout
 plt.tight_layout()
 plt.show()
