@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 import os
+import matplotlib.pyplot as plt
+
 THRESHOLD: int = 98
 
 def replace_cold_with_continental(kg_main_group):
@@ -27,12 +29,9 @@ local_hour_adjusted_df.info()
 
 len(local_hour_adjusted_df['location_ID'].unique()) 
 
-# ##  3.2: Compute Average Differences Based on Local Hour
 
-# os.environ["PROJ_LIB"] = "/home/jguo/anaconda3/envs/I2000/share/proj"
-import xarray as xr
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
+
+
 
 # Group by 'lat', 'lon', and 'local_hour', then calculate the mean for 'UHI_diff'
 var_diff_by_localhour = local_hour_adjusted_df.groupby(['lat', 'lon', 'local_hour'])[['UHI_diff']].mean().reset_index().sort_values(by=['lat', 'lon', 'local_hour'])
@@ -46,8 +45,8 @@ var_diff_by_localhour.info()
 # ## 4.1: Visualize UHI_diff and UWBI_diff by Local Hour
 
 # Plot control switches
-PLOT_GLOBAL_MEAN = False
-PLOT_KG_CLASS = False
+PLOT_GLOBAL_MEAN = True
+PLOT_KG_CLASS = True
 PLOT_KG_MAIN_GROUP = True
 
 if PLOT_GLOBAL_MEAN:
@@ -81,10 +80,6 @@ if PLOT_GLOBAL_MEAN:
 
 # ###  4.2.1: Load the Koppen Geiger Map and Legend
 
-import pandas as pd
-import xarray as xr
-import numpy as np
-import matplotlib.pyplot as plt
 
 # Load the Koppen-Geiger climate classification map from a NetCDF file
 ds_koppen_map = xr.open_dataset('/home/jguo/other_projects/1991_2020/koppen_geiger_0p5.nc')
@@ -92,37 +87,37 @@ ds_koppen_map = xr.open_dataset('/home/jguo/other_projects/1991_2020/koppen_geig
 
 # Load the Koppen-Geiger Legend from an Excel file for mapping class IDs to descriptions
 kg_legend = pd.read_excel('/home/jguo/research/hw_global/Data/KoppenGeigerLegend.xlsx', engine='openpyxl')
-kg_legend
+# kg_legend
 
-# ###  4.2.2: Assign the Nearest Koppen Geiger Class to Each Grid Cell
+# # ###  4.2.2: Assign the Nearest Koppen Geiger Class to Each Grid Cell
 
-# Convert latitudes and longitudes from the NetCDF dataset to numpy arrays
-latitudes = ds_koppen_map['lat'].values
-longitudes = ds_koppen_map['lon'].values
+# # Convert latitudes and longitudes from the NetCDF dataset to numpy arrays
+# latitudes = ds_koppen_map['lat'].values
+# longitudes = ds_koppen_map['lon'].values
 
-# Flatten the latitudes, longitudes, and kg_class for easier manipulation
-lat_flat = np.repeat(latitudes, len(longitudes))
-lon_flat = np.tile(longitudes, len(latitudes))
-kg_class_flat = ds_koppen_map['kg_class'].values.flatten()
+# # Flatten the latitudes, longitudes, and kg_class for easier manipulation
+# lat_flat = np.repeat(latitudes, len(longitudes))
+# lon_flat = np.tile(longitudes, len(latitudes))
+# kg_class_flat = ds_koppen_map['kg_class'].values.flatten()
 
-# Filter out the zero kg_class values
-non_zero_indices = kg_class_flat > 0
-lat_flat_non_zero = lat_flat[non_zero_indices]
-lon_flat_non_zero = lon_flat[non_zero_indices]
-kg_class_flat_non_zero = kg_class_flat[non_zero_indices]
+# # Filter out the zero kg_class values
+# non_zero_indices = kg_class_flat > 0
+# lat_flat_non_zero = lat_flat[non_zero_indices]
+# lon_flat_non_zero = lon_flat[non_zero_indices]
+# kg_class_flat_non_zero = kg_class_flat[non_zero_indices]
 
 # Function to find the nearest non-zero Koppen-Geiger class for a given latitude and longitude
-def find_nearest_non_zero_kg_class(lat, lon):
-    distances = np.sqrt((lat_flat_non_zero - lat)**2 + (lon_flat_non_zero - lon)**2)
-    nearest_index = np.argmin(distances)
-    return kg_class_flat_non_zero[nearest_index]
+# def find_nearest_non_zero_kg_class(lat, lon):
+#     distances = np.sqrt((lat_flat_non_zero - lat)**2 + (lon_flat_non_zero - lon)**2)
+#     nearest_index = np.argmin(distances)
+#     return kg_class_flat_non_zero[nearest_index]
 
-# Vectorize the function to apply it efficiently to arrays
-vec_find_nearest_non_zero_kg_class = np.vectorize(find_nearest_non_zero_kg_class)
+# # Vectorize the function to apply it efficiently to arrays
+# vec_find_nearest_non_zero_kg_class = np.vectorize(find_nearest_non_zero_kg_class)
 
 # Apply the function to map each grid cell to its nearest Koppen-Geiger class
-var_diff_by_localhour['KG_ID'] = vec_find_nearest_non_zero_kg_class(var_diff_by_localhour['lat'].values, var_diff_by_localhour['lon'].values)
-var_diff_by_localhour.head()
+# var_diff_by_localhour['KG_ID'] = vec_find_nearest_non_zero_kg_class(var_diff_by_localhour['lat'].values, var_diff_by_localhour['lon'].values)
+# var_diff_by_localhour.head()
 
 # ###  4.2.3: Plot Average UHI_diff by Local Hour for Each Koppen Geiger Class
 
@@ -177,102 +172,43 @@ def get_kg_color(kg_main_group):
     kg_main_group_colors = {'Tropical': '#0078ff', 'Arid': '#ff9696', 'Temperate': '#96ff96', 'Cold': '#ff00ff'}
     return kg_main_group_colors.get(kg_main_group, '#000000')
 
-if PLOT_KG_CLASS:
-    # Calculate average UHI_diff by local_hour for each Koppen-Geiger class
-    avg_uhi_by_hour_and_kg = var_diff_by_localhour.groupby(['KG_ID', 'local_hour'])['UHI_diff'].mean().reset_index()
-    
-    # Create a mapping from KG class IDs to their descriptive names using the legend
-    kg_map = dict(zip(kg_legend['ID'], kg_legend['KGClass']))
-    
-    # Plotting
-    import textwrap
-    
-    # Define the number of graphs you want in each row
-    graphs_per_row = 4  # You can change this number to your preference
-    
-    # Find the global minimum and maximum UHI_diff values for consistent y-axis limits
-    global_min_uhi = avg_uhi_by_hour_and_kg['UHI_diff'].min()
-    global_max_uhi = avg_uhi_by_hour_and_kg['UHI_diff'].max()
-    
-    # Unique KG IDs
-    unique_kg_ids = avg_uhi_by_hour_and_kg['KG_ID'].unique()
-    
-    # Number of KG IDs
-    n_kg_ids = len(unique_kg_ids)
-    
-    # Determine the number of rows for subplots based on the number of Koppen-Geiger classes
-    n_rows = (n_kg_ids + graphs_per_row - 1) // graphs_per_row  # Ensures rounding up
-    
-    # Generate plots for each Koppen-Geiger class showing the average UHI_diff by local hour
-    for i, kg_id in enumerate(unique_kg_ids):
-        # Create a new figure at the start and after every 'graphs_per_row' plots
-        if i % graphs_per_row == 0:
-            fig = plt.figure(figsize=(5 * graphs_per_row, 5 * n_rows))  # Adjust figure size as needed
-        # Select the subplot position
-        plt.subplot(n_rows, graphs_per_row, i % graphs_per_row + 1)
-    
-        # Extract the subset of data for the current KG ID
-        subset = avg_uhi_by_hour_and_kg[avg_uhi_by_hour_and_kg['KG_ID'] == kg_id]
-    
-        # Plot the average UHI_diff
-        plt.plot(subset['local_hour'], subset['UHI_diff'], marker='o')
-    
-        # Wrap the title text for better readability
-        title_text = f'KG Class {kg_id}: {kg_map.get(kg_id, "Unknown")} - Average Hourly UHI_diff'
-        wrapped_title = textwrap.fill(title_text, width=40)  # Adjust 'width' as needed
-    
-        plt.title(wrapped_title)
-        plt.xlabel('Local Hour')
-        plt.ylabel('Average UHI_diff')
-        plt.grid(True)
-    
-        # Set consistent y-axis limits across all plots
-        plt.ylim(global_min_uhi, global_max_uhi)
-    
-        # Display the figure after every 'graphs_per_row' plots or on the last plot
-        if (i % graphs_per_row == graphs_per_row - 1) or (i == n_kg_ids - 1):
-            plt.tight_layout()
-            plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, f'kg_class_uhi_diff_group_{i//graphs_per_row + 1}.png'), 
-                        dpi=600, bbox_inches='tight')
-            plt.close() 
 
 # ###  4.2.4: Main Group Analysis - Aggregate Data by Main Koppen Geiger Groups
 if PLOT_KG_MAIN_GROUP:
     # The kg_legend data frame has a KGClass column, which has values for KG classification main group and subgroup, separated by a comma.
     # Extract the main climate group from the detailed Koppen-Geiger class descriptions
-    kg_legend['KGMainGroup'] = kg_legend['KGClass'].apply(lambda x: x.split(',')[0].strip())
+    # kg_legend['KGMainGroup'] = kg_legend['KGClass'].apply(lambda x: x.split(',')[0].strip())
     
     # Create a mapping from KG class IDs to their main climate groups
-    kg_main_group_map = dict(zip(kg_legend['ID'], kg_legend['KGMainGroup']))
+    # kg_main_group_map = dict(zip(kg_legend['ID'], kg_legend['KGMainGroup']))
     
     # Get the unique main group values sorted by their minimum IDs
-    main_group_min_id = {}
-    for kg_id, main_group in kg_main_group_map.items():
-        if main_group not in main_group_min_id:
-            main_group_min_id[main_group] = kg_id
-        else:
-            main_group_min_id[main_group] = min(main_group_min_id[main_group], kg_id)
+    # main_group_min_id = {}
+    # for kg_id, main_group in kg_main_group_map.items():
+    #     if main_group not in main_group_min_id:
+    #         main_group_min_id[main_group] = kg_id
+    #     else:
+    #         main_group_min_id[main_group] = min(main_group_min_id[main_group], kg_id)
     
-    sorted_main_groups = sorted(set(kg_main_group_map.values()), key=lambda x: main_group_min_id[x])
+    # sorted_main_groups = sorted(set(kg_main_group_map.values()), key=lambda x: main_group_min_id[x])
     
     # Remove the 'Polar' group
-    sorted_main_groups = [group for group in sorted_main_groups if group.lower() != 'polar']
+    # sorted_main_groups = [group for group in sorted_main_groups if group.lower() != 'polar']
+
+    # Use the existing 'KGMajorClass' column in local_hour_adjusted_df
+    sorted_main_groups = sorted(local_hour_adjusted_df['KGMajorClass'].dropna().unique())
+    if 'Polar' in sorted_main_groups:
+        sorted_main_groups.remove('Polar')
     
     # Define Koppen-Geiger color convention using the new function
     kg_main_group_colors = {
         main_group: get_kg_color(main_group)
         for main_group in ['Tropical', 'Arid', 'Temperate', 'Cold']
     }
-    print(kg_main_group_colors)
-    #save the kg_main_group_colors to a csv  file
-    kg_main_group_colors_df = pd.DataFrame(list(kg_main_group_colors.items()), columns=['KGMainGroup', 'Color'])
-    kg_main_group_colors_df.to_csv('/home/jguo/research/hw_global/Data/kg_main_group_colors.csv', index=False)
-    
-    # Add main group to var_diff_by_localhour
-    var_diff_by_localhour['KGMainGroup'] = var_diff_by_localhour['KG_ID'].map(kg_main_group_map)
+
     
     # Calculate average UHI_diff by local_hour for each KG main group
-    avg_diff_by_hour_and_main_group = var_diff_by_localhour.groupby(['KGMainGroup', 'local_hour'])[['UHI_diff']].agg(['mean', 'std']).reset_index()
+    avg_diff_by_hour_and_main_group = local_hour_adjusted_df.groupby(['KGMajorClass', 'local_hour'])[['UHI_diff']].agg(['mean', 'std']).reset_index()
     
     # Calculate the global minimum and maximum of the 'mean' UHI_diff
     min_uhi_diff = -0.75
@@ -288,7 +224,7 @@ if PLOT_KG_MAIN_GROUP:
         row = i // 4
         col = i % 4
     
-        subset = avg_diff_by_hour_and_main_group[avg_diff_by_hour_and_main_group['KGMainGroup'] == main_group]
+        subset = avg_diff_by_hour_and_main_group[avg_diff_by_hour_and_main_group['KGMajorClass'] == main_group]
     
         axs[row, col].plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label='HW-NHW UHI')
         
@@ -334,7 +270,7 @@ if PLOT_KG_MAIN_GROUP:
     # ### Additional Plot: Combined Chart of All Main Groups without Std Dev
     plt.figure(figsize=(10, 6))
     for main_group in sorted_main_groups:
-        subset = avg_diff_by_hour_and_main_group[avg_diff_by_hour_and_main_group['KGMainGroup'] == main_group]
+        subset = avg_diff_by_hour_and_main_group[avg_diff_by_hour_and_main_group['KGMajorClass'] == main_group]
         plt.plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label=replace_cold_with_continental(main_group))
     
     plt.title('Average Hourly UHI_diff by KG Main Groups')
