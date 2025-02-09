@@ -3,6 +3,8 @@ import numpy as np
 import xarray as xr
 import os
 import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
+from scipy.spatial import cKDTree
 
 THRESHOLD: int = 98
 SUMMARY_DIR = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
@@ -10,6 +12,7 @@ FIGURE_OUTPUT_DIR = '/home/jguo/tmp/output2'
 MERGED_FEATHER_PATH = os.path.join(SUMMARY_DIR, f'updated_local_hour_adjusted_variables_HW{THRESHOLD}.feather')
 KOPPEN_GEIGER_DATA_PATH = '/home/jguo/other_projects/1991_2020/koppen_geiger_0p5.nc'
 KOPPEN_GEIGER_LEGEND_PATH = '/home/jguo/research/hw_global/Data/KoppenGeigerLegend.xlsx'
+OUTPUT_FEATHER_PATH = os.path.join(SUMMARY_DIR, 'twoKG_local_hour_adjusted_variables_HW98.feather')
 
 
 def replace_cold_with_continental(kg_main_group: str) -> str:
@@ -29,8 +32,8 @@ def load_koppen_geiger_data() -> tuple[xr.Dataset, pd.DataFrame]:
     return ds_koppen_map, kg_legend
 
 
-def preprocess_koppen_geiger(ds_koppen_map: xr.Dataset) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Preprocesses the Koppen-Geiger dataset for nearest neighbor search."""
+def preprocess_koppen_geiger(ds_koppen_map: xr.Dataset) -> tuple[np.ndarray, np.ndarray]:
+    """Preprocesses the Koppen-Geiger dataset for KDTree."""
     latitudes = ds_koppen_map['lat'].values
     longitudes = ds_koppen_map['lon'].values
     lat_flat = np.repeat(latitudes, len(longitudes))
@@ -38,19 +41,18 @@ def preprocess_koppen_geiger(ds_koppen_map: xr.Dataset) -> tuple[np.ndarray, np.
     kg_class_flat = ds_koppen_map['kg_class'].values.flatten()
 
     non_zero_indices = kg_class_flat > 0
-    return lat_flat[non_zero_indices], lon_flat[non_zero_indices], kg_class_flat[non_zero_indices]
+    lat_flat_non_zero = lat_flat[non_zero_indices]
+    lon_flat_non_zero = lon_flat[non_zero_indices]
+    kg_class_flat_non_zero = kg_class_flat[non_zero_indices]
+    
+    # Return only coordinates and KG classes
+    return np.stack([lat_flat_non_zero, lon_flat_non_zero], axis=-1), kg_class_flat_non_zero
 
 
-def find_nearest_non_zero_kg_class(lat: np.ndarray, lon: np.ndarray, lat_flat_non_zero: np.ndarray,
-                                  lon_flat_non_zero: np.ndarray, kg_class_flat_non_zero: np.ndarray) -> np.ndarray:
-    """Finds the nearest non-zero Koppen-Geiger class ID for multiple lat/lon pairs."""
-    # Calculate distances for all lat/lon pairs at once
-    distances = np.sqrt((lat_flat_non_zero - lat[:, None])**2 + (lon_flat_non_zero - lon[:, None])**2)
-    # Find the index of the minimum distance for each lat/lon pair
-    nearest_indices = np.argmin(distances, axis=1)
-    # Return the corresponding KG class IDs
-    return kg_class_flat_non_zero[nearest_indices]
-
+def find_nearest_non_zero_kg_class(coords: np.ndarray, tree: cKDTree, kg_class_flat_non_zero: np.ndarray) -> np.ndarray:
+    """Finds the nearest non-zero Koppen-Geiger class ID using KDTree."""
+    _, indices = tree.query(coords, k=1)
+    return kg_class_flat_non_zero[indices]
 
 def create_kg_mappings(kg_legend: pd.DataFrame) -> tuple[dict, dict, list]:
     """Creates mappings for Koppen-Geiger groups and a sorted list of main groups."""
@@ -67,22 +69,31 @@ def create_kg_mappings(kg_legend: pd.DataFrame) -> tuple[dict, dict, list]:
     sorted_main_groups = [group for group in sorted_main_groups if group.lower() != 'polar']
     return kg_main_group_map, kg_major_group_map, sorted_main_groups
 
-def prepare_data_for_plotting(local_hour_adjusted_df: pd.DataFrame, kg_main_group_map: dict) -> pd.DataFrame:
-    """Prepares the data for plotting by grouping and aggregating."""
-    var_diff_by_localhour = local_hour_adjusted_df.groupby(['lat', 'lon', 'local_hour'])[['UHI_diff']].mean().reset_index().sort_values(by=['lat', 'lon', 'local_hour'])
-    
-    # Prepare Koppen-Geiger Data and find nearest KG class
+def prepare_data_for_plotting(local_hour_adjusted_df: pd.DataFrame, kg_main_group_map: dict, kg_major_group_map:dict) -> pd.DataFrame:
+    """Prepares the data: adds KG_ID and KGMainGroup, then groups for plotting."""
+    # 1. Add KG_ID
     ds_koppen_map, kg_legend = load_koppen_geiger_data()
-    lat_flat_non_zero, lon_flat_non_zero, kg_class_flat_non_zero = preprocess_koppen_geiger(ds_koppen_map)
-    # No need to vectorize, the function now handles arrays directly
-    var_diff_by_localhour['KG_ID'] = find_nearest_non_zero_kg_class(
-        var_diff_by_localhour['lat'].values, var_diff_by_localhour['lon'].values,
-        lat_flat_non_zero, lon_flat_non_zero, kg_class_flat_non_zero
-    )
+    coords, kg_class_flat_non_zero = preprocess_koppen_geiger(ds_koppen_map)
+    tree = cKDTree(coords)
 
-    var_diff_by_localhour['KGMainGroup'] = var_diff_by_localhour['KG_ID'].map(kg_main_group_map)
+    # Prepare coordinates from the main DataFrame
+    input_coords = local_hour_adjusted_df[['lat', 'lon']].to_numpy()
+
+    local_hour_adjusted_df['KG_ID'] = find_nearest_non_zero_kg_class(input_coords, tree, kg_class_flat_non_zero)
+   
+    # 2. Add KGMainGroup using the *main* group map (for plotting)
+    local_hour_adjusted_df['KGMainGroup'] = local_hour_adjusted_df['KG_ID'].map(kg_main_group_map)
+    
+    # Add KGMainGroup using the major group map (for the comparison, before grouping)
+    local_hour_adjusted_df['KGMainGroup_Major'] = local_hour_adjusted_df['KGClass'].map(kg_major_group_map)
+
+    # 3. Group for plotting (after adding all necessary KG columns)
+    var_diff_by_localhour = local_hour_adjusted_df.groupby(['lat', 'lon', 'local_hour', 'KGMainGroup'])[['UHI_diff']].mean().reset_index().sort_values(by=['lat', 'lon', 'local_hour'])
+
     avg_diff_by_hour_and_main_group = var_diff_by_localhour.groupby(['KGMainGroup', 'local_hour'])[['UHI_diff']].agg(['mean', 'std']).reset_index()
-    return avg_diff_by_hour_and_main_group
+
+    return avg_diff_by_hour_and_main_group, local_hour_adjusted_df  # Return both!
+
 
 def get_kg_color(kg_main_group: str) -> str:
     """Returns the color for a given Koppen-Geiger main group."""
@@ -145,38 +156,75 @@ def plot_combined_climate_zones(avg_diff_by_hour_and_main_group: pd.DataFrame, s
     plt.close()
 
 
-def compare_kg_major_and_main(local_hour_adjusted_df: pd.DataFrame, kg_major_group_map : dict):
-    """Compares KGMajorClass and KGMainGroup in the dataframe."""
-    
-    local_hour_adjusted_df['KGMainGroup'] = local_hour_adjusted_df['KGClass'].map(kg_major_group_map)
-    location_counts = local_hour_adjusted_df.groupby('location_ID')[['KGMajorClass', 'KGMainGroup']].nunique()
+def compare_kg_major_and_main(local_hour_adjusted_df: pd.DataFrame):
+    """Compares KGMajorClass and KGMainGroup (using the _Major suffix) in the dataframe."""
+
+    # Use the KGMainGroup_Major column for the comparison
+    location_counts = local_hour_adjusted_df.groupby('location_ID')[['KGMajorClass', 'KGMainGroup_Major']].nunique()
     inconsistent_locations_major = location_counts[location_counts['KGMajorClass'] > 1]
-    inconsistent_locations_main = location_counts[location_counts['KGMainGroup'] > 1]
+    inconsistent_locations_main = location_counts[location_counts['KGMainGroup_Major'] > 1]
 
     print("\n--- KGMajorClass and KGMainGroup Comparison ---")
     print("KGMajorClass is consistent for each location_ID." if inconsistent_locations_major.empty else
           "Inconsistencies found in KGMajorClass:\n" + str(inconsistent_locations_major))
-    print("KGMainGroup is consistent for each location_ID." if inconsistent_locations_main.empty else
-          "Inconsistencies found in KGMainGroup:\n" + str(inconsistent_locations_main))
+    print("KGMainGroup_Major is consistent for each location_ID." if inconsistent_locations_main.empty else
+          "Inconsistencies found in KGMainGroup_Major:\n" + str(inconsistent_locations_main))
 
-    comparison_table = pd.crosstab(local_hour_adjusted_df['KGMajorClass'], local_hour_adjusted_df['KGMainGroup'])
-    print("\n--- Crosstabulation of KGMajorClass vs. KGMainGroup ---")
+    comparison_table = pd.crosstab(local_hour_adjusted_df['KGMajorClass'], local_hour_adjusted_df['KGMainGroup_Major'])
+    print("\n--- Crosstabulation of KGMajorClass vs. KGMainGroup_Major ---")
     print(comparison_table)
 
-    local_hour_adjusted_df['Major_Main_Match'] = local_hour_adjusted_df['KGMajorClass'] == local_hour_adjusted_df['KGMainGroup']
+    local_hour_adjusted_df['Major_Main_Match'] = local_hour_adjusted_df['KGMajorClass'] == local_hour_adjusted_df['KGMainGroup_Major']
     match_counts = local_hour_adjusted_df['Major_Main_Match'].value_counts()
-    print("\n--- KGMajorClass and KGMainGroup Match Summary ---", match_counts)
+    print("\n--- KGMajorClass and KGMainGroup_Major Match Summary ---", match_counts)
 
     non_matching_rows = local_hour_adjusted_df[~local_hour_adjusted_df['Major_Main_Match']]
-    print("\n--- Rows where KGMajorClass and KGMainGroup DO NOT match ---")
+    print("\n--- Rows where KGMajorClass and KGMainGroup_Major DO NOT match ---")
     if not non_matching_rows.empty:
         print(f"Number of non-matching rows: {len(non_matching_rows)}")
         print("\nSample of non-matching rows:")
-        print(non_matching_rows[['location_ID', 'KGClass', 'KGMajorClass', 'KGMainGroup']].sample(min(10, len(non_matching_rows))))
+        print(non_matching_rows[['location_ID', 'KGClass', 'KGMajorClass', 'KGMainGroup_Major']].sample(min(10, len(non_matching_rows))))
         print("\nValue Counts of KGClass in non-matching rows:", non_matching_rows['KGClass'].value_counts())
     else:
-        print("All rows have matching KGMajorClass and KGMainGroup.")
+        print("All rows have matching KGMajorClass and KGMainGroup_Major.")
+    return non_matching_rows
 
+def normalize_longitude(lons: np.ndarray) -> np.ndarray:
+    """Normalizes longitudes to the range [0, 360)."""
+    return lons % 360
+
+def save_plot(plt_obj, filename, output_dir):
+    """Saves the given plot to a file."""
+    filepath = os.path.join(output_dir, filename)
+    plt_obj.savefig(filepath, dpi=600, bbox_inches='tight')
+    plt_obj.close()
+
+
+def plot_mismatched_locations(df: pd.DataFrame, output_dir: str):
+    """Plots locations where KGMajorClass and KGMainGroup differ on a global map."""
+
+    if df.empty:
+        print("No mismatched KGMajorClass and KGMainGroup data to plot.")
+        return
+
+    fig, ax = plt.subplots(figsize=(10, 6), dpi=600)
+    m = Basemap(projection='cyl', lon_0=0, ax=ax, fix_aspect=False,
+                llcrnrlat=-44.94133, urcrnrlat=65.12386)  # Fixed lat limits
+    m.drawcoastlines(color='0.15', linewidth=0.5, zorder=3)
+    m.drawcountries(linewidth=0.1)
+    m.fillcontinents(color='white', lake_color='lightcyan')
+    m.drawmapboundary(fill_color='lightcyan')
+    m.drawparallels(np.arange(-90., 91., 30.), labels=[1,0,0,0], fontsize=10)
+    m.drawmeridians(np.arange(-180., 181., 60.), labels=[0,0,0,1], fontsize=10)
+
+    # Normalize longitudes and plot
+    normalized_lons = normalize_longitude(df['lon'].values)
+    x, y = m(normalized_lons, df['lat'].values)
+    m.scatter(x, y, color='red', marker='o', s=10, alpha=0.75, zorder=4)
+
+    ax.set_title('Locations with Mismatched KGMajorClass and KGMainGroup')
+
+    save_plot(plt, "mismatched_kg_locations.png", output_dir)
 
 
 
@@ -186,11 +234,24 @@ def main():
     ds_koppen_map, kg_legend = load_koppen_geiger_data()
     kg_main_group_map, kg_major_group_map, sorted_main_groups = create_kg_mappings(kg_legend)
 
-    avg_diff_by_hour_and_main_group = prepare_data_for_plotting(local_hour_adjusted_df, kg_main_group_map)
+    # Prepare data and add KG_ID *before* comparison, get both returned DataFrames
+    avg_diff_by_hour_and_main_group, local_hour_adjusted_df = prepare_data_for_plotting(local_hour_adjusted_df, kg_main_group_map, kg_major_group_map)
+    
+    # Now do the comparison and get the non-matching rows
+    non_matching_rows = compare_kg_major_and_main(local_hour_adjusted_df)
+
+    # Save the updated DataFrame *after* adding KGMainGroup and KG_ID
+    local_hour_adjusted_df.to_feather(OUTPUT_FEATHER_PATH)
+    print(f"Saved updated DataFrame to {OUTPUT_FEATHER_PATH}")
+
+
+
 
     plot_individual_climate_zones(avg_diff_by_hour_and_main_group, sorted_main_groups)
     plot_combined_climate_zones(avg_diff_by_hour_and_main_group, sorted_main_groups)
-    compare_kg_major_and_main(local_hour_adjusted_df, kg_major_group_map)
+    # Plot mismatched locations
+    plot_mismatched_locations(non_matching_rows, FIGURE_OUTPUT_DIR)
+
 
 
 if __name__ == "__main__":
