@@ -139,9 +139,10 @@ def create_map_figure3_style(ax, data, title, vmin, vmax, cmap):
         zorder=2,
         shading="auto",
     )
-    plt.colorbar(
+    cbar = plt.colorbar(
         cs, ax=ax, orientation="vertical", pad=0.02, extend="both", format="%.1f"
     )
+    cbar.set_label('°C', rotation=0, labelpad=5, y=-0.1, ha='right')
     ax.set_title(title, fontsize=14, fontweight="bold", pad=-1)
     return cs
 
@@ -182,7 +183,7 @@ def plot_all_uhi_maps_figure3_style(df, output_dir=None):
     plt.tight_layout()
 
     if output_dir:
-        save_plot(plt, "figure_2_ab_all_uhi_day_night_comparison_figure3_style.png", output_dir)
+        save_plot(plt, "Figure_2_ab_all_uhi_day_night_comparison_figure3_style.png", output_dir)
     else:
         plt.show()
 
@@ -356,7 +357,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate UHI global maps")
     parser.add_argument(
         "--output_dir",
-        default="/home/jguo/tmp/output",
+        default="/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper",
         help="Directory for output files",
     )
     args = parser.parse_args()
@@ -432,7 +433,7 @@ def main():
     # Generate plots
     plot_all_uhi_maps(uhi_diff_summary, output_dir)
     plot_all_uhi_maps_figure3_style(uhi_diff_summary, output_dir)
-    plot_missing_kgmajorclass(uhi_diff_summary, output_dir)
+    # plot_missing_kgmajorclass(uhi_diff_summary, output_dir)
 
 
 if __name__ == "__main__":
