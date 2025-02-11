@@ -182,7 +182,7 @@ def plot_all_uhi_maps_figure3_style(df, output_dir=None):
     plt.tight_layout()
 
     if output_dir:
-        save_plot(plt, "all_uhi_day_night_comparison_figure3_style.png", output_dir)
+        save_plot(plt, "figure_2_ab_all_uhi_day_night_comparison_figure3_style.png", output_dir)
     else:
         plt.show()
 
@@ -380,10 +380,17 @@ def main():
     location_ID_ds = xr.open_dataset(location_ID_path)
 
     # Define masks for daytime and nighttime
-    daytime_mask = local_hour_adjusted_df["local_hour"].between(8, 16)
-    nighttime_mask = local_hour_adjusted_df["local_hour"].between(
-        20, 24
-    ) | local_hour_adjusted_df["local_hour"].between(0, 4)
+    day_night_avg = False
+    if day_night_avg:
+        daytime_mask = local_hour_adjusted_df["local_hour"].between(8, 16)
+        nighttime_mask = local_hour_adjusted_df["local_hour"].between(
+            20, 24
+        ) | local_hour_adjusted_df["local_hour"].between(0, 4)
+    else: # use 16 and 4
+        daytime_mask = local_hour_adjusted_df["local_hour"].between(16, 16)
+        nighttime_mask = local_hour_adjusted_df["local_hour"].between(
+            4, 4
+        ) 
 
     # Calculate averages for UHI_diff
     daytime_uhi_diff_avg = local_hour_adjusted_df[daytime_mask].groupby("location_ID")["UHI_diff"].mean()
