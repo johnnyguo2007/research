@@ -14,17 +14,40 @@ FilePath = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_r
 feather_file = FilePath + 'updated_local_hour_adjusted_variables_HW98.feather'
 local_hour_adjusted_df = pd.read_feather(feather_file)
 
-daytime_df  = local_hour_adjusted_df[ local_hour_adjusted_df["local_hour"] == 16 ].copy()
-nighttime_df= local_hour_adjusted_df[ local_hour_adjusted_df["local_hour"] == 4  ].copy()
+average_by_daytime_and_nighttime = True
+if average_by_daytime_and_nighttime:
+    daytime_mask = local_hour_adjusted_df['local_hour'].between(5, 5)
+    # nighttime_mask = (local_hour_adjusted_df['local_hour'].between(20, 24) | local_hour_adjusted_df['local_hour'].between(0, 5))
+    nighttime_mask = local_hour_adjusted_df['local_hour'].between(10, 10)
+
+    
+    daytime_df = local_hour_adjusted_df[daytime_mask]
+    nighttime_df = local_hour_adjusted_df[nighttime_mask]
+else:
+    daytime_df  = local_hour_adjusted_df[ local_hour_adjusted_df["local_hour"] == 16 ].copy()
+    nighttime_df= local_hour_adjusted_df[ local_hour_adjusted_df["local_hour"] == 4  ].copy()
+
+# day_loc_mean = (
+#     daytime_df.groupby(['location_ID', 'local_hour'])['UHI_diff']
+#               .mean()
+#               .reset_index()
+#               .rename(columns={'UHI_diff': 'mean_UHI_diff'})
+# )
+# night_loc_mean = (
+#     nighttime_df.groupby(['location_ID', 'local_hour'])['UHI_diff']
+#                 .mean()
+#                 .reset_index()
+#                 .rename(columns={'UHI_diff': 'mean_UHI_diff'})
+# )
 
 day_loc_mean = (
-    daytime_df.groupby('location_ID')['UHI_diff']
+    daytime_df.groupby(['location_ID'])['UHI_diff']
               .mean()
               .reset_index()
               .rename(columns={'UHI_diff': 'mean_UHI_diff'})
 )
 night_loc_mean = (
-    nighttime_df.groupby('location_ID')['UHI_diff']
+    nighttime_df.groupby(['location_ID'])['UHI_diff']
                 .mean()
                 .reset_index()
                 .rename(columns={'UHI_diff': 'mean_UHI_diff'})
@@ -167,13 +190,13 @@ ax_night.spines['bottom'].set_visible(True)    # we keep a bottom spine for x la
 ax_night.hlines(0, 0, 6, colors='k', linestyles='solid', linewidth=0.8)
 
 # Slightly different y‐range at night
-ax_night.set_ylim(-2, 3)
+ax_night.set_ylim(-1, 2)
 ax_night.set_xlim(0, 6)
 
 ax_night.text(0.1, 1.8, 'Night', fontsize=14, weight='bold',
               horizontalalignment='left', verticalalignment='top')
 ax_night.set_ylabel('ΔUHI (°C)', fontsize=14, labelpad=-9)
-ax_night.text(-0.6, 3.2, 'b', fontsize=14, weight='bold',
+ax_night.text(-0.6, 2.2, 'b', fontsize=14, weight='bold',
               horizontalalignment='left', verticalalignment='top')
 
 # Plot each zone (Night)
@@ -193,5 +216,27 @@ plt.subplots_adjust(
 )
 
 outdir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/'
-plt.savefig(outdir + 'Figure_3_distribution_4KG.png', dpi=600)
+plt.savefig(outdir + 'Figure_4_distribution_4KG.png', dpi=600)
 plt.close()
+
+# Calculate statistics for Day and Night
+day_stats = day_loc_mean.groupby('KGMajorClass')['mean_UHI_diff'].agg(['mean', 'std']).reset_index()
+night_stats = night_loc_mean.groupby('KGMajorClass')['mean_UHI_diff'].agg(['mean', 'std']).reset_index()
+
+# Merge and rename columns appropriately
+stats = pd.merge(day_stats, night_stats, on='KGMajorClass', suffixes=('_Day', '_Night'))
+stats = stats.rename(columns={
+    'KGMajorClass': 'Climate Zone',
+    'mean_Day': 'Day_mean',
+    'std_Day': 'Day_std',
+    'mean_Night': 'Night_mean',
+    'std_Night': 'Night_std'
+})
+
+# Map 'Cold' to 'Continental' for consistency with display labels
+mapping = {'Arid': 'Arid', 'Tropical': 'Tropical', 'Temperate': 'Temperate', 'Cold': 'Continental'}
+stats['Climate Zone'] = stats['Climate Zone'].map(mapping)
+
+# Write the statistics to a CSV file
+csv_out = outdir + 'Figure_4_distribution_mean_std.csv'
+stats.to_csv(csv_out, index=False)

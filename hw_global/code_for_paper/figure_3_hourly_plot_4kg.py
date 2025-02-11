@@ -8,7 +8,7 @@ from scipy.spatial import cKDTree
 
 THRESHOLD: int = 98
 SUMMARY_DIR = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
-FIGURE_OUTPUT_DIR = '/home/jguo/tmp/output2'
+FIGURE_OUTPUT_DIR = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/'
 MERGED_FEATHER_PATH = os.path.join(SUMMARY_DIR, f'updated_local_hour_adjusted_variables_HW{THRESHOLD}.feather')
 KOPPEN_GEIGER_DATA_PATH = '/home/jguo/other_projects/1991_2020/koppen_geiger_0p5.nc'
 KOPPEN_GEIGER_LEGEND_PATH = '/home/jguo/research/hw_global/Data/KoppenGeigerLegend.xlsx'
@@ -257,31 +257,39 @@ def plot_mismatched_locations(df: pd.DataFrame, output_dir: str):
 
 def main():
     """Main function to execute the analysis and plotting."""
-    local_hour_adjusted_df = load_data(MERGED_FEATHER_PATH)
-    ds_koppen_map, kg_legend = load_koppen_geiger_data()
-    kg_main_group_map, kg_major_group_map, sorted_main_groups = create_kg_mappings(kg_legend)
 
-    # Prepare data and add KG_ID *before* comparison, get both aggregated DataFrames and the updated DataFrame
-    avg_diff_by_hour_and_main_group, avg_diff_by_hour_and_major_class, local_hour_adjusted_df = prepare_data_for_plotting(local_hour_adjusted_df, kg_main_group_map, kg_major_group_map)
+    hourly_plot_4kg_feather = FIGURE_OUTPUT_DIR + 'Figure_3_hourly_Plot_4KG.feather'
+    if os.path.exists(hourly_plot_4kg_feather):
+        print(f"Loading data from {hourly_plot_4kg_feather}")
 
-    # Now do the comparison and get the non-matching rows
-    non_matching_rows = compare_kg_major_and_main(local_hour_adjusted_df)
+        avg_diff_by_hour_and_major_class = pd.read_feather(hourly_plot_4kg_feather)
+    else:
+        print(f"File {hourly_plot_4kg_feather} does not exist. Running the analysis...")    
+        local_hour_adjusted_df = load_data(MERGED_FEATHER_PATH)
+        ds_koppen_map, kg_legend = load_koppen_geiger_data()
+        kg_main_group_map, kg_major_group_map, sorted_main_groups = create_kg_mappings(kg_legend)
 
-    # Save the updated DataFrame *after* adding KGMainGroup and KG_ID
-    # local_hour_adjusted_df.to_feather(OUTPUT_FEATHER_PATH)
-    # print(f"Saved updated DataFrame to {OUTPUT_FEATHER_PATH}")
+        # Prepare data and add KG_ID *before* comparison, get both aggregated DataFrames and the updated DataFrame
+        avg_diff_by_hour_and_main_group, avg_diff_by_hour_and_major_class, local_hour_adjusted_df = prepare_data_for_plotting(local_hour_adjusted_df, kg_main_group_map, kg_major_group_map)
 
-    # Use the generic plotting function
-    plot_uhi_diff(avg_diff_by_hour_and_main_group, 'KGMainGroup', sorted_main_groups, 'kg_main_group_uhi_diff')
-    plot_uhi_diff(avg_diff_by_hour_and_main_group, 'KGMainGroup', sorted_main_groups, 'kg_main_group_uhi_diff', combined=True)
+        # Now do the comparison and get the non-matching rows
+        # non_matching_rows = compare_kg_major_and_main(local_hour_adjusted_df)
 
+        # Save the updated DataFrame *after* adding KGMainGroup and KG_ID
+        # local_hour_adjusted_df.to_feather(OUTPUT_FEATHER_PATH)
+        # print(f"Saved updated DataFrame to {OUTPUT_FEATHER_PATH}")
+
+        # # Use the generic plotting function
+        # plot_uhi_diff(avg_diff_by_hour_and_main_group, 'KGMainGroup', sorted_main_groups, 'kg_main_group_uhi_diff')
+        avg_diff_by_hour_and_major_class.to_feather(hourly_plot_4kg_feather)
+    
     sorted_major_classes = sorted(avg_diff_by_hour_and_major_class['KGMajorClass'].unique())
     # remove polar from sorted_major_classes
     sorted_major_classes = [cls for cls in sorted_major_classes if cls != 'Polar']
-    plot_uhi_diff(avg_diff_by_hour_and_major_class, 'KGMajorClass', sorted_major_classes, 'kg_major_class_uhi_diff')
-    plot_uhi_diff(avg_diff_by_hour_and_major_class, 'KGMajorClass', sorted_major_classes, 'kg_major_class_uhi_diff', combined=True)
+    plot_uhi_diff(avg_diff_by_hour_and_major_class, 'KGMajorClass', sorted_major_classes, 'Figure_3_hourly_Plot_4KG')
+    # plot_uhi_diff(avg_diff_by_hour_and_major_class, 'KGMajorClass', sorted_major_classes, 'kg_major_class_uhi_diff', combined=True)
     # Plot mismatched locations
-    plot_mismatched_locations(non_matching_rows, FIGURE_OUTPUT_DIR)
+    # plot_mismatched_locations(non_matching_rows, FIGURE_OUTPUT_DIR)
 
 if __name__ == "__main__":
     main()
