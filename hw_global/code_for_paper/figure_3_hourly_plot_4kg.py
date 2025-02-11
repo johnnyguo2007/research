@@ -138,9 +138,9 @@ def plot_uhi_diff(data: pd.DataFrame, group_col: str, sorted_groups: list, outpu
             plt.plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o',
                      color=get_kg_color(group), label=group_label)
 
-        plt.title(f'Average Hourly UHI_diff by {group_col}')
+        # plt.title(f'Average Hourly UHI_diff by {group_col}')
         plt.xlabel('Local Hour')
-        plt.ylabel('Average UHI_diff')
+        plt.ylabel('HW-NHW UHI (°C)')
         plt.grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.6)
         plt.xticks(range(0, 24))
         plt.legend()
@@ -164,12 +164,12 @@ def plot_uhi_diff(data: pd.DataFrame, group_col: str, sorted_groups: list, outpu
 
             title_font = {'size': 14, 'weight': 'normal'}
             group_font = {'size': 16, 'weight': 'bold'}
-            axs[row, col].set_title(f'Climate Zone ({group_col}):', fontdict=title_font)
+            # axs[row, col].set_title(f'Climate Zone ({group_col}):', fontdict=title_font)
             group_label = replace_cold_with_continental(group) if group_col == 'KGMainGroup' else group
             axs[row, col].text(0.5, 1.05, group_label, fontdict=group_font,
                                transform=axs[row, col].transAxes, ha='center', va='bottom')
             axs[row, col].set_xlabel('Local Hour')
-            axs[row, col].set_ylabel('Average UHI_diff')
+            axs[row, col].set_ylabel('HW-NHW UHI (°C)')
             axs[row, col].grid(True, axis='y')
             axs[row, col].legend()
             axs[row, col].set_ylim(min_uhi_diff, max_uhi_diff)
@@ -178,7 +178,7 @@ def plot_uhi_diff(data: pd.DataFrame, group_col: str, sorted_groups: list, outpu
             fig.delaxes(axs[i // 4, i % 4])
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
-        plt.suptitle(f'Average Hourly HW-NHW UHI by {group_col}', size=20, weight='bold', y=0.99)
+        # plt.suptitle(f'Average Hourly HW-NHW UHI by {group_col}', size=20, weight='bold', y=0.99)
         plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, f'{output_filename}.png'), dpi=600, bbox_inches='tight')
         plt.close()
 

@@ -169,7 +169,7 @@ ax_day.set_xlim(0, 6)
 ax_day.text(0.1, 0.9, 'Day', fontsize=14, weight='bold',
             horizontalalignment='left', verticalalignment='top')
 
-ax_day.set_ylabel('ΔUHI (°C)', fontsize=14, labelpad=-1)
+ax_day.set_ylabel('HW-NHW UHI (°C)', fontsize=14, labelpad=-1)
 ax_day.axes.xaxis.set_visible(False)  # hide day x‐axis completely
 
 ax_day.text(-0.6, 1.2, 'a', fontsize=14, weight='bold',
