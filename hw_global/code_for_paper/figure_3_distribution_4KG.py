@@ -82,15 +82,29 @@ def plot_zone_scatter_box_kde(df, zone, DN, ax, clip0, clip1):
     capprops     = dict(linewidth=1.5, color=c)
     flierprops   = dict(marker=".", markersize=0.8, alpha=0.3, color=c)
 
-    ax.boxplot(
-        y, positions=[pos], whis=(0,100), widths=0.25, vert=True,
-        boxprops=boxprops, whiskerprops=whiskerprops,
-        medianprops=medianprops, capprops=capprops,
-        flierprops=flierprops
+    mean_val = np.mean(y)
+    std_val  = np.std(y)
+    custom_stats = {
+        'med': mean_val,
+        'q1': mean_val - std_val,
+        'q3': mean_val + std_val,
+        'whislo': mean_val - 3 * std_val,
+        'whishi': mean_val + 3 * std_val,
+        'fliers': []
+    }
+    ax.bxp(
+        [custom_stats],
+        positions=[pos],
+        widths=0.25,
+        showfliers=False,
+        boxprops=boxprops,
+        whiskerprops=whiskerprops,
+        medianprops=medianprops,
+        capprops=capprops,
     )
 
     # Inset for vertical KDE
-    x_offset = 0.4
+    x_offset = 0.35 # the space between the boxplot and the KDE plot
     inset = inset_axes(
         ax,
         width=0.4, 
@@ -135,7 +149,7 @@ ax_day.text(0.1, 0.9, 'Day', fontsize=14, weight='bold',
 ax_day.set_ylabel('ΔUHI (°C)', fontsize=14, labelpad=-1)
 ax_day.axes.xaxis.set_visible(False)  # hide day x‐axis completely
 
-ax_day.text(-0.3, 3.1, 'a', fontsize=14, weight='bold',
+ax_day.text(-0.6, 1.2, 'a', fontsize=14, weight='bold',
             horizontalalignment='left', verticalalignment='top')
 
 # Plot each zone (Day)
@@ -159,7 +173,7 @@ ax_night.set_xlim(0, 6)
 ax_night.text(0.1, 1.8, 'Night', fontsize=14, weight='bold',
               horizontalalignment='left', verticalalignment='top')
 ax_night.set_ylabel('ΔUHI (°C)', fontsize=14, labelpad=-9)
-ax_night.text(-0.3, 2.1, 'b', fontsize=14, weight='bold',
+ax_night.text(-0.6, 3.2, 'b', fontsize=14, weight='bold',
               horizontalalignment='left', verticalalignment='top')
 
 # Plot each zone (Night)
