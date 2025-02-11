@@ -1,5 +1,5 @@
 """
-Plot Figure 5 equivalent for UHI_diff and climate zones
+Plot Figure 5 equivalent for UHI_diff and climate zones, averaged by location_id for day/night hours
 """
 import numpy as np
 import pandas as pd
@@ -20,32 +20,45 @@ local_hour_adjusted_df = pd.read_feather(feather_file)
 daytime_mask = local_hour_adjusted_df["local_hour"] == 16
 nighttime_mask = local_hour_adjusted_df["local_hour"] == 4
 
+# Separate dataframes for day and night
+daytime_df = local_hour_adjusted_df[daytime_mask].copy() # use copy to avoid SettingWithCopyWarning
+nighttime_df = local_hour_adjusted_df[nighttime_mask].copy() # use copy to avoid SettingWithCopyWarning
+
+# Group by location_ID and calculate mean UHI_diff for DAY and NIGHT separately
+day_location_averaged_df = daytime_df.groupby('location_ID')['UHI_diff'].mean().reset_index()
+day_location_averaged_df = day_location_averaged_df.rename(columns={'UHI_diff': 'mean_UHI_diff'})
+
+night_location_averaged_df = nighttime_df.groupby('location_ID')['UHI_diff'].mean().reset_index()
+night_location_averaged_df = night_location_averaged_df.rename(columns={'UHI_diff': 'mean_UHI_diff'})
+
+# Merge back KGMajorClass for filtering - DAY
+merge_cols_day = ['location_ID', 'KGMajorClass']
+day_location_averaged_df = pd.merge(day_location_averaged_df, daytime_df[merge_cols_day].drop_duplicates(subset='location_ID'), on='location_ID', how='left')
+
+# Merge back KGMajorClass for filtering - NIGHT
+merge_cols_night = ['location_ID', 'KGMajorClass']
+night_location_averaged_df = pd.merge(night_location_averaged_df, nighttime_df[merge_cols_night].drop_duplicates(subset='location_ID'), on='location_ID', how='left')
+
+
 # Climate Zones to plot
 climate_zones = ['Arid', 'Tropical', 'Temperate', 'Cold']
 climate_zones_display = ['Arid', 'Tropical', 'Temperate', 'Continental'] # For x axis display
 
 """
 PlotByClimateZone
-Description: a function to plot UHI_diff distribution by climate zone
-Input： df -- pandas DataFrame
+Description: a function to plot UHI_diff distribution by climate zone, averaged by location_id for specific DN
+Input： df -- pandas DataFrame (day_location_averaged_df or night_location_averaged_df)
           Zone -- climate zone name (Arid, Tropical, Temperate, Cold)
-          DN -- 'Day' or 'Night'
+          DN -- 'Day' or 'Night' (used for print statement only now)
 Output: None (plots on the current axes)
 """
 def PlotByClimateZone(df, Zone, DN, ax, inset1, inset2, clip0, clip1):
-    if DN == 'Day':
-        data_DN = df[daytime_mask]
-    elif DN == 'Night':
-        data_DN = df[nighttime_mask]
-    else:
-        raise ValueError("DN must be 'Day' or 'Night'")
-
-    zone_data = data_DN[data_DN['KGMajorClass'] == Zone]['UHI_diff'].dropna()
+    zone_data = df[df['KGMajorClass'] == Zone]['mean_UHI_diff'].dropna() # Use 'mean_UHI_diff'
 
     if DN=='Day':
-        print(f'Climate zone {Zone} Daytime UHI_diff mean: {zone_data.mean()}')
+        print(f'Climate zone {Zone} Daytime UHI_diff mean (averaged for hour 16): {zone_data.mean()}')
     elif DN=='Night':
-        print(f'Climate zone {Zone} Nighttime UHI_diff mean: {zone_data.mean()}')
+        print(f'Climate zone {Zone} Nighttime UHI_diff mean (averaged for hour 4): {zone_data.mean()}')
 
     c='black'
     flierprops = dict(marker=".",markersize=0.8,alpha=0.3,color=c,markeredgecolor=c)
@@ -118,7 +131,7 @@ ax.text(0.1,5.3,'Day',horizontalalignment='left',verticalalignment='top',fontsiz
 ax.set_ylabel('ΔUHI (°C)',fontsize=14,labelpad=-9) # Modified y axis label
 
 for i, zone in enumerate(climate_zones):
-    PlotByClimateZone(local_hour_adjusted_df, zone, 'Day', ax, inset_axes_day[i], inset_axes_day[i], Clip0, Clip1) # using same inset for both plot in each column
+    PlotByClimateZone(day_location_averaged_df, zone, 'Day', ax, inset_axes_day[i], inset_axes_day[i], Clip0, Clip1) # using same inset for both plot in each column
 
 ax.tick_params(axis='both',labelsize=14,direction='in')
 ax.text(-0.3,5.5,'a',horizontalalignment='left',verticalalignment='top',fontsize=14,weight='bold')
@@ -160,7 +173,7 @@ ax.text(0.1,2.1,'Night',horizontalalignment='left',verticalalignment='top',fonts
 ax.set_ylabel('ΔUHI (°C)',fontsize=14,labelpad=-9) # Modified y axis label
 
 for i, zone in enumerate(climate_zones):
-    PlotByClimateZone(local_hour_adjusted_df, zone, 'Night', ax, inset_axes_night[i], inset_axes_night[i], Clip0, Clip1) # using same inset for both plot in each column
+    PlotByClimateZone(night_location_averaged_df, zone, 'Night', ax, inset_axes_night[i], inset_axes_night[i], Clip0, Clip1) # using same inset for both plot in each column
 
 
 ax.tick_params(axis='both',labelsize=14,direction='in')
