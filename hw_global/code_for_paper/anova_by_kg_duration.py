@@ -31,8 +31,8 @@ if not os.path.exists(explain_variance_by_kg_duration_path):
                     UHI_diff_std=('UHI_diff','std'),
                     Q2M_mean=('Q2M', 'mean'),
                     SOILWATER_10CM_mean=('SOILWATER_10CM', 'mean')))
-    output_feather_path = "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/updated_local_hour_adjusted_variables_HW98_daily_agg.feather"
-    df_agg.to_feather(output_feather_path)  
+  
+    df_agg.to_feather(explain_variance_by_kg_duration_path)  
 else:
     df_agg = pd.read_feather(explain_variance_by_kg_duration_path)
 
@@ -85,7 +85,7 @@ ncols = 2
 nrows = 2
 
 fig, axes = plt.subplots(nrows=nrows, ncols=ncols,
-                         figsize=(5*ncols, 4*nrows),
+                         figsize=(5*ncols, 4*nrows),  # Removed extra height since legend is now in plots
                          sharex=True, sharey=True)
 axes = axes.flatten() if n_zones > 1 else [axes]
 
@@ -105,7 +105,7 @@ for i, zone in enumerate(unique_zones):
         # Plot UHI_diff on the primary (left) y-axis
         for var_index, var in enumerate(variables_left_yaxis):
             mean_var_col = variable_means_left[var_index]
-            ax.plot(
+            line = ax.plot(
                 sub_agg['day_in_event'],
                 sub_agg[mean_var_col],
                 label=f"{var}",
@@ -113,7 +113,8 @@ for i, zone in enumerate(unique_zones):
                 marker='o',
                 markersize=3,
                 linestyle='-'
-            )
+            )[0]
+                
         ax.set_ylabel("UHI_diff (°C)", color=colors[0])
         ax.tick_params(axis='y', labelcolor=colors[0])
         # Set consistent y-axis limits for UHI_diff
@@ -125,7 +126,7 @@ for i, zone in enumerate(unique_zones):
         # Plot normalized Q2M and SOILWATER_10CM on the secondary (right) y-axis
         for var_index, var in enumerate(variables_right_yaxis):
             mean_var_col_scaled = variable_means_right_scaled[var_index]
-            ax_right.plot(
+            line = ax_right.plot(
                 sub_agg['day_in_event'],
                 sub_agg[mean_var_col_scaled],
                 label=f"{var} (normalized)",
@@ -133,16 +134,24 @@ for i, zone in enumerate(unique_zones):
                 marker='o',
                 markersize=3,
                 linestyle='-'
-            )
+            )[0]
+                
         ax_right.set_ylabel("Globally Normalized Q2M & SOILWATER_10CM (0-1)", color='black')
         ax_right.tick_params(axis='y', labelcolor='black')
         # Set consistent y-axis limits for normalized variables
         ax_right.set_ylim(0, 1)  # Since these are normalized values, they should be between 0 and 1
 
-        # Combine legends from both axes
-        lines_left, labels_left = ax.get_legend_handles_labels()
-        lines_right, labels_right = ax_right.get_legend_handles_labels()
-        ax.legend(lines_left + lines_right, labels_left + labels_right, loc='best', title="Variables")
+        # Add legend only for first and fourth plots
+        if i == 0:  # First plot (top-left)
+            lines_left, labels_left = ax.get_legend_handles_labels()
+            lines_right, labels_right = ax_right.get_legend_handles_labels()
+            ax.legend(lines_left + lines_right, labels_left + labels_right, 
+                     loc='upper right', title="Variables")
+        elif i == 3:  # Fourth plot (bottom-right)
+            lines_left, labels_left = ax.get_legend_handles_labels()
+            lines_right, labels_right = ax_right.get_legend_handles_labels()
+            ax.legend(lines_left + lines_right, labels_left + labels_right, 
+                     loc='lower right', title="Variables")
 
         ax.set_title(zone)
         ax.set_xlabel("Day in Heatwave Event")
@@ -156,7 +165,7 @@ for j in range(i + 1, nrows*ncols):
     if j < len(axes):
         fig.delaxes(axes[j])
 
-
-plt.suptitle("Day-by-Day Changes of UHI_diff, Globally Normalized Q2M & SOILWATER_10CM by Climate Zone (First 10 Days)", fontsize=14, y=0.98)
+plt.suptitle("Day-by-Day Changes of UHI_diff, Globally Normalized Q2M & SOILWATER_10CM by Climate Zone (First 10 Days)", 
+             fontsize=14, y=0.95)
 plt.tight_layout()
 plt.show()
