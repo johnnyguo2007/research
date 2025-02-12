@@ -16,9 +16,14 @@ local_hour_adjusted_df = pd.read_feather(feather_file)
 
 average_by_daytime_and_nighttime = True
 if average_by_daytime_and_nighttime:
-    daytime_mask = local_hour_adjusted_df['local_hour'].between(5, 5)
-    # nighttime_mask = (local_hour_adjusted_df['local_hour'].between(20, 24) | local_hour_adjusted_df['local_hour'].between(0, 5))
-    nighttime_mask = local_hour_adjusted_df['local_hour'].between(10, 10)
+    # daytime_mask = local_hour_adjusted_df['local_hour'].between(5, 5)
+    # # nighttime_mask = (local_hour_adjusted_df['local_hour'].between(20, 24) | local_hour_adjusted_df['local_hour'].between(0, 5))
+    # nighttime_mask = local_hour_adjusted_df['local_hour'].between(10, 10)
+
+    daytime_mask = local_hour_adjusted_df["local_hour"].between(8, 16)
+    nighttime_mask = local_hour_adjusted_df["local_hour"].between(
+        20, 24
+    ) | local_hour_adjusted_df["local_hour"].between(0, 4)
 
     
     daytime_df = local_hour_adjusted_df[daytime_mask]
@@ -163,16 +168,16 @@ ax_day.hlines(0, 0, 6, colors='k', linestyles='solid', linewidth=0.8)
 
 # A narrower y‐range for day
 # You could auto‐scale around the data, or just fix it:
-ax_day.set_ylim(-1, 1)
+ax_day.set_ylim(-1.5, 1.5)
 ax_day.set_xlim(0, 6)
 
-ax_day.text(0.1, 0.9, 'Day', fontsize=14, weight='bold',
+ax_day.text(0.1, 1.4, 'Day', fontsize=14, weight='bold',
             horizontalalignment='left', verticalalignment='top')
 
 ax_day.set_ylabel('HW-NHW UHI (°C)', fontsize=14, labelpad=-1)
 ax_day.axes.xaxis.set_visible(False)  # hide day x‐axis completely
 
-ax_day.text(-0.6, 1.2, 'a', fontsize=14, weight='bold',
+ax_day.text(-0.6, 1.7, 'a', fontsize=14, weight='bold',
             horizontalalignment='left', verticalalignment='top')
 
 # Plot each zone (Day)
@@ -193,9 +198,9 @@ ax_night.hlines(0, 0, 6, colors='k', linestyles='solid', linewidth=0.8)
 ax_night.set_ylim(-1, 2)
 ax_night.set_xlim(0, 6)
 
-ax_night.text(0.1, 1.8, 'Night', fontsize=14, weight='bold',
+ax_night.text(0.1, 1.9, 'Night', fontsize=14, weight='bold',
               horizontalalignment='left', verticalalignment='top')
-ax_night.set_ylabel('ΔUHI (°C)', fontsize=14, labelpad=-9)
+ax_night.set_ylabel('HW-NHW UHI (°C)', fontsize=14, labelpad=-1)
 ax_night.text(-0.6, 2.2, 'b', fontsize=14, weight='bold',
               horizontalalignment='left', verticalalignment='top')
 

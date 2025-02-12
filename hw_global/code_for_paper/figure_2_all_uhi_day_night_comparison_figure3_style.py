@@ -142,7 +142,7 @@ def create_map_figure3_style(ax, data, title, vmin, vmax, cmap):
     cbar = plt.colorbar(
         cs, ax=ax, orientation="vertical", pad=0.02, extend="both", format="%.1f"
     )
-    cbar.set_label('°C', rotation=0, labelpad=5, y=-0.1, ha='right')
+    cbar.set_label('(°C)', rotation=0, labelpad= -1, y=0.05, ha='right')
     ax.set_title(title, fontsize=14, fontweight="bold", pad=-1)
     return cs
 
@@ -178,8 +178,8 @@ def plot_all_uhi_maps_figure3_style(df, output_dir=None):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 6), dpi=600)
     plt.rcParams.update({"font.sans-serif": "Arial"})
 
-    create_map_figure3_style(ax1, day_data, "Daytime Average HW-NHW UHI", vmin, vmax, "coolwarm")
-    create_map_figure3_style(ax2, night_data, "Nighttime Average HW-NHW UHI", vmin, vmax, "coolwarm")
+    create_map_figure3_style(ax1, day_data, "Day", vmin, vmax, "coolwarm")
+    create_map_figure3_style(ax2, night_data, "Night", vmin, vmax, "coolwarm")
     plt.tight_layout()
 
     if output_dir:
@@ -353,6 +353,36 @@ def plot_missing_kgmajorclass(df, output_dir):
     else:
         plt.show()
 
+def calculate_and_save_stats(df, output_dir):
+    """Calculate and save day/night UHI statistics"""
+    # Calculate day/night statistics
+    daytime_stats = {
+        'mean': df['Daytime_UHI_diff_avg'].mean(),
+        'std': df['Daytime_UHI_diff_avg'].std()
+    }
+    
+    nighttime_stats = {
+        'mean': df['Nighttime_UHI_diff_avg'].mean(),
+        'std': df['Nighttime_UHI_diff_avg'].std()
+    }
+    
+    # Format the statistics into a string
+    stats_text = (
+        "UHI Difference Statistics:\n"
+        "========================\n\n"
+        "Daytime:\n"
+        f"  Mean: {daytime_stats['mean']:.3f}°C\n"
+        f"  Standard Deviation: {daytime_stats['std']:.3f}°C\n\n"
+        "Nighttime:\n"
+        f"  Mean: {nighttime_stats['mean']:.3f}°C\n"
+        f"  Standard Deviation: {nighttime_stats['std']:.3f}°C\n"
+    )
+    
+    # Save to file
+    output_path = os.path.join(output_dir, 'uhi_diff_statistics.txt')
+    with open(output_path, 'w') as f:
+        f.write(stats_text)
+
 def main():
     parser = argparse.ArgumentParser(description="Generate UHI global maps")
     parser.add_argument(
@@ -381,7 +411,7 @@ def main():
     location_ID_ds = xr.open_dataset(location_ID_path)
 
     # Define masks for daytime and nighttime
-    day_night_avg = False
+    day_night_avg = True
     if day_night_avg:
         daytime_mask = local_hour_adjusted_df["local_hour"].between(8, 16)
         nighttime_mask = local_hour_adjusted_df["local_hour"].between(
@@ -434,6 +464,9 @@ def main():
     plot_all_uhi_maps(uhi_diff_summary, output_dir)
     plot_all_uhi_maps_figure3_style(uhi_diff_summary, output_dir)
     # plot_missing_kgmajorclass(uhi_diff_summary, output_dir)
+
+    # After creating uhi_diff_summary DataFrame, add:
+    calculate_and_save_stats(uhi_diff_summary, output_dir)
 
 
 if __name__ == "__main__":
