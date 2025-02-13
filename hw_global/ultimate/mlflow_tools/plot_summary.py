@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from typing import List
 
 from .group_data import GroupData
+from .plot_util import get_latex_label
 
 def _create_output_dir(output_dir: str, kg_class: str = None) -> str:
     """
@@ -23,6 +24,20 @@ def _create_output_dir(output_dir: str, kg_class: str = None) -> str:
         output_dir = os.path.join(output_dir, kg_class)
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
+def get_shap_feature_importance(shap_values, feature_names):
+    """
+    Calculate the SHAP feature importance.
+    """
+    shap_feature_importance = np.abs(shap_values).mean(axis=0)
+    total_importance = np.sum(shap_feature_importance)
+    shap_importance_df = pd.DataFrame({
+        'Feature': feature_names,
+        'Importance': shap_feature_importance,
+        'Percentage': (shap_feature_importance / total_importance) * 100
+    })
+    shap_importance_df.sort_values(by='Importance', ascending=False, inplace=True)
+    # shap_importance_df = add_long_name(shap_importance_df, join_column='Feature', df_daily_vars=df_daily_vars)
+    return shap_importance_df
 
 def plot_summary(
     shap_values_df: pd.DataFrame,
@@ -42,9 +57,13 @@ def plot_summary(
     logging.info(f"feature_values_df columns: {feature_values_df.columns.tolist()}")
     output_dir = _create_output_dir(output_dir)
     plt.figure()
+    feature_names = [get_latex_label(name) for name in feature_names]
+    shap_values = shap_values_df.values    # Calculate SHAP feature importance
+    shap_feature_importance = get_shap_feature_importance(shap_values, feature_names)
+
     shap.summary_plot(
-        shap_values_df.values,
-        feature_values_df.values,
+        shap_values[:, shap_feature_importance.index],
+        feature_values_df.values[:, shap_feature_importance.index],
         feature_names=feature_names,
         show=False,
         plot_size=(20, 15),
@@ -53,6 +72,19 @@ def plot_summary(
     plt.title(f"{plot_type.capitalize()} Summary Plot - {kg_class}")
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, f"{plot_type}_summary_plot_{kg_class}.png"))
+    plt.close()
+
+    shap.waterfall_plot(
+        shap.Explanation(
+            values=shap_feature_importance['Percentage'].values,
+            base_values=0,
+            feature_names=feature_names
+        ),
+        show=False
+    )
+    plt.title(f"Feature Importance Plot - {kg_class}")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f"feature_importance_plot_{kg_class}.png"))
     plt.close()
 
 def generate_summary_and_kg_plots(
@@ -80,6 +112,7 @@ def generate_summary_and_kg_plots(
         feature_values_df = group_data.feature_group_detail_df
         feature_names = group_data.group_names
 
+    feature_names = [get_latex_label(name) for name in feature_names]
     # Generate summary plots for global data
     logging.info(f"Generating {plot_type} summary plot for global data")
     plot_summary(
