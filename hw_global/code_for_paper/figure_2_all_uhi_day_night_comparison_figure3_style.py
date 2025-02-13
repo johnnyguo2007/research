@@ -366,6 +366,11 @@ def calculate_and_save_stats(df, output_dir):
         'std': df['Nighttime_UHI_diff_avg'].std()
     }
     
+    overall_stats = {
+        'mean': df['Overall_UHI_diff_avg'].mean(),
+        'std': df['Overall_UHI_diff_avg'].std()
+    }
+    
     # Format the statistics into a string
     stats_text = (
         "UHI Difference Statistics:\n"
@@ -375,7 +380,10 @@ def calculate_and_save_stats(df, output_dir):
         f"  Standard Deviation: {daytime_stats['std']:.3f}°C\n\n"
         "Nighttime:\n"
         f"  Mean: {nighttime_stats['mean']:.3f}°C\n"
-        f"  Standard Deviation: {nighttime_stats['std']:.3f}°C\n"
+        f"  Standard Deviation: {nighttime_stats['std']:.3f}°C\n\n"
+        "Overall:\n"
+        f"  Mean: {overall_stats['mean']:.3f}°C\n"
+        f"  Standard Deviation: {overall_stats['std']:.3f}°C\n"
     )
     
     # Save to file
