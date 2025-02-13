@@ -49,7 +49,9 @@ def plot_side_by_side_from_csv(
         unique_features = sorted(list(set(all_features)))
         palette = sns.color_palette("tab20", n_colors=len(unique_features))
         color_mapping = dict(zip(unique_features, palette))
-
+    
+        #only select the group_name column from shap_df
+        shap_df = shap_df[[group_name]].copy()
         create_side_by_side_group_plot(
             shap_df=shap_df,
             feature_values_df=feature_values_df,
