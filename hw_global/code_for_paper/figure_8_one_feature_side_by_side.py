@@ -36,6 +36,10 @@ def plot_side_by_side_from_csv(
         shap_df = pd.read_csv(shap_csv_path, index_col=0)
         feature_values_df = pd.read_csv(feature_csv_path, index_col=0)
 
+        # Drop 'Total' column if it exists
+        shap_df = shap_df.drop(columns=['Total'], errors='ignore')
+        feature_values_df = feature_values_df.drop(columns=['Total'], errors='ignore')
+
         # Basic check to ensure dataframes are not empty
         if shap_df.empty:
             logging.warning(f"SHAP data CSV '{shap_csv_path}' is empty.")
