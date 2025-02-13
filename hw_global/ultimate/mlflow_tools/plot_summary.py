@@ -24,6 +24,8 @@ def _create_output_dir(output_dir: str, kg_class: str = None) -> str:
         output_dir = os.path.join(output_dir, kg_class)
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
+
+
 def get_shap_feature_importance(shap_values, feature_names):
     """
     Calculate the SHAP feature importance.
@@ -38,6 +40,7 @@ def get_shap_feature_importance(shap_values, feature_names):
     shap_importance_df.sort_values(by='Importance', ascending=False, inplace=True)
     # shap_importance_df = add_long_name(shap_importance_df, join_column='Feature', df_daily_vars=df_daily_vars)
     return shap_importance_df
+
 
 def plot_summary(
     shap_values_df: pd.DataFrame,
@@ -60,11 +63,12 @@ def plot_summary(
     feature_names = [get_latex_label(name) for name in feature_names]
     shap_values = shap_values_df.values    # Calculate SHAP feature importance
     shap_feature_importance = get_shap_feature_importance(shap_values, feature_names)
+    ordered_feature_names = shap_feature_importance['Feature'].tolist()
 
     shap.summary_plot(
         shap_values[:, shap_feature_importance.index],
         feature_values_df.values[:, shap_feature_importance.index],
-        feature_names=feature_names,
+        feature_names=ordered_feature_names,
         show=False,
         plot_size=(20, 15),
         color_bar=True,
@@ -78,7 +82,7 @@ def plot_summary(
         shap.Explanation(
             values=shap_feature_importance['Percentage'].values,
             base_values=0,
-            feature_names=feature_names
+            feature_names=ordered_feature_names
         ),
         show=False
     )
@@ -113,10 +117,13 @@ def generate_summary_and_kg_plots(
         feature_names = group_data.group_names
 
     feature_names = [get_latex_label(name) for name in feature_names]
+    shap_feature_importance = get_shap_feature_importance(shap_df.values, feature_names)
+    ordered_feature_names = shap_feature_importance['Feature'].tolist()
+
     # Generate summary plots for global data
     logging.info(f"Generating {plot_type} summary plot for global data")
     plot_summary(
-        shap_df, feature_values_df, feature_names, summary_dir, plot_type=plot_type
+        shap_df, feature_values_df, ordered_feature_names, summary_dir, plot_type=plot_type
     )
 
     # Generate summary plots for each KGMajorClass
@@ -128,7 +135,7 @@ def generate_summary_and_kg_plots(
         plot_summary(
             shap_df[kg_mask],
             feature_values_df[kg_mask],
-            feature_names,
+            ordered_feature_names,
             kg_output_dir,
             kg_class,
             plot_type=plot_type
