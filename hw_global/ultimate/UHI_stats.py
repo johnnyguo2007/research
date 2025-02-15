@@ -14,8 +14,8 @@ def replace_cold_with_continental(kg_main_group):
 
 summary_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary'
 
-FIGURE_OUTPUT_DIR = '/home/jguo/research/hw_global/paper_figure_output'
-
+# FIGURE_OUTPUT_DIR = '/home/jguo/research/hw_global/paper_figure_output'
+FIGURE_OUTPUT_DIR = '/home/jguo/tmp/output2'
 # merged_feather_path = os.path.join(summary_dir, 'local_hour_adjusted_variables.feather')
 merged_feather_path = os.path.join(summary_dir, f'updated_local_hour_adjusted_variables_HW{THRESHOLD}.feather')
 
@@ -31,7 +31,7 @@ len(local_hour_adjusted_df['location_ID'].unique())
 # os.environ["PROJ_LIB"] = "/home/jguo/anaconda3/envs/I2000/share/proj"
 import xarray as xr
 import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
+
 
 # Group by 'lat', 'lon', and 'local_hour', then calculate the mean for 'UHI_diff'
 var_diff_by_localhour = local_hour_adjusted_df.groupby(['lat', 'lon', 'local_hour'])[['UHI_diff']].mean().reset_index().sort_values(by=['lat', 'lon', 'local_hour'])

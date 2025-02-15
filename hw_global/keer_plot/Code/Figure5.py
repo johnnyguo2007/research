@@ -12,7 +12,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 Wet=570;Dry=180
-FilePath='B:\\HeatStressPaper2022_v2\\Revision2\\Upload_20221130\\Data\\'
+# FilePath='B:\\HeatStressPaper2022_v2\\Revision2\\Upload_20221130\\Data\\'
+FilePath='/home/jguo/research/hw_global/keer_plot/Data/'
 DangerousDaysNights=nc.Dataset(FilePath+'DangerousDaysNights_Figure5.nc')
 DangerousDays_U=DangerousDaysNights.variables['DangerousDays_U'][:]
 DangerousDays_R=DangerousDaysNights.variables['DangerousDays_R'][:]
@@ -243,6 +244,6 @@ left=0.11,
 right=0.9,
 hspace=0.23,
 wspace=0.21)
-# plt.savefig(FilePath+'Figure5.png', dpi=600)
-# plt.close()
+plt.savefig(FilePath+'Figure5.png', dpi=600)
+plt.close()
 

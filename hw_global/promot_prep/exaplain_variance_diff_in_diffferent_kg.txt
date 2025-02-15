@@ -1,0 +1,141 @@
+
+
+path of the feather file:
+/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/updated_local_hour_adjusted_variables_HW98.feather
+
+info:
+========================================
+Number of rows     6,181,728
+Number of columns  109
+
+Column Information:
+========================================
+  Index  Name                         Type           Nullable
+      0  time                         timestamp[ns]  True
+      1  lat                          float          True
+      2  lon                          float          True
+      3  APPAR_TEMP                   float          True
+      4  APPAR_TEMP_R                 float          True
+      5  APPAR_TEMP_U                 float          True
+      6  EFLX_LH_TOT                  float          True
+      7  EFLX_LH_TOT_R                float          True
+      8  EFLX_LH_TOT_U                float          True
+      9  FGR                          float          True
+     10  FGR_R                        float          True
+     11  FGR_U                        float          True
+     12  FIRA                         float          True
+     13  FIRA_R                       float          True
+     14  FIRA_U                       float          True
+     15  FIRE                         float          True
+     16  FIRE_R                       float          True
+     17  FIRE_U                       float          True
+     18  FLDS                         float          True
+     19  FSA                          float          True
+     20  FSA_U                        float          True
+     21  FSA_R                        float          True
+     22  FSDS                         float          True
+     23  FSH                          float          True
+     24  FSH_R                        float          True
+     25  FSH_U                        float          True
+     26  HEAT_FROM_AC                 float          True
+     27  HIA                          float          True
+     28  HIA_R                        float          True
+     29  HIA_U                        float          True
+     30  PBOT                         float          True
+     31  Q2M                          float          True
+     32  Q2M_R                        float          True
+     33  Q2M_U                        float          True
+     34  QBOT                         float          True
+     35  Qstor                        float          True
+     36  RAIN                         float          True
+     37  SNOW                         float          True
+     38  SOILWATER_10CM               float          True
+     39  TBOT                         float          True
+     40  THBOT                        float          True
+     41  TSA                          float          True
+     42  TSA_R                        float          True
+     43  TSA_U                        float          True
+     44  TSKIN                        float          True
+     45  TSKIN_R                      float          True
+     46  TSKIN_U                      float          True
+     47  U10                          float          True
+     48  URBAN_HEAT                   float          True
+     49  VAPOR_PRES                   float          True
+     50  VAPOR_PRES_R                 float          True
+     51  VAPOR_PRES_U                 float          True
+     52  WASTEHEAT                    float          True
+     53  WBA                          float          True
+     54  WBA_R                        float          True
+     55  WBA_U                        float          True
+     56  WIND                         float          True
+     57  HW98                         bool           True
+     58  location_ID                  double         True
+     59  event_ID                     double         True
+     60  global_event_ID              string         True
+     61  hour                         int32          True
+     62  month                        int32          True
+     63  year                         int32          True
+     64  local_time                   timestamp[ns]  True
+     65  local_hour                   int32          True
+     66  UHI                          float          True
+     67  UWBI                         float          True
+     68  UHI_avg                      float          True
+     69  UWBI_avg                     float          True
+     70  UHI_diff                     float          True
+     71  UWBI_diff                    float          True
+     72  TOPO                         double         True
+     73  KGClass                      string         True
+     74  KGMajorClass                 string         True
+     75  hw_nohw_diff_EFLX_LH_TOT     float          True
+     76  hw_nohw_diff_EFLX_LH_TOT_R   float          True
+     77  hw_nohw_diff_EFLX_LH_TOT_U   float          True
+     78  hw_nohw_diff_FGR             float          True
+     79  hw_nohw_diff_FGR_R           float          True
+     80  hw_nohw_diff_FGR_U           float          True
+     81  hw_nohw_diff_FIRA            float          True
+     82  hw_nohw_diff_FIRA_R          float          True
+     83  hw_nohw_diff_FIRA_U          float          True
+     84  hw_nohw_diff_FSA             float          True
+     85  hw_nohw_diff_FSA_U           float          True
+     86  hw_nohw_diff_FSA_R           float          True
+     87  hw_nohw_diff_FSH             float          True
+     88  hw_nohw_diff_FSH_R           float          True
+     89  hw_nohw_diff_FSH_U           float          True
+     90  hw_nohw_diff_HEAT_FROM_AC    float          True
+     91  hw_nohw_diff_PBOT            float          True
+     92  hw_nohw_diff_Q2M             float          True
+     93  hw_nohw_diff_Q2M_R           float          True
+     94  hw_nohw_diff_Q2M_U           float          True
+     95  hw_nohw_diff_QBOT            float          True
+     96  hw_nohw_diff_RAIN            float          True
+     97  hw_nohw_diff_U10             float          True
+     98  hw_nohw_diff_URBAN_HEAT      float          True
+     99  hw_nohw_diff_VAPOR_PRES      float          True
+    100  hw_nohw_diff_VAPOR_PRES_R    float          True
+    101  hw_nohw_diff_VAPOR_PRES_U    float          True
+    102  hw_nohw_diff_WASTEHEAT       float          True
+    103  hw_nohw_diff_WBA             float          True
+    104  hw_nohw_diff_WBA_R           float          True
+    105  hw_nohw_diff_WBA_U           float          True
+    106  hw_nohw_diff_WIND            float          True
+    107  hw_nohw_diff_Qstor           float          True
+    108  hw_nohw_diff_SOILWATER_10CM  float          True
+
+
+KGMajorClass indicate the climate zone of the location.
+Q2M is the 2m air humidity.
+SOILWATER_10CM is the soil moisture at 10cm depth.
+UHI_diff is the difference in UHI between heatwave and non-heatwave.
+location_ID is the location ID of the location.
+event_ID is the event ID of the heatwave. it is unique for each heatwave. it contains multiple days, which can be found in date part of time column.
+global_event_ID consist of location_ID and event_ID. seperate by '_'
+I want to figure out if climate zone like Arid has lower UHI_diff variance than other climate zone 
+because the low humidity and soil moisture and air quickly dry out as heatwave continue. Hence variance of UHI_diff is lower in different days. 
+at the same time, for climate zone like Tropical, the moisture is gradually decreasing, and the UHI_diff change through out the event. hence bigger variance.
+
+please note we already know climate zone like Arid has low variance in UHI_diff than that of Tropical for example.  we want to show UHI_diff change more day by day in some zone than others.
+please generate python code and my feather file location:
+/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/feather_info.sh updated_local_hour_adjusted_variables_HW98.feather
+which of plot should I show to prove my point?
+
+please don't use seaborn, just use matplot

@@ -215,9 +215,9 @@ ax_night.set_xticklabels(climate_zones_disp, fontsize=12)
 
 # Layout
 plt.subplots_adjust(
-    top=0.90, bottom=0.12, 
-    left=0.10, right=0.90,
-    hspace=0.25
+    top=0.95, bottom=0.05, 
+    left=0.05, right=0.95,
+    hspace=0.1  # Reduced from 0.25 to 0.05 to make plots closer
 )
 
 outdir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/'

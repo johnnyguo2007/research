@@ -9,7 +9,8 @@ import seaborn as sb
 # define precipitation thresholds for three climate zones
 Wet=570;Dry=180
 
-FilePath='B:\\HeatStressPaper2022_v2\\Revision2\\Upload_20221130\\Data\\'
+# FilePath='B:\\HeatStressPaper2022_v2\\Revision2\\Upload_20221130\\Data\\'
+FilePath='/home/jguo/research/hw_global/keer_plot/Data/'
 Precipitation=nc.Dataset(FilePath+'SummerPrecipitation.nc')
 Rain=Precipitation.variables['Precip'][:]
 
@@ -175,5 +176,5 @@ right=0.85,
 hspace=0.194,
 wspace=0.34)
 
-# plt.savefig(FilePath+'Figure3bd.png', dpi=600)
-# plt.close()
+plt.savefig(FilePath+'Figure3bd.png', dpi=600)
+plt.close()

@@ -54,7 +54,7 @@ def plot_feature_group_from_csv(csv_path: str, output_path: str, title: str, gro
                 base_values = pd.Series([0] * len(df.index), index=df.index)
         else:
             logging.info("No base value CSV path provided. Using default base value of 0.")
-            base_values = pd.Series([0.178] * len(df.index), index=df.index)
+            base_values = pd.Series([0.112] * len(df.index), index=df.index)
 
 
         plot_feature_group_stacked_bar(
@@ -76,12 +76,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Plot feature group stacked bar chart from CSV data.")
     parser.add_argument("--csv_path", 
-                        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/paper_data/global_shap_stacked_bar_all_features_shap_data.csv', 
+                        # default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/paper_data/global_shap_stacked_bar_all_features_shap_data.csv', 
+                        # default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/paper_data/hourly_stacked_bar/feature_group_contribution_by_hour_Arid_group_data.csv',
+                        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/paper_data/hourly_stacked_bar/feature_group_contribution_by_hour_Tropical_group_data.csv',
                         help="Path to the input CSV data file.")
     parser.add_argument("--output_path", 
-                        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_7_stacked_bar_through_hour.png', 
+                        # default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_7/Figure_7_stacked_bar_through_hour_Arid.png', 
+                        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_7/Figure_7_stacked_bar_through_hour_Tropical.png', 
                         help="Path to save the output plot image.")
-    parser.add_argument("--title", default='SHAP Feature Importance by Hour', help="Title of the plot.")
+    parser.add_argument("--title", default='Tropical', help="Title of the plot.")
     parser.add_argument("--group_by_column", default="local_hour", help="Column to group by (default: local_hour).")
     parser.add_argument("--base_value_path", default=None, help="Optional path to CSV file containing base values.")
 

@@ -545,7 +545,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate UHI global maps")
     parser.add_argument(
         "--output_dir",
-        default="/home/jguo/tmp/output",
+        default="/home/jguo/tmp/output2",
         help="Directory for output files",
     )
     args = parser.parse_args()

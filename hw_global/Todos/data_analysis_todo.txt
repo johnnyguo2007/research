@@ -1,0 +1,8 @@
+1. using shap data to show the mean and trend against label
+2. show why hw days the DD_FSA is actually negative
+
+
+
+3. study the relationship between DD_FSA and  HW_NO_FSA and FSA. 
+I actually looked at the 5 chart /Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/plots/day/combined_plots/combined_FSA.png
+and it is easy to the negative correlation pattern

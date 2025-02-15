@@ -12,7 +12,7 @@ import os
 # define precipitation thresholds for three climate zones
 Wet=570;Dry=180
 
-FilePath='/home/jguo/research/hw_global/keer_plot/Data'
+FilePath='/home/jguo/research/hw_global/keer_plot/Data/'
 PartitionTerms=nc.Dataset(os.path.join(FilePath, 'PartitionTerms.nc'))
 
 # FilePath='B:\\HeatStressPaper2022_v2\\Revision2\\Upload_20221130\\Data\\'
@@ -109,8 +109,8 @@ for i in range(0,3):
     right=wi,
     hspace=0.2,
     wspace=0.2)    
-    # plt.savefig(FilePath+'Figure3a'+Zone+'.png', dpi=600)    
-    # plt.close()
+    plt.savefig(FilePath+'Figure3a'+Zone+'.png', dpi=600)    
+    plt.close()
     
 for i in range(0,3):
     Zone=ClimateZones[i]
@@ -133,6 +133,6 @@ for i in range(0,3):
     right=wi,
     hspace=0.2,
     wspace=0.2)
-    # plt.savefig(FilePath+'Figure3c'+Zone+'.png', dpi=600) 
-    # plt.close()
+    plt.savefig(FilePath+'Figure3c'+Zone+'.png', dpi=600) 
+    plt.close()
     

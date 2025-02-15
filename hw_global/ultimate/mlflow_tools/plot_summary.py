@@ -60,10 +60,10 @@ def plot_summary(
     logging.info(f"feature_values_df columns: {feature_values_df.columns.tolist()}")
     output_dir = _create_output_dir(output_dir)
     plt.figure()
-    feature_names = [get_latex_label(name) for name in feature_names]
     shap_values = shap_values_df.values    # Calculate SHAP feature importance
     shap_feature_importance = get_shap_feature_importance(shap_values, feature_names)
     ordered_feature_names = shap_feature_importance['Feature'].tolist()
+    ordered_feature_names = [get_latex_label(name) for name in ordered_feature_names]
 
     shap.summary_plot(
         shap_values[:, shap_feature_importance.index],
@@ -116,14 +116,10 @@ def generate_summary_and_kg_plots(
         feature_values_df = group_data.feature_group_detail_df
         feature_names = group_data.group_names
 
-    feature_names = [get_latex_label(name) for name in feature_names]
-    shap_feature_importance = get_shap_feature_importance(shap_df.values, feature_names)
-    ordered_feature_names = shap_feature_importance['Feature'].tolist()
-
     # Generate summary plots for global data
     logging.info(f"Generating {plot_type} summary plot for global data")
     plot_summary(
-        shap_df, feature_values_df, ordered_feature_names, summary_dir, plot_type=plot_type
+        shap_df, feature_values_df, feature_names, summary_dir, plot_type=plot_type
     )
 
     # Generate summary plots for each KGMajorClass
@@ -135,7 +131,7 @@ def generate_summary_and_kg_plots(
         plot_summary(
             shap_df[kg_mask],
             feature_values_df[kg_mask],
-            ordered_feature_names,
+            feature_names,
             kg_output_dir,
             kg_class,
             plot_type=plot_type

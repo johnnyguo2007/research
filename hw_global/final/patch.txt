@@ -1,0 +1,22 @@
+--- a/mlflow_feature_selection.py
++++ b/mlflow_feature_selection.py
+@@ -478,10 +478,17 @@
+ 
+ # Separate daytime and nighttime data
+ print(f"Separating {args.time_period} data...")
++
++# Extract date from 'time' column
++local_hour_adjusted_df['date'] = pd.to_datetime(local_hour_adjusted_df['time']).dt.date
++
+ if args.time_period == "day":
+-    uhi_diff = local_hour_adjusted_df[daytime_mask]
++    uhi_diff_daily = local_hour_adjusted_df[daytime_mask].groupby(['lat', 'lon', 'date']).mean().reset_index()
+ else:
+-    uhi_diff = local_hour_adjusted_df[nighttime_mask]
++    uhi_diff_daily = local_hour_adjusted_df[nighttime_mask].groupby(['lat', 'lon', 'date']).mean().reset_index()
++
++# Rename uhi_diff_daily to uhi_diff for consistency with the rest of the script
++uhi_diff = uhi_diff_daily
+ 
+ X = uhi_diff[daily_var_lst]
+ y = uhi_diff['UHI_diff']

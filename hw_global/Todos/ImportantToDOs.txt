@@ -1,0 +1,2 @@
+plot factor group contribution through time (24 hours) for each climate zone.
+
