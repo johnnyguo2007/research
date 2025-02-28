@@ -73,7 +73,14 @@ def plot_summary(
         plot_size=(20, 15),
         color_bar=True,
     )
-    plt.title(f"{plot_type.capitalize()} Summary Plot - {kg_class}")
+    plt.title(f"{plot_type.capitalize()} Summary Plot - {kg_class}", fontsize=16)
+    # Increase font size for feature names (y-axis labels)
+    plt.yticks(fontsize=36)
+    # Adjust other plot elements for better readability
+    plt.xticks(fontsize=12)
+    if plt.gcf().get_axes() and len(plt.gcf().get_axes()) > 1:
+        cbar_ax = plt.gcf().get_axes()[1]
+        cbar_ax.tick_params(labelsize=12)
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, f"{plot_type}_summary_plot_{kg_class}.png"))
     plt.close()
