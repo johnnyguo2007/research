@@ -1,13 +1,15 @@
 from PIL import Image, ImageDraw, ImageFont
 
-# Load the six images
-image1 = Image.open('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_3_a_feature_summary_plot_Global.png')
-image2 = Image.open('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_3_b_group_summary_plot_Global.png')
-image4 = Image.open('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_3_c_feature_summary_plot_Global.png')
-image5 = Image.open('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_3_d_group_summary_plot_Global.png')
-image3 = Image.open('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_3_e_feature_importance_plot_Global.png')
-image6 = Image.open('/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_3_f_feature_importance_plot_Global.png')
+# Define a base directory for images
+image_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_3'
 
+# Load the six images using the base directory
+image1 = Image.open(f'{image_dir}/Figure_3_a_feature_summary_plot_Global.png')
+image2 = Image.open(f'{image_dir}/Figure_3_b_group_summary_plot_Global.png')
+image4 = Image.open(f'{image_dir}/Figure_3_c_feature_summary_plot_Global.png')
+image5 = Image.open(f'{image_dir}/Figure_3_d_group_summary_plot_Global.png')
+image3 = Image.open(f'{image_dir}/Figure_3_e_feature_importance_plot_Global.png')
+image6 = Image.open(f'{image_dir}/Figure_3_f_feature_importance_plot_Global.png')
 
 # Define the target size for scaling
 max_width = max(image1.width, image2.width, image3.width, image4.width, image5.width, image6.width)
@@ -49,7 +51,7 @@ except IOError:
 draw = ImageDraw.Draw(combined_image)
 
 # Define labels and positions with an offset for visibility
-labels = ['a', 'b', 'e', 'c', 'd', 'f']
+labels = ['a    Day', 'b    Day', 'e    Day', 'c    Night', 'd    Night', 'f    Night']
 # Adding a small offset to the positions to ensure labels are visible
 positions = [(10, 10), (width + 10, 10), (width * 2 + 10, 10), (10, height + 10), (width + 10, height + 10), (width * 2 + 10, height + 10)]
 
@@ -58,6 +60,6 @@ for label, position in zip(labels, positions):
     draw.text(position, label, (0, 0, 0), font=font)
 
 # Save the combined image
-output_path = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_3_combined_6_images.jpg'
+output_path = f'{image_dir}/Figure_3_combined_6_images.jpg'
 combined_image.save(output_path)
 output_path
