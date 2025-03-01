@@ -3,6 +3,11 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+
+import sys
+sys.path.append('/home/jguo/research/hw_global/ultimate/')
+# Import get_latex_label from plot_util
+from mlflow_tools.plot_util import get_latex_label
 # Load your data
 # Path to your Feather file
 explain_variance_by_kg_duration_path = "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/paper_data/explain_variance_by_kg_duration.feather"
@@ -108,14 +113,14 @@ for i, zone in enumerate(unique_zones):
             line = ax.plot(
                 sub_agg['day_in_event'],
                 sub_agg[mean_var_col],
-                label=f"{var}",
+                label=f"{get_latex_label(var)} (°C)",
                 color=colors[0],
                 marker='o',
                 markersize=3,
                 linestyle='-'
             )[0]
                 
-        ax.set_ylabel("UHI_diff (°C)", color=colors[0])
+        ax.set_ylabel("(°C)", color=colors[0])
         ax.tick_params(axis='y', labelcolor=colors[0])
         # Set consistent y-axis limits for UHI_diff
         ax.set_ylim(uhi_min, uhi_max)
@@ -129,14 +134,16 @@ for i, zone in enumerate(unique_zones):
             line = ax_right.plot(
                 sub_agg['day_in_event'],
                 sub_agg[mean_var_col_scaled],
-                label=f"{var} (normalized)",
+                label=f"{get_latex_label(var)} (normalized)",
                 color=colors[var_index+1],
                 marker='o',
                 markersize=3,
                 linestyle='-'
             )[0]
                 
-        ax_right.set_ylabel("Globally Normalized Q2M & SOILWATER_10CM (0-1)", color='black')
+        ax_right.set_ylabel("Globally Normalized " + 
+                          f"{get_latex_label('Q2M')} & {get_latex_label('SOILWATER_10CM')} (0-1)", 
+                          color='black')
         ax_right.tick_params(axis='y', labelcolor='black')
         # Set consistent y-axis limits for normalized variables
         ax_right.set_ylim(0, 1)  # Since these are normalized values, they should be between 0 and 1
@@ -146,12 +153,12 @@ for i, zone in enumerate(unique_zones):
             lines_left, labels_left = ax.get_legend_handles_labels()
             lines_right, labels_right = ax_right.get_legend_handles_labels()
             ax.legend(lines_left + lines_right, labels_left + labels_right, 
-                     loc='upper right', title="Variables")
+                     loc='upper right')
         elif i == 3:  # Fourth plot (bottom-right)
             lines_left, labels_left = ax.get_legend_handles_labels()
             lines_right, labels_right = ax_right.get_legend_handles_labels()
             ax.legend(lines_left + lines_right, labels_left + labels_right, 
-                     loc='lower right', title="Variables")
+                     loc='lower left')
 
         ax.set_title(zone)
         ax.set_xlabel("Day in Heatwave Event")
@@ -165,7 +172,7 @@ for j in range(i + 1, nrows*ncols):
     if j < len(axes):
         fig.delaxes(axes[j])
 
-plt.suptitle("Day-by-Day Changes of UHI_diff, Globally Normalized Q2M & SOILWATER_10CM by Climate Zone (First 10 Days)", 
-             fontsize=14, y=0.95)
+# plt.suptitle(f"Day-by-Day Changes of {get_latex_label('UHI_diff')}, Globally Normalized {get_latex_label('Q2M')} & {get_latex_label('SOILWATER_10CM')} by Climate Zone (First 10 Days)", 
+#              fontsize=14, y=0.95)
 plt.tight_layout()
 plt.show()
