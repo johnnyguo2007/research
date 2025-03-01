@@ -3,6 +3,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+import argparse
 
 import sys
 sys.path.append('/home/jguo/research/hw_global/ultimate/')
@@ -49,9 +50,39 @@ df_plot = df_agg[df_agg['KGMajorClass'] != 'Polar'].copy()
 N_DAYS = 11
 df_plot = df_plot[df_plot['day_in_event'] < N_DAYS].copy()
 
-# 6. We'll make the plot 2x2
+# --- LAYOUT OPTIONS ---
+# Add command line arguments if running as script
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Plot heatwave data with different layout options')
+    parser.add_argument('--grid', action='store_true', help='Use 2x2 grid layout instead of one row')
+    args = parser.parse_args()
+    
+    # Command line args take precedence if provided
+    if 'args' in locals():
+        use_grid_layout = args.grid
+    else:
+        use_grid_layout = False  # Default to one row when no args
+else:
+    # Default to one row when running in notebook
+    use_grid_layout = False
+
+# --- LAYOUT OPTION ---
+one_row_layout = False  # Set to True to put all plots in one row, False for 2x2 grid
+
+# Override with our preferred default (one row)
+one_row_layout = not use_grid_layout  # True for one row, False for 2x2 grid
+
+# 6. Set up the plot layout based on the configuration
 unique_zones = sorted(df_plot['KGMajorClass'].dropna().unique())  # sort & drop NA
 n_zones = len(unique_zones)
+
+# Set rows and columns based on layout preference
+if one_row_layout:
+    ncols = n_zones
+    nrows = 1
+else:
+    ncols = 2
+    nrows = 2
 
 # ### Normalize Q2M and SOILWATER_10CM to a 0-1 scale (Min-Max scaling) - GLOBAL Normalization
 
@@ -85,12 +116,9 @@ for var in ['Q2M_mean', 'SOILWATER_10CM_mean']: # Only normalize Q2M and SOILWAT
 uhi_min = df_plot_agg['UHI_diff_mean'].min()
 uhi_max = df_plot_agg['UHI_diff_mean'].max()
 
-# Set up 2x2 subplot grid
-ncols = 2
-nrows = 2
-
+# Set up subplot grid
 fig, axes = plt.subplots(nrows=nrows, ncols=ncols,
-                         figsize=(5*ncols, 4*nrows),  # Removed extra height since legend is now in plots
+                         figsize=(5*ncols, 4*nrows),  # Adjust figure size based on layout
                          sharex=True, sharey=True)
 axes = axes.flatten() if n_zones > 1 else [axes]
 
@@ -120,7 +148,10 @@ for i, zone in enumerate(unique_zones):
                 linestyle='-'
             )[0]
                 
-        ax.set_ylabel("(°C)", color=colors[0])
+        # Only add left y-axis label to the first plot in one-row layout, or to all plots in grid layout
+        if not one_row_layout or (one_row_layout and i == 0):
+            ax.set_ylabel("HW-NHW UHI (°C)", color=colors[0])
+        
         ax.tick_params(axis='y', labelcolor=colors[0])
         # Set consistent y-axis limits for UHI_diff
         ax.set_ylim(uhi_min, uhi_max)
@@ -141,20 +172,23 @@ for i, zone in enumerate(unique_zones):
                 linestyle='-'
             )[0]
                 
-        ax_right.set_ylabel("Globally Normalized " + 
-                          f"{get_latex_label('Q2M')} & {get_latex_label('SOILWATER_10CM')} (0-1)", 
-                          color='black')
+        # Only add right y-axis label to the last plot in one-row layout, or to all plots in grid layout
+        if not one_row_layout or (one_row_layout and i == n_zones-1):
+            ax_right.set_ylabel("Globally Normalized " + 
+                            f"{get_latex_label('Q2M')} & {get_latex_label('SOILWATER_10CM')} (0-1)", 
+                            color='black')
+        
         ax_right.tick_params(axis='y', labelcolor='black')
         # Set consistent y-axis limits for normalized variables
         ax_right.set_ylim(0, 1)  # Since these are normalized values, they should be between 0 and 1
 
-        # Add legend only for first and fourth plots
-        if i == 0:  # First plot (top-left)
+        # Add legend based on layout
+        if (one_row_layout and i == 0) or (not one_row_layout and i == 0):  # First plot
             lines_left, labels_left = ax.get_legend_handles_labels()
             lines_right, labels_right = ax_right.get_legend_handles_labels()
             ax.legend(lines_left + lines_right, labels_left + labels_right, 
                      loc='upper right')
-        elif i == 3:  # Fourth plot (bottom-right)
+        elif (one_row_layout and i == n_zones-1) or (not one_row_layout and i == 3):  # Last plot
             lines_left, labels_left = ax.get_legend_handles_labels()
             lines_right, labels_right = ax_right.get_legend_handles_labels()
             ax.legend(lines_left + lines_right, labels_left + labels_right, 
