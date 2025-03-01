@@ -221,7 +221,7 @@ plt.subplots_adjust(
 )
 
 outdir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/'
-plt.savefig(outdir + 'Figure_4_distribution_4KG.png', dpi=600)
+plt.savefig(outdir + 'Figure_5_box_kde_4KG.png', dpi=600)
 plt.close()
 
 # Calculate statistics for Day and Night
@@ -243,5 +243,5 @@ mapping = {'Arid': 'Arid', 'Tropical': 'Tropical', 'Temperate': 'Temperate', 'Co
 stats['Climate Zone'] = stats['Climate Zone'].map(mapping)
 
 # Write the statistics to a CSV file
-csv_out = outdir + 'Figure_4_distribution_mean_std.csv'
+csv_out = outdir + 'Figure_5_distribution_mean_std.csv'
 stats.to_csv(csv_out, index=False)
