@@ -28,7 +28,7 @@ def get_latex_label(feature_name: str) -> str:
     _initialize_lookup()
     
     if feature_name == "UHI_diff":
-        return "HW-NHW UHI"
+        return "HW-NHW UHII"
     # Define mapping from prefixes to symbols
     prefix_to_symbol = {
         "delta_": "(Δ)",

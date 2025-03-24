@@ -12,7 +12,8 @@ lookup_df = pd.read_excel('/home/jguo/research/hw_global/Data/var_name_unit_look
 lookup_dict = dict(zip(lookup_df['Variable'], lookup_df['LaTeX']))
 
 # Define the output directory
-output_dir = '/home/jguo/tmp/output'
+# output_dir = '/home/jguo/tmp/output'
+output_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper'
 os.makedirs(output_dir, exist_ok=True)
 
 # Define the directory containing the CSV files
@@ -122,6 +123,6 @@ for i, feature_group in enumerate(data_pivot.index):
 plt.tight_layout()
 
 # Save the plot instead of displaying
-plt.savefig(os.path.join(output_dir, 'feature_group_contribution_by_KG.png'), 
+plt.savefig(os.path.join(output_dir, 'Figure_7_feature_group_contribution_by_KG.png'), 
             bbox_inches='tight', dpi=600)
 plt.close()
