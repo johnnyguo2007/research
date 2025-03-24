@@ -50,7 +50,7 @@ df_plot = df_agg[df_agg['KGMajorClass'] != 'Polar'].copy()
 df_plot['KGMajorClass'] = df_plot['KGMajorClass'].apply(replace_cold_with_continental)
 
 # --- FILTER FOR FIRST N DAYS ---
-N_DAYS = 11
+N_DAYS = 8
 df_plot = df_plot[df_plot['day_in_event'] < N_DAYS].copy()
 
 # --- LAYOUT OPTIONS ---

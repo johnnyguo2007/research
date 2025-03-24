@@ -283,7 +283,7 @@ def main():
     sorted_major_classes = sorted(avg_diff_by_hour_and_major_class['KGMajorClass'].unique())
     # remove polar from sorted_major_classes
     sorted_major_classes = [cls for cls in sorted_major_classes if cls != 'Polar']
-    plot_uhi_diff(avg_diff_by_hour_and_major_class, 'KGMajorClass', sorted_major_classes, 'Figure_3_hourly_Plot_4KG')
+    plot_uhi_diff(avg_diff_by_hour_and_major_class, 'KGMajorClass', sorted_major_classes, 'Figure_4_hourly_Plot_4KG')
     # plot_uhi_diff(avg_diff_by_hour_and_major_class, 'KGMajorClass', sorted_major_classes, 'kg_major_class_uhi_diff', combined=True)
     # Plot mismatched locations
     # plot_mismatched_locations(non_matching_rows, FIGURE_OUTPUT_DIR)
