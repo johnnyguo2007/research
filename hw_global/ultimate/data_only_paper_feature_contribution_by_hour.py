@@ -30,11 +30,11 @@ def _save_data_csv(
     Args:
         df: DataFrame containing the data
         total_values: Series containing the total values
-        output_path: Base path for the output file (e.g., .../plot_name.png)
+        output_path: Base path for the output file (e.g., .../Arid/FGR/shap_and_feature_values_FGR_Arid) - NO extension expected.
         data_type: String indicating the type of data ('shap' or 'feature' or 'group')
     """
-    # Remove potential .png extension and add csv identifier
-    base_path = output_path.rsplit(".", 1)[0]
+    # The output_path provided IS the base path, no need to rsplit.
+    base_path = output_path
     csv_path = f"{base_path}_{data_type}_data.csv"
 
     # Create a copy of the DataFrame
