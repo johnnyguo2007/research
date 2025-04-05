@@ -9,8 +9,9 @@ from typing import List, Dict, Tuple, Optional
 from mlflow_tools import (
     create_day_night_summary,
     get_feature_groups,
-    generate_group_shap_plots_by_climate_zone, # Keep for data calculation logic inside
+    # generate_group_shap_plots_by_climate_zone, # No longer needed for just data
 )
+from mlflow_tools.plot_util import replace_cold_with_continental # Import the function
 from mlflow_tools.group_data import calculate_group_shap_values, GroupData
 
 # Configure logging
@@ -22,30 +23,32 @@ logging.basicConfig(
 
 # Copied from mlflow_tools.plot_shap_stacked_bar
 def _save_data_csv(
-    df: pd.DataFrame, total_values: pd.Series, output_path: str, data_type: str
+    df: pd.DataFrame, output_path: str, data_type: str, total_values: Optional[pd.Series] = None
 ) -> None:
     """
-    Save data to CSV files, including both individual values and totals.
+    Save data DataFrame to a CSV file, optionally adding a 'Total' column.
 
     Args:
-        df: DataFrame containing the data
-        total_values: Series containing the total values
-        output_path: Base path for the output file (e.g., .../Arid/FGR/shap_and_feature_values_FGR_Arid) - NO extension expected.
-        data_type: String indicating the type of data ('shap' or 'feature' or 'group')
+        df: DataFrame containing the data to save.
+        output_path: Base path for the output file (e.g., .../Arid/Arid) - NO extension expected.
+        data_type: String suffix for the filename (e.g., 'shap', 'feature', 'group_shap_contribution').
+        total_values (pd.Series, optional): Series containing total values to add as a 'Total' column. Defaults to None.
     """
-    # The output_path provided IS the base path, no need to rsplit.
     base_path = output_path
+    # Construct the final CSV path using the data_type suffix
     csv_path = f"{base_path}_{data_type}_data.csv"
 
-    # Create a copy of the DataFrame
+    # Create directory if it doesn't exist
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+
+    # Create a copy to avoid modifying the original DataFrame
     output_df = df.copy()
 
-    # Add the total values as a new column if it's not empty
-    if not total_values.empty:
+    # Add the total values as a new column if provided
+    if total_values is not None and not total_values.empty:
         output_df["Total"] = total_values
 
     # Save to CSV
-    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
     output_df.to_csv(csv_path)
 
     logging.info(f"Saved {data_type} data to {csv_path}")
@@ -100,85 +103,60 @@ def extract_shap_and_feature_columns(df: pd.DataFrame) -> Tuple[List[str], List[
     return shap_cols, feature_cols
 
 
-def save_hourly_group_data(
-    obj_group_data: GroupData,
-    kg_class: str,
-    output_dir: str,
-    base_values: pd.Series
-) -> None:
-    """Calculates and saves the hourly mean group SHAP data."""
-    feature_group_data = obj_group_data.shap_group_hourly_mean_df(kg_class) # This is pivot_df in plot func
-    if feature_group_data.empty:
-        logging.warning(f"No hourly group data for KGMajorClass '{kg_class}'. Skipping CSV saving.")
-        return
-
-    mean_values = feature_group_data.sum(axis=1) + base_values
-    output_path_base = os.path.join(
-        output_dir, f"feature_group_contribution_by_hour_{kg_class}" # Base name without extension
-    )
-    _save_data_csv(feature_group_data, mean_values, output_path_base, "group")
-
-
 def save_climate_zone_group_details(
     obj_group_data: GroupData,
-    kg_class: str,
+    kg_class: str, # Original KG class name (e.g., 'Cold')
     output_dir: str,
     base_values: pd.Series
 ) -> None:
-    """Calculates and saves detailed SHAP and Feature CSVs per group within a climate zone."""
-    kg_class_dir = os.path.join(output_dir, kg_class)
+    """Calculates and saves separate CSVs for hourly mean SHAP (individual), Features (individual), and SHAP (grouped) for a climate zone, renaming 'Cold' to 'Continental' in paths/filenames."""
+    
+    # Get the display name for paths/filenames
+    kg_class_display_name = replace_cold_with_continental(kg_class)
+    
+    # Create directory using the display name
+    kg_class_dir = os.path.join(output_dir, kg_class_display_name) # e.g., .../Continental/
     os.makedirs(kg_class_dir, exist_ok=True)
 
-    # Save the overall KG class SHAP data first
-    shap_plot_df_kg = obj_group_data.shap_group_hourly_mean_df(kg_class)
-    if shap_plot_df_kg.empty:
-        logging.warning(f"No SHAP data for KGMajorClass '{kg_class}'. Skipping overall KG SHAP CSV.")
+    # --- Data for individual features --- 
+
+    # Get data using the ORIGINAL kg_class name
+    shap_individual_features_df = obj_group_data.shap_hourly_mean_df(kg_class)
+    features_individual_features_df = obj_group_data.feature_hourly_mean_df(kg_class)
+
+    # Check if individual feature dataframes are empty
+    if shap_individual_features_df.empty or features_individual_features_df.empty:
+        logging.warning(f"No hourly individual SHAP or Feature data available for KGMajorClass '{kg_class}'. Skipping individual feature CSVs.")
     else:
-        mean_shap_kg = shap_plot_df_kg.sum(axis=1) + base_values # Corresponds to mean_shap in plot_shap_stacked_bar
-        kg_shap_output_path_base = os.path.join(
-            kg_class_dir, f"{kg_class}_shap_stacked_bar_all_features" # Base name without extension
-        )
-        _save_data_csv(shap_plot_df_kg, mean_shap_kg, kg_shap_output_path_base, "shap")
+        # Define base path for these files using the DISPLAY name
+        output_path_base_individual = os.path.join(kg_class_dir, f"shap_and_feature_values_{kg_class_display_name}") # e.g., .../Continental/shap_and_feature_values_Continental
+        # Save individual SHAP values
+        _save_data_csv(shap_individual_features_df, output_path_base_individual, "shap") # Saves as ..._shap_data.csv
+        # Save individual Feature values
+        _save_data_csv(features_individual_features_df, output_path_base_individual, "feature") # Saves as ..._feature_data.csv
 
-    # Save data for each group within the climate zone
-    for group_name in obj_group_data.group_names:
-        group_dir = os.path.join(kg_class_dir, group_name)
-        os.makedirs(group_dir, exist_ok=True)
+    # --- Data for grouped features --- 
 
-        # Get SHAP and feature data for this group and kg_class
-        # SHAP data (hourly mean for *one* group in the KG class)
-        shap_df_group = obj_group_data.shap_group_hourly_mean_df(kg_class)[[group_name]]
-        # Feature data (hourly mean features for *one* group in the KG class)
-        feature_values_df_group = obj_group_data.feature_hourly_mean_for_a_given_group_df(kg_class, group_name)
+    # Get data using the ORIGINAL kg_class name
+    shap_grouped_features_df = obj_group_data.shap_group_hourly_mean_df(kg_class)
 
-        if shap_df_group.empty or feature_values_df_group.empty:
-            logging.warning(
-                f"No data available for group '{group_name}' in KGMajorClass '{kg_class}'. Skipping group detail CSVs."
-            )
-            continue
+    # Check if grouped dataframe is empty
+    if shap_grouped_features_df.empty:
+        logging.warning(f"No hourly grouped SHAP data available for KGMajorClass '{kg_class}'. Skipping grouped SHAP CSV.")
+    else:
+        # Define base path for this file using the DISPLAY name
+        output_path_base_grouped = os.path.join(kg_class_dir, f"{kg_class_display_name}") # e.g., .../Continental/Continental
+        
+        # Calculate the Total column (Sum of group SHAP + Base Value for each hour)
+        # Ensure base_values index aligns with shap_grouped_features_df index (local_hour)
+        if not base_values.index.equals(shap_grouped_features_df.index):
+             logging.warning(f"Index mismatch between base_values and grouped SHAP for {kg_class}. Cannot calculate Total reliably. Saving without Total.")
+             total_values_with_base = None
+        else:
+             total_values_with_base = shap_grouped_features_df.sum(axis=1) + base_values
 
-        # --- Data saving mimicking create_side_by_side_group_plot ---
-        output_base_combined = os.path.join(group_dir, f"shap_and_feature_values_{group_name}_{kg_class}")
-        # Calculate totals
-        total_shap = shap_df_group.sum(axis=1) # Total SHAP for this specific group
-        total_features = (
-            feature_values_df_group.sum(axis=1)
-            if len(feature_values_df_group.columns) > 1
-            else pd.Series(dtype='float64', index=feature_values_df_group.index) # Ensure correct type and index even if empty sum
-        )
-        # Save SHAP data associated with the combined plot naming convention
-        _save_data_csv(shap_df_group, total_shap, output_base_combined, "shap")
-        # Save Feature data associated with the combined plot naming convention
-        _save_data_csv(feature_values_df_group, total_features, output_base_combined, "feature")
-
-        # --- Data saving mimicking the standalone shap_contributions plot ---
-        # Note: The standalone plot in the original script uses plot_shap_stacked_bar,
-        # which saves data using its own output path. Here we replicate that save.
-        output_base_standalone = os.path.join(group_dir, f"shap_contributions_{group_name}_{kg_class}")
-        # Calculate mean_shap for the standalone plot (total shap + base value for the group)
-        # Base value is tricky here - the original plot didn't seem to use it correctly for single group plots.
-        # Let's save the raw group shap total without base value for consistency with combined plot data save.
-        _save_data_csv(shap_df_group, total_shap, output_base_standalone, "shap")
+        # Save grouped SHAP values using a descriptive data_type and include the total
+        _save_data_csv(shap_grouped_features_df, output_path_base_grouped, "group_shap_contribution", total_values=total_values_with_base) # Saves as ..._group_shap_contribution_data.csv
 
 
 def main():
@@ -189,10 +167,11 @@ def main():
     args = parse_arguments()
     logging.info(f"Parsed command line arguments: {vars(args)}")
 
-    # Set flags based on --all argument if provided
-    if args.all:
-        args.day_night_summary = True
-        args.group_shap_data = True
+    # No need for flags since --all is always assumed
+    # # Set flags based on --all argument if provided
+    # if args.all:
+    #     args.day_night_summary = True
+    #     args.group_shap_data = True
 
     # Get experiment and run
     experiment_id, run_id = get_experiment_and_run(args.experiment_name)
@@ -254,59 +233,50 @@ def main():
 
     logging.info(f"Initial GroupData created. Group names: {obj_group_data_full.group_names}")
 
-    # Generate day/night summary CSV if requested
-    if args.day_night_summary:
-        logging.info("Generating day/night summary...")
-        try:
-            # Use the shap_group_detail_df which contains the summed SHAP values per group
-            summary_df = create_day_night_summary(obj_group_data_full._shap_group_detail_df, all_df, output_dir)
-            logging.info("\nFeature Group Day/Night Summary:")
-            logging.info("\n" + str(summary_df))
-        except Exception as e:
-            logging.error(f"Error generating day/night summary: {e}")
+    # --- Always generate day/night summary --- 
+    # if args.day_night_summary:
+    logging.info("Generating day/night summary...")
+    try:
+        # Use the shap_group_detail_df which contains the summed SHAP values per group
+        summary_df = create_day_night_summary(obj_group_data_full._shap_group_detail_df, all_df, output_dir)
+        logging.info("\nFeature Group Day/Night Summary:")
+        logging.info("\n" + str(summary_df))
+    except Exception as e:
+        logging.error(f"Error generating day/night summary: {e}")
+
+    # --- Always process and save hourly group SHAP data --- 
+    # if args.group_shap_data:
+    logging.info("Processing and saving hourly group SHAP data...")
+    # Base values per hour
+    base_values_hourly: pd.Series = all_df.groupby("local_hour")["base_value"].first()
+
+    # Group all_df by local_hour and KGMajorClass, calculate mean
+    exclude_cols = ["global_event_ID", "lon", "lat", "time", "KGClass"]
+    cols_to_drop = [col for col in exclude_cols if col in all_df.columns]
+    all_df_by_hour_kg = all_df.drop(columns=cols_to_drop).groupby(["local_hour", "KGMajorClass"], observed=True).mean().reset_index()
+
+    if all_df_by_hour_kg.empty:
+         logging.error("Grouping data by hour and KG class resulted in an empty DataFrame. Cannot proceed.")
+         return
+
+    # Calculate group values for the hourly aggregated data
+    obj_group_data_hourly = calculate_group_shap_values(all_df_by_hour_kg, feature_to_group_mapping)
+    logging.info("Hourly GroupData created.")
 
 
-    # --- Hourly Aggregation and Data Saving ---
-    if args.group_shap_data:
-        logging.info("Processing and saving hourly group SHAP data...")
-        # Base values per hour
-        base_values_hourly: pd.Series = all_df.groupby("local_hour")["base_value"].first()
+    # Generate data CSVs for each climate zone
+    kg_classes = ["global"] + all_df_by_hour_kg["KGMajorClass"].dropna().unique().tolist()
 
-        # Group all_df by local_hour and KGMajorClass, calculate mean
-        exclude_cols = ["global_event_ID", "lon", "lat", "time", "KGClass"]
-        cols_to_drop = [col for col in exclude_cols if col in all_df.columns]
-        all_df_by_hour_kg = all_df.drop(columns=cols_to_drop).groupby(["local_hour", "KGMajorClass"], observed=True).mean().reset_index()
-
-        if all_df_by_hour_kg.empty:
-             logging.error("Grouping data by hour and KG class resulted in an empty DataFrame. Cannot proceed.")
-             return
-
-        # Calculate group values for the hourly aggregated data
-        obj_group_data_hourly = calculate_group_shap_values(all_df_by_hour_kg, feature_to_group_mapping)
-        logging.info("Hourly GroupData created.")
-
-
-        # Generate data CSVs for each climate zone
-        kg_classes = ["global"] + all_df_by_hour_kg["KGMajorClass"].dropna().unique().tolist()
-
-        for kg_class in kg_classes:
-            logging.info(f"--- Processing data for KGMajorClass: {kg_class} ---")
-            # Save hourly mean group SHAP contributions (like feature_group_contribution_by_hour_*.png data)
-            save_hourly_group_data(
-                obj_group_data_hourly,
-                kg_class,
-                output_dir,
-                base_values_hourly
-            )
-
-            # Save detailed SHAP and Feature CSVs per group within the climate zone
-            # (like data for shap_and_feature_values_*.png and shap_contributions_*.png)
-            save_climate_zone_group_details(
-                obj_group_data_hourly,
-                kg_class,
-                output_dir,
-                base_values_hourly
-            )
+    for kg_class in kg_classes:
+        logging.info(f"--- Processing data for KGMajorClass: {kg_class} ---")
+        # Save detailed SHAP and Feature CSVs per group within the climate zone
+        # (like data for shap_and_feature_values_*.png and shap_contributions_*.png)
+        save_climate_zone_group_details(
+            obj_group_data_hourly,
+            kg_class,
+            output_dir,
+            base_values_hourly
+        )
 
     logging.info("Data generation completed successfully.")
     logging.info(f"All CSV outputs have been saved to: {output_dir}")
@@ -328,25 +298,25 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         help="Name of the MLflow experiment to process.",
     )
-    # Arguments to control which data files are generated
-    parser.add_argument(
-        "--day-night-summary",
-        action="store_true",
-        default=False,
-        help="Generate the day/night summary CSV.",
-    )
-    parser.add_argument(
-        "--group-shap-data",
-        action="store_true",
-        default=False,
-        help="Generate the hourly group SHAP and feature data CSVs by climate zone.",
-    )
-    parser.add_argument(
-        "--all",
-        action="store_true",
-        default=False,
-        help="Run all data generation steps (day/night summary, hourly group data).",
-    )
+    # Arguments to control which data files are generated - REMOVED as --all is always used
+    # parser.add_argument(
+    #     "--day-night-summary",
+    #     action="store_true",
+    #     default=False,
+    #     help="Generate the day/night summary CSV.",
+    # )
+    # parser.add_argument(
+    #     "--group-shap-data",
+    #     action="store_true",
+    #     default=False,
+    #     help="Generate the hourly group SHAP and feature data CSVs by climate zone.",
+    # )
+    # parser.add_argument(
+    #     "--all",
+    #     action="store_true",
+    #     default=False,
+    #     help="Run all data generation steps (day/night summary, hourly group data).",
+    # )
     return parser.parse_args()
 
 if __name__ == "__main__":
