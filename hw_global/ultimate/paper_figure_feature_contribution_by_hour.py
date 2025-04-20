@@ -27,87 +27,19 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-def load_feature_values(shap_values_feather_path: str) -> pd.DataFrame:
+def extract_shap_and_feature_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     """
-    Loads feature values from the shap_values_with_additional_columns.feather file.
+    Extracts SHAP and corresponding feature columns from a DataFrame.
 
     Args:
-        shap_values_feather_path (str): Path to the shap_values_with_additional_columns.feather file.
+        df (pd.DataFrame): DataFrame containing SHAP values.
 
     Returns:
-        pd.DataFrame: DataFrame containing feature values, aligned with SHAP values.
+        tuple: (list of SHAP columns, list of feature columns)
     """
-    # Load the shap values with additional columns
-    shap_df = pd.read_feather(shap_values_feather_path)
-
-    # Identify feature columns: columns not in exclude list and not ending with '_shap'
-    exclude_cols = [
-        "global_event_ID",
-        "lon",
-        "lat",
-        "time",
-        "KGClass",
-        "KGMajorClass",
-        "local_hour",
-        "UHI_diff",
-        "Estimation_Error",
-    ]
-    feature_cols = [
-        col
-        for col in shap_df.columns
-        if col not in exclude_cols and not col.endswith("_shap")
-    ]
-
-    # Extract the required columns
-    feature_values_df = shap_df[
-        [
-            "global_event_ID",
-            "lon",
-            "lat",
-            "time",
-            "KGClass",
-            "KGMajorClass",
-            "local_hour",
-        ]
-        + feature_cols
-    ]
-
-    # Melt the feature values dataframe to long format
-    feature_values_melted = feature_values_df.melt(
-        id_vars=[
-            "global_event_ID",
-            "lon",
-            "lat",
-            "time",
-            "KGClass",
-            "KGMajorClass",
-            "local_hour",
-        ],
-        value_vars=feature_cols,
-        var_name="Feature",
-        value_name="FeatureValue",
-    )
-
-    return feature_values_melted
-
-def get_top_features(df: pd.DataFrame, top_n: int) -> List[str]:
-    """
-    Gets the list of top features based on total contribution.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing features.
-        top_n (int): The number of top features to select.
-
-    Returns:
-        list: List of top feature names.
-    """
-    feature_totals = df.groupby("Feature")["Value"].sum()
-    top_features_list = (
-        feature_totals.sort_values(ascending=False).head(top_n).index.tolist()
-    )
-    return top_features_list
-
-
+    shap_cols = [col for col in df.columns if col.endswith("_shap")]
+    feature_cols = [col.replace("_shap", "") for col in shap_cols]
+    return shap_cols, feature_cols
 
 def get_experiment_and_run(experiment_name: str) -> Tuple[Optional[str], Optional[str]]:
     """
@@ -143,90 +75,6 @@ def get_experiment_and_run(experiment_name: str) -> Tuple[Optional[str], Optiona
 
     return experiment_id, run_id
 
-def prepare_shap_data(
-    shap_df: pd.DataFrame,
-    feature_values_df: pd.DataFrame,
-    kg_class: Optional[str] = None,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Prepares SHAP data for plotting by filtering and organizing values.
-
-    Args:
-        shap_df (pd.DataFrame): DataFrame containing SHAP values
-        feature_values_df (pd.DataFrame): DataFrame containing feature values
-        kg_class (str, optional): Climate zone to filter by
-
-    Returns:
-        tuple: (shap_plot_df, feature_values_plot_df)
-    """
-    # Filter by climate zone if specified
-    if kg_class and kg_class != "global":
-        mask = feature_values_df["KGMajorClass"] == kg_class
-        shap_df = shap_df[mask]
-        feature_values_df = feature_values_df[mask]
-
-    # Get SHAP columns and corresponding feature columns
-    shap_cols = [col for col in shap_df.columns if col.endswith("_shap")]
-    feature_cols = [col.replace("_shap", "") for col in shap_cols]
-
-    return shap_df[shap_cols], feature_values_df[feature_cols]
-
-def extract_shap_and_feature_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
-    """
-    Extracts SHAP and corresponding feature columns from a DataFrame.
-
-    Args:
-        df (pd.DataFrame): DataFrame containing SHAP values.
-
-    Returns:
-        tuple: (list of SHAP columns, list of feature columns)
-    """
-    shap_cols = [col for col in df.columns if col.endswith("_shap")]
-    feature_cols = [col.replace("_shap", "") for col in shap_cols]
-    return shap_cols, feature_cols
-
-def plot_stacked_bar(
-    df: pd.DataFrame,
-    group_by_column: str,
-    output_path: str,
-    title: str,
-    color_mapping: Optional[Dict[str, str]] = None,
-    base_value: float = 0,
-    show_total_line: bool = True,
-) -> None:
-    """
-    Plots a stacked bar chart with optional total line.
-
-    Args:
-        df (pd.DataFrame): DataFrame to plot.
-        title (str): Title of the plot.
-        output_path (str): Path to save the plot.
-        color_mapping (dict, optional): Mapping of features to colors.
-        base_value (float, optional): Base value for the plot.
-        show_total_line (bool, optional): Whether to show the total line.
-    """
-    fig, ax = plt.subplots(figsize=(12, 8))
-    colors = (
-        [color_mapping.get(feature, "#333333") for feature in df.columns]
-        if color_mapping
-        else None
-    )
-    df.plot(kind="bar", stacked=True, color=colors, ax=ax, bottom=base_value)
-
-    if show_total_line:
-        total_values = df.sum(axis=1) + base_value
-        total_values.plot(
-            kind="line", color="black", marker="o", linewidth=2, ax=ax, label="Total"
-        )
-
-    ax.set_title(title)
-    ax.set_xlabel("Hour of Day")
-    ax.set_ylabel("Value")
-    plt.tight_layout()
-    plt.savefig(output_path, bbox_inches="tight")
-    plt.close()
-
-
 def main():
 
     ''' 
@@ -258,8 +106,10 @@ def main():
         "mlflow-artifacts:",
         "/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts",
     )
+    feather_file_name = args.feather_file_name
+    logging.info(f"Using feather file: {feather_file_name}")
     shap_values_feather_path = os.path.join(
-        artifact_uri, "shap_values_with_additional_columns.feather"
+        artifact_uri, feather_file_name
     )
     output_dir = os.path.join(artifact_uri, "24_hourly_plot")
     os.makedirs(output_dir, exist_ok=True)
@@ -303,39 +153,52 @@ def main():
         logging.info("\n" + str(summary_df))
 
     raw_df = all_df
-    # base_value is different for each hour, so we need to get the base_value for each hour 
-    base_values: pd.Series = raw_df.groupby("local_hour")["base_value"].first()
+    # Calculate base values globally (averaged over all zones for each hour)
+    global_base_values: pd.Series = raw_df.groupby("local_hour")["base_value"].first()
+    # Calculate base values grouped by hour and climate zone
+    base_values_by_hour_kg: pd.DataFrame = raw_df.groupby(["local_hour", "KGMajorClass"])["base_value"].first().reset_index()
 
     # group all_df by local_hour and KGMajorClass, exclude  "global_event_ID",  "lon",  "lat",  "time", "KGClass",
     exclude_cols = ["global_event_ID", "lon", "lat", "time", "KGClass"]
-    #drop the exclude_cols then group by local_hour and KGMajorClass    
+    #drop the exclude_cols then group by local_hour and KGMajorClass
     all_df_by_hour_kg = raw_df.drop(columns=exclude_cols).groupby(["local_hour", "KGMajorClass"]).mean().reset_index()
-    
+
     # Calculate group values for the grouped data
     obj_group_data = calculate_group_shap_values(all_df_by_hour_kg, feature_to_group_mapping)
 
-    # # Load and prepare feature values for plotting
-    # feature_values_melted = load_feature_values(shap_values_feather_path)
-
     # Generate plots for each climate zone
-    kg_classes = ["global"] + all_df_by_hour_kg["KGMajorClass"].unique().tolist()
+    kg_classes = ["global"] + sorted(all_df_by_hour_kg["KGMajorClass"].unique().tolist()) # Sort for consistent order
     if args.group_shap_plots:
         for kg_class in kg_classes:
             # Prepare data for current climate zone
             feature_group_data = obj_group_data.shap_group_hourly_mean_df(kg_class)
 
+            # Determine the appropriate base values for the current plot
+            if kg_class == "global":
+                current_base_values = global_base_values
+            else:
+                # Filter base values for the specific climate zone
+                kg_base_values_df = base_values_by_hour_kg[base_values_by_hour_kg["KGMajorClass"] == kg_class]
+                if kg_base_values_df.empty:
+                    logging.warning(f"No base values found for kg_class {kg_class}. Using global base values.")
+                    current_base_values = global_base_values
+                else:
+                    # Convert to a Series indexed by local_hour
+                    current_base_values = kg_base_values_df.set_index("local_hour")["base_value"]
+
+
             # Generate stacked bar plot
             plot_title = (
                 "Global Feature Group Contribution by Hour"
                 if kg_class == "global"
-                else f"Feature Group Contribution by Hour for {kg_class}"
+                else f"Feature Group Contribution by Hour for {get_latex_label(kg_class)}" # Use latex label
             )
             output_path = os.path.join(
                 output_dir, f"feature_group_contribution_by_hour_{kg_class}.png"
             )
 
             plot_feature_group_stacked_bar(
-                feature_group_data, "local_hour", output_path, plot_title, base_values
+                feature_group_data, "local_hour", output_path, plot_title, current_base_values # Use current_base_values
             )
 
             # Generate SHAP and feature value plots
@@ -343,7 +206,7 @@ def main():
                 obj_group_data=obj_group_data,
                 kg_classes=[kg_class],
                 output_dir=output_dir,
-                base_values=base_values,
+                base_values=current_base_values, # Use current_base_values
                 show_total_feature_line=not args.hide_total_feature_line,
             )
 
@@ -363,7 +226,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--experiment-name",
         type=str,
-        required=True,
+        default="Combined_Final3_NO_LE_Hourly_HW98_Hour",
         help="Name of the MLflow experiment to process.",
     )
     parser.add_argument(
@@ -371,6 +234,12 @@ def parse_arguments() -> argparse.Namespace:
         type=int,
         default=None,
         help="Number of top features to plot. If None, plot all features.",
+    )
+    parser.add_argument(
+        "--feather-file-name",
+        type=str,
+        default="shap_values_with_additional_columns.feather",
+        help="Name of the input feather file containing SHAP values.",
     )
     parser.add_argument(
         "--hide-total-feature-line",
