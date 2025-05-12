@@ -48,14 +48,49 @@ def plot_side_by_side_from_csv(
             logging.warning(f"Feature data CSV '{feature_csv_path}' is empty.")
             return
 
-        # Create a default color palette - adjust n_colors if you have more groups
-        all_features = list(shap_df.columns) + list(feature_values_df.columns)
-        unique_features = sorted(list(set(all_features)))
-        palette = sns.color_palette("tab20", n_colors=len(unique_features))
-        color_mapping = dict(zip(unique_features, palette))
-    
-        #only select the group_name column from shap_df
-        shap_df = shap_df[[group_name]].copy()
+        # Get features containing group_name from shap_df
+        shap_features_to_select = [col for col in shap_df.columns if group_name in col]
+
+        # Get features containing group_name from feature_values_df and prioritize
+        potential_feature_val_features = [col for col in feature_values_df.columns if group_name in col]
+        feature_val_features_to_select = potential_feature_val_features
+        if len(potential_feature_val_features) > 1:
+            double_diff_features = [f for f in potential_feature_val_features if "Double_Differencing" in f]
+            if double_diff_features:
+                feature_val_features_to_select = double_diff_features
+
+        # Combine selected features for color mapping and further checks
+        final_combined_features = sorted(list(set(shap_features_to_select + feature_val_features_to_select)))
+
+        # Check if any features were selected at all
+        if not final_combined_features:
+            logging.warning(f"No features found for group '{group_name}' in either SHAP or Feature Value data.")
+            return
+
+        # Create a color palette based on the combined final features
+        palette = sns.color_palette("tab20", n_colors=len(final_combined_features))
+        color_mapping = dict(zip(final_combined_features, palette))
+
+        # Select the identified features from each dataframe
+        if not shap_features_to_select:
+            logging.warning(f"No features found in SHAP data for group '{group_name}'.")
+            # Consider how to handle plotting if one dataframe has no features for the group
+            shap_df = pd.DataFrame(index=feature_values_df.index) # Create empty df with same index
+        else:
+            shap_df = shap_df[shap_features_to_select].copy()
+
+        if not feature_val_features_to_select:
+             logging.warning(f"No features found in Feature Value data for group '{group_name}' after prioritization.")
+             # Consider how to handle plotting if one dataframe has no features for the group
+             feature_values_df = pd.DataFrame(index=shap_df.index) # Create empty df with same index
+        else:
+             feature_values_df = feature_values_df[feature_val_features_to_select].copy()
+
+        # Final check if both are empty after selection (e.g., if group_name was wrong)
+        if shap_df.empty and feature_values_df.empty:
+             logging.warning(f"Both SHAP and Feature Value dataframes are empty for group '{group_name}' after selection.")
+             return
+
         create_side_by_side_group_plot(
             shap_df=shap_df,
             feature_values_df=feature_values_df,
@@ -72,12 +107,29 @@ def plot_side_by_side_from_csv(
     except Exception as e:
         logging.error(f"An error occurred while plotting: {e}")
 
-
+# run command like: /home/jguo/anaconda3/envs/pipJupyter/bin/python /home/jguo/research/hw_global/code_for_paper/figure_9_one_feature_side_by_side.py --group_name Q2M --shap_csv_path "/home/jguo/tmp/output/global/Q2M/shap_contributions_Q2M_global_shap_data.csv" --feature_csv_path "/home/jguo/tmp/output/global/Q2M/shap_and_feature_values_Q2M_global_feature_data.csv"
 if __name__ == "__main__":
+    # default_out_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper'
+    default_out_dir = '/home/jguo/tmp/output'
+    # default_input_dir = ("/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/",
+    #                     "summary/mlflow/mlartifacts/",
+    #                     "893793682234305734/67f2e168085e4507b0a79941b74d7eb7/",
+    #                     "artifacts/data_only_24_hourly/"
+    # )
+    # climate_zone = "global"
+    default_input_dir = "/home/jguo/tmp/output/global/"
+    climate_zone = "Q2M"
+    #path join the default_input_dir
+    default_input_dir = os.path.join(*default_input_dir, climate_zone)
+    default_shap_csv_path = os.path.join(default_input_dir, "global_group_shap_contribution_data.csv")
+    default_feature_csv_path = os.path.join(default_input_dir, "shap_and_feature_values_global_feature_data.csv")
+    #print the default_shap_csv_path and default_feature_csv_path   
+    print(default_shap_csv_path)
+    print(default_feature_csv_path)
     parser = argparse.ArgumentParser(description="Plot side-by-side group plot from CSV data.")
-    parser.add_argument("--shap_csv_path", default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/paper_data/global_shap_stacked_bar_all_features_shap_data.csv', help="Path to the SHAP data CSV file.")
-    parser.add_argument("--feature_csv_path", default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/paper_data/shap_and_feature_values_U10_global_feature_data.csv', help="Path to the feature data CSV file.")
-    parser.add_argument("--output_dir", default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper', help="Directory to save the output plot.")
+    parser.add_argument("--shap_csv_path", default=default_shap_csv_path, help="Path to the SHAP data CSV file.")
+    parser.add_argument("--feature_csv_path", default=default_feature_csv_path, help="Path to the feature data CSV file.")
+    parser.add_argument("--output_dir", default=default_out_dir, help="Directory to save the output plot.")
     parser.add_argument("--group_name", default="U10", help="Name of the feature group.")
     parser.add_argument("--kg_class", default="global", help="KGMajorClass name.")
     parser.add_argument("--show_total_feature_line", action='store_true', help="Show total feature value line in feature plot.")
