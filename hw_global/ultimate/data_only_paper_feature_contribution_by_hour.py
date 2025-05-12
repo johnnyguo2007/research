@@ -48,6 +48,35 @@ def _save_data_csv(
     if total_values is not None and not total_values.empty:
         output_df["Total"] = total_values
 
+    # Get all columns, sort alphabetically, ensuring 'Total', 'UHI_diff', 'y_pred', and 'Estimation_Error' are last
+    cols = output_df.columns.tolist()
+    has_total = "Total" in cols
+    has_uhi = "UHI_diff" in cols
+    has_ypred = "y_pred" in cols
+    has_error = "Estimation_Error" in cols # ADDED: Check for Estimation_Error
+
+    special_cols = [] # List to hold the special columns in desired order
+    if has_total:
+        cols.remove("Total")
+        special_cols.append("Total")
+    if has_uhi:
+        cols.remove("UHI_diff")
+        special_cols.append("UHI_diff")
+    if has_ypred:
+        cols.remove("y_pred")
+        special_cols.append("y_pred")
+    if has_error:
+        cols.remove("Estimation_Error")
+        special_cols.append("Estimation_Error") # ADDED: Add Estimation_Error to special cols
+
+    cols.sort() # Sort the remaining columns alphabetically
+
+    # Append the special columns at the end
+    cols.extend(special_cols)
+
+    # Reindex the DataFrame with the desired column order
+    output_df = output_df[cols]
+
     # Save to CSV
     output_df.to_csv(csv_path)
 
@@ -107,7 +136,9 @@ def save_climate_zone_group_details(
     obj_group_data: GroupData,
     kg_class: str, # Original KG class name (e.g., 'Cold')
     output_dir: str,
-    base_values: pd.Series
+    base_values: pd.Series,
+    all_df: pd.DataFrame, # Added: Original full dataframe for global UHI calc
+    all_df_by_hour_kg: pd.DataFrame # Added: Hourly aggregated dataframe for KG UHI calc
 ) -> None:
     """Calculates and saves separate CSVs for hourly mean SHAP (individual), Features (individual), and SHAP (grouped) for a climate zone, renaming 'Cold' to 'Continental' in paths/filenames."""
     
@@ -144,6 +175,78 @@ def save_climate_zone_group_details(
     if shap_grouped_features_df.empty:
         logging.warning(f"No hourly grouped SHAP data available for KGMajorClass '{kg_class}'. Skipping grouped SHAP CSV.")
     else:
+        # --- Add UHI_diff / y_pred / Estimation_Error columns --- # MODIFIED
+        uhi_diff_hourly = None
+        y_pred_hourly = None
+        estimation_error_hourly = None # ADDED: Initialize estimation_error_hourly
+
+        if kg_class == "global":
+            # Calculate global hourly means from the original df
+            if 'UHI_diff' in all_df.columns and 'local_hour' in all_df.columns:
+                 uhi_diff_hourly = all_df.groupby('local_hour')['UHI_diff'].mean()
+            else:
+                 logging.warning("Could not find 'UHI_diff' or 'local_hour' in all_df for global UHI_diff calculation.")
+            if 'y_pred' in all_df.columns and 'local_hour' in all_df.columns:
+                 y_pred_hourly = all_df.groupby('local_hour')['y_pred'].mean()
+            else:
+                 logging.warning("Could not find 'y_pred' or 'local_hour' in all_df for global y_pred calculation.")
+            # ADDED: Calculate global Estimation_Error
+            if 'Estimation_Error' in all_df.columns and 'local_hour' in all_df.columns:
+                 estimation_error_hourly = all_df.groupby('local_hour')['Estimation_Error'].mean()
+            else:
+                 logging.warning("Could not find 'Estimation_Error' or 'local_hour' in all_df for global Estimation_Error calculation.")
+        else:
+            # Get KG-specific hourly means from the pre-aggregated df
+            required_cols = ['UHI_diff', 'y_pred', 'Estimation_Error', 'KGMajorClass', 'local_hour'] # ADDED Estimation_Error
+            if all(col in all_df_by_hour_kg.columns for col in required_cols):
+                kg_hourly_df = all_df_by_hour_kg[all_df_by_hour_kg['KGMajorClass'] == kg_class]
+                if not kg_hourly_df.empty:
+                    uhi_diff_hourly = kg_hourly_df.set_index('local_hour')['UHI_diff']
+                    y_pred_hourly = kg_hourly_df.set_index('local_hour')['y_pred']
+                    estimation_error_hourly = kg_hourly_df.set_index('local_hour')['Estimation_Error'] # ADDED: Get Estimation_Error
+                else:
+                    logging.warning(f"No data found for KGMajorClass '{kg_class}' in all_df_by_hour_kg.")
+            else:
+                missing_cols = [col for col in required_cols if col not in all_df_by_hour_kg.columns]
+                logging.warning(f"Could not find required columns ({', '.join(missing_cols)}) in all_df_by_hour_kg for {kg_class}.")
+
+        # Join UHI_diff if successfully calculated
+        if uhi_diff_hourly is not None and not uhi_diff_hourly.empty:
+            try:
+                shap_grouped_features_df.index = shap_grouped_features_df.index.astype(uhi_diff_hourly.index.dtype)
+            except Exception as e:
+                logging.warning(f"Could not align index types for joining UHI_diff for {kg_class}: {e}")
+            shap_grouped_features_df = shap_grouped_features_df.join(uhi_diff_hourly.rename('UHI_diff'))
+            logging.info(f"Added 'UHI_diff' column for {kg_class}.")
+        else:
+            logging.warning(f"Could not calculate or join 'UHI_diff' for {kg_class}.")
+
+        # Join y_pred if successfully calculated
+        if y_pred_hourly is not None and not y_pred_hourly.empty:
+            try:
+                if 'UHI_diff' not in shap_grouped_features_df.columns: # Only align if UHI_diff didn't
+                     shap_grouped_features_df.index = shap_grouped_features_df.index.astype(y_pred_hourly.index.dtype)
+            except Exception as e:
+                logging.warning(f"Could not align index types for joining y_pred for {kg_class}: {e}")
+            shap_grouped_features_df = shap_grouped_features_df.join(y_pred_hourly.rename('y_pred'))
+            logging.info(f"Added 'y_pred' column for {kg_class}.")
+        else:
+            logging.warning(f"Could not calculate or join 'y_pred' for {kg_class}.")
+
+        # ADDED: Join Estimation_Error if successfully calculated
+        if estimation_error_hourly is not None and not estimation_error_hourly.empty:
+            try:
+                # Only align if UHI_diff and y_pred didn't
+                if 'UHI_diff' not in shap_grouped_features_df.columns and 'y_pred' not in shap_grouped_features_df.columns:
+                     shap_grouped_features_df.index = shap_grouped_features_df.index.astype(estimation_error_hourly.index.dtype)
+            except Exception as e:
+                 logging.warning(f"Could not align index types for joining Estimation_Error for {kg_class}: {e}")
+            shap_grouped_features_df = shap_grouped_features_df.join(estimation_error_hourly.rename('Estimation_Error'))
+            logging.info(f"Added 'Estimation_Error' column for {kg_class}.")
+        else:
+            logging.warning(f"Could not calculate or join 'Estimation_Error' for {kg_class}.")
+        # --- End Add columns ---
+
         # Define base path for this file using the DISPLAY name
         output_path_base_grouped = os.path.join(kg_class_dir, f"{kg_class_display_name}") # e.g., .../Continental/Continental
         
@@ -153,7 +256,9 @@ def save_climate_zone_group_details(
              logging.warning(f"Index mismatch between base_values and grouped SHAP for {kg_class}. Cannot calculate Total reliably. Saving without Total.")
              total_values_with_base = None
         else:
-             total_values_with_base = shap_grouped_features_df.sum(axis=1) + base_values
+             # Ensure UHI_diff, y_pred, and Estimation_Error are excluded from the sum if they exist before adding base_values
+             cols_to_exclude_from_sum = ['UHI_diff', 'y_pred', 'Estimation_Error'] # ADDED Estimation_Error
+             total_values_with_base = shap_grouped_features_df.drop(columns=cols_to_exclude_from_sum, errors='ignore').sum(axis=1) + base_values
 
         # Save grouped SHAP values using a descriptive data_type and include the total
         _save_data_csv(shap_grouped_features_df, output_path_base_grouped, "group_shap_contribution", total_values=total_values_with_base) # Saves as ..._group_shap_contribution_data.csv
@@ -193,8 +298,10 @@ def main():
          if artifact_uri.startswith("file://"):
               artifact_uri = artifact_uri[len("file://"):] # Remove file:// prefix if present
 
+    feather_file_name = args.feather_file_name
+    logging.info(f"Using feather file: {feather_file_name}")
     shap_values_feather_path = os.path.join(
-        artifact_uri, "shap_values_with_additional_columns.feather"
+        artifact_uri, feather_file_name
     )
     # Use a different output directory name to avoid conflicts with plot script
     output_dir = os.path.join(artifact_uri, "data_only_24_hourly")
@@ -210,6 +317,12 @@ def main():
     try:
         all_df = pd.read_feather(shap_values_feather_path)
         logging.info(f"Loaded data from {shap_values_feather_path}. Shape: {all_df.shape}")
+        # Add y_pred column as sum of UHI_diff and Estimation_Error
+        if "UHI_diff" in all_df.columns and "Estimation_Error" in all_df.columns:
+            all_df["y_pred"] = all_df["UHI_diff"] + all_df["Estimation_Error"]
+            logging.info("Added 'y_pred' column to DataFrame.")
+        else:
+            logging.warning("Could not add 'y_pred' column: required columns 'UHI_diff' or 'Estimation_Error' missing.")
     except Exception as e:
         logging.error(f"Failed to load feather file: {e}")
         return
@@ -275,7 +388,9 @@ def main():
             obj_group_data_hourly,
             kg_class,
             output_dir,
-            base_values_hourly
+            base_values_hourly,
+            all_df, # Pass original df
+            all_df_by_hour_kg # Pass hourly aggregated df
         )
 
     logging.info("Data generation completed successfully.")
@@ -295,8 +410,14 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--experiment-name",
         type=str,
-        required=True,
+        default="Combined_Final3_NO_LE_Hourly_HW98_Hour",
         help="Name of the MLflow experiment to process.",
+    )
+    parser.add_argument(
+        "--feather-file-name",
+        type=str,
+        default="shap_values_with_additional_columns.feather",
+        help="Name of the input feather file containing SHAP values.",
     )
     # Arguments to control which data files are generated - REMOVED as --all is always used
     # parser.add_argument(

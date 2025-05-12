@@ -9,7 +9,7 @@ import sys
 sys.path.append('/home/jguo/research/hw_global/ultimate/')
 # Assuming plot_side_by_side.py and plot_util.py are in the same directory
 from mlflow_tools.plot_side_by_side import create_side_by_side_group_plot
-from mlflow_tools.plot_util import get_latex_label, replace_cold_with_continental
+from mlflow_tools.plot_util import get_latex_label, replace_cold_with_continental, FEATURE_COLORS
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -67,9 +67,11 @@ def plot_side_by_side_from_csv(
             logging.warning(f"No features found for group '{group_name}' in either SHAP or Feature Value data.")
             return
 
-        # Create a color palette based on the combined final features
-        palette = sns.color_palette("tab20", n_colors=len(final_combined_features))
-        color_mapping = dict(zip(final_combined_features, palette))
+        # Use the predefined FEATURE_COLORS mapping
+        color_mapping = FEATURE_COLORS
+        # Remove the dynamic color generation
+        # palette = sns.color_palette("tab20", n_colors=len(final_combined_features))
+        # color_mapping = dict(zip(final_combined_features, palette))
 
         # Select the identified features from each dataframe
         if not shap_features_to_select:
@@ -111,14 +113,14 @@ def plot_side_by_side_from_csv(
 if __name__ == "__main__":
     # default_out_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper'
     default_out_dir = '/home/jguo/tmp/output'
-    # default_input_dir = ("/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/",
-    #                     "summary/mlflow/mlartifacts/",
-    #                     "893793682234305734/67f2e168085e4507b0a79941b74d7eb7/",
-    #                     "artifacts/data_only_24_hourly/"
-    # )
-    # climate_zone = "global"
-    default_input_dir = "/home/jguo/tmp/output/global/"
-    climate_zone = "Q2M"
+    default_input_dir = ("/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/",
+                        "summary/mlflow/mlartifacts/",
+                        "893793682234305734/67f2e168085e4507b0a79941b74d7eb7/",
+                        "artifacts/data_only_24_hourly/"
+    )
+    climate_zone = "global"
+    # default_input_dir = "/home/jguo/tmp/output/global/"
+    # climate_zone = "Q2M"
     #path join the default_input_dir
     default_input_dir = os.path.join(*default_input_dir, climate_zone)
     default_shap_csv_path = os.path.join(default_input_dir, "global_group_shap_contribution_data.csv")

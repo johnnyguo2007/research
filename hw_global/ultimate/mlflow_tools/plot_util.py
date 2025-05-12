@@ -94,3 +94,30 @@ def get_feature_groups(feature_names: List[str]) -> Dict[str, str]:
             group = feature + "_Level"
         feature_groups[feature] = group
     return feature_groups
+
+# Define consistent colors for feature groups
+FEATURE_COLORS = {
+    "FGR":            '#a65628', # Brown
+    "FIRA":           '#e41a1c', # Red
+    "FSA":            '#984ea3', # Purple
+    "FSH":            '#ff7f00', # Orange
+    "HEAT_FROM_AC":   '#999999', # Gray / Silver
+    "Q2M":            '#377eb8', # Blue
+    "Qstor":          '#008080', # Teal
+    "SOILWATER_10CM": '#f781bf', # Pink
+    "U10":            '#4daf4a', # Green
+}
+
+def replace_cold_with_continental(s: str) -> str:
+    """
+    Replaces 'Cold' with 'Continental' in the given string.
+
+    Args:
+        s (str): The input string.
+
+    Returns:
+        str: The modified string with 'Cold' replaced by 'Continental'.
+    """
+    if s == "Cold":
+        return "Continental"
+    return s

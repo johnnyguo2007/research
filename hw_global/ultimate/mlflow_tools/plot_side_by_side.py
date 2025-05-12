@@ -13,6 +13,7 @@ from .plot_util import (
     get_feature_groups,
     get_latex_label,
     replace_cold_with_continental,
+    FEATURE_COLORS,
 )
 
 def generate_group_shap_plots_by_climate_zone(
@@ -36,9 +37,8 @@ def generate_group_shap_plots_by_climate_zone(
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    # Create a color palette
-    palette = sns.color_palette("tab20", n_colors=len(obj_group_data.group_names))
-    color_mapping = dict(zip(sorted(obj_group_data.group_names), palette))
+    # Use the predefined color mapping
+    color_mapping = FEATURE_COLORS
 
     # Create a global subdirectory
     global_dir = os.path.join(output_dir, "global")
