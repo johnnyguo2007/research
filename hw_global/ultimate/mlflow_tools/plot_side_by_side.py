@@ -14,6 +14,9 @@ from .plot_util import (
     get_latex_label,
     replace_cold_with_continental,
     FEATURE_COLORS,
+    get_label_with_unit,
+    get_unit,
+    get_long_name_without_unit,
 )
 
 def generate_group_shap_plots_by_climate_zone(
@@ -88,6 +91,11 @@ def generate_group_shap_plots_by_climate_zone(
             shap_plot_df = obj_group_data.shap_group_hourly_mean_df(kg_class)[[group_name]]  # Only select current group
             feature_values_plot_df = obj_group_data.feature_hourly_mean_for_a_given_group_df(kg_class, group_name)  # Only select current group
 
+            # --- Ensure consistent x-axis (local hour) for both plots ---
+            common_index = shap_plot_df.index.intersection(feature_values_plot_df.index)
+            shap_plot_df = shap_plot_df.reindex(common_index)
+            feature_values_plot_df = feature_values_plot_df.reindex(common_index)
+
             create_side_by_side_group_plot(
                 shap_df=shap_plot_df,
                 feature_values_df=feature_values_plot_df,
@@ -97,6 +105,7 @@ def generate_group_shap_plots_by_climate_zone(
                 color_mapping=color_mapping,
                 base_value=base_values,
                 show_total_feature_line=show_total_feature_line,
+                x_axis_label="Local Hour",
             )
 
 
@@ -109,6 +118,7 @@ def create_side_by_side_group_plot(
     color_mapping: Dict[str, str],
     base_value: float = 0,
     show_total_feature_line: bool = True,
+    x_axis_label: str = "Local Hour",
 ) -> None:
     """
     Creates a side-by-side visualization comparing SHAP contributions and actual values for a feature group.
@@ -123,9 +133,12 @@ def create_side_by_side_group_plot(
         color_mapping: Dictionary mapping features to colors
         base_value: Base value for SHAP contributions (default: 0)
         show_total_feature_line: Whether to show total feature value line (default: True)
+        x_axis_label: Label for the x-axis (default: "Local Hour")
     """
     import matplotlib.pyplot as plt
     import os
+
+    plt.rcParams['text.usetex'] = False
 
     # Check if data is available
     if shap_df.empty or feature_values_df.empty:
@@ -168,32 +181,35 @@ def create_side_by_side_group_plot(
     mean_shap_df = shap_df.copy()
     mean_shap_df.plot(kind="bar", stacked=True, ax=axes[0], color=shap_colors)
 
-    axes[0].set_title("Mean SHAP Value Contributions")
-    axes[0].set_xlabel("Hour of Day")
-    axes[0].set_ylabel("Mean Contribution")
+    axes[0].set_title(f"SHAP Value Contributions")
+    axes[0].set_xlabel(x_axis_label)
+    axes[0].set_ylabel(f"{get_latex_label(group_name)} SHAP Contribution (°C)")
 
     # Calculate and plot mean SHAP values on the same axis
     mean_shap = mean_shap_df.sum(axis=1)  # Sum across features for each hour
     mean_shap.plot(kind="line", color="black", marker="o", linewidth=2, ax=axes[0])
 
-    # Get handles and labels for SHAP plot, convert feature names to LaTeX labels
+    # Get handles and labels for SHAP plot, convert feature names to LaTeX labels with units
     handles, labels = axes[0].get_legend_handles_labels()
     new_labels = []
     for label in labels:
         if label.startswith("Mean SHAP") or label.startswith("Base Value"):
             new_labels.append(label)
         else:
-            new_labels.append(get_latex_label(label))
+            new_labels.append(get_label_with_unit(label))
     axes[0].legend(
         handles, new_labels, loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=6
     )
 
     # Plot feature values on axes[1]
     feature_values_df.plot(ax=axes[1], color=feature_colors)
-    axes[1].set_title(f"Feature Values - Group: {get_latex_label(group_name)}")
-    axes[1].set_xlabel("Hour of Day")
-    axes[1].set_ylabel("Feature Value")
-    axes[1].axhline(0, linestyle="--", color="lightgray", linewidth=1)
+    axes[1].set_title(f"Feature Values - Group: {get_label_with_unit(group_name)}")
+    axes[1].set_xlabel(x_axis_label)
+    
+    # Get unit for the feature group
+    unit = get_unit(group_name)
+    y_label = f"Feature Value{f' ({unit})' if unit else ''}"
+    axes[1].set_ylabel(y_label)
 
     # Add total feature values line if enabled and there are multiple features
     if show_total_feature_line and len(feature_values_df.columns) > 1:
@@ -208,21 +224,33 @@ def create_side_by_side_group_plot(
             label="Total Feature Value",
         )
 
-    # Get handles and labels for feature values plot, convert feature names to LaTeX labels
+    # Get handles and labels for feature values plot, convert feature names to LaTeX labels with units
     handles, labels = axes[1].get_legend_handles_labels()
     new_labels = []
     for label in labels:
         if label == "Total Feature Value":
             new_labels.append(label)
         else:
-            new_labels.append(get_latex_label(label))
+            new_labels.append(get_label_with_unit(label))
     axes[1].legend(
         handles, new_labels, loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=5
     )
 
     # Adjust layout and save the figure
-    title = f"HW-NHW UHI Contribution and Feature Values by Hour - {get_latex_label(group_name)} - Climate Zone {replace_cold_with_continental(kg_class)}"
+    group_name_formatted = get_long_name_without_unit(group_name)
+    kg_class_formatted = replace_cold_with_continental(kg_class)
+
+    # Prepare for mathtext bolding by escaping spaces to preserve them
+    group_name_formatted_for_title = group_name_formatted.replace(' ', r'\ ')
+    kg_class_formatted_for_title = kg_class_formatted.replace(' ', r'\ ')
+
+    # Construct the title using LaTeX for bold text and preserving spaces
+    # Escaping curly braces for f-string and LaTeX interaction
+    # example r"This is a Normal and $\bf{Bold}$ Title"
+    title = f"HW-NHW UHI Contribution and Feature Values by Hour - $\\bf{{{group_name_formatted_for_title}}}$ - Climate Zone $\\bf{{{kg_class_formatted_for_title}}}$"
+    print(title)
     plt.suptitle(title, y=1.02)
+
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches="tight")
     plt.close()

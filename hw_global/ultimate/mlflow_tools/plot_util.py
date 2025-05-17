@@ -2,17 +2,117 @@ import pandas as pd
 import numpy as np
 from typing import Dict, List
 
-# Initialize lookup_dict as None
+# Initialize lookup dictionaries as None
 lookup_dict: Dict[str, str] = None
+unit_dict: Dict[str, str] = None
+long_name_dict: Dict[str, str] = None
 
 def _initialize_lookup():
-    """Initialize the lookup dictionary if it hasn't been initialized yet."""
-    global lookup_dict
+    """Initialize the lookup dictionaries if they haven't been initialized yet."""
+    global lookup_dict, unit_dict, long_name_dict
     if lookup_dict is None:
         lookup_df = pd.read_excel(
             "/home/jguo/research/hw_global/Data/var_name_unit_lookup.xlsx"
         )
         lookup_dict = dict(zip(lookup_df["Variable"], lookup_df["LaTeX"]))
+        unit_dict = dict(zip(lookup_df["Variable"], lookup_df["Units"]))
+        long_name_dict = dict(zip(lookup_df["Variable"], lookup_df["Long Name"]))
+
+def get_unit(feature_name: str) -> str:
+    """
+    Retrieves the unit for a given feature based on its feature group.
+
+    Args:
+        feature_name (str): The name of the feature.
+
+    Returns:
+        str: The corresponding unit.
+    """
+    # Initialize lookup dictionary if not already initialized
+    _initialize_lookup()
+    
+    # Define mapping from prefixes to symbols
+    prefix_to_symbol = {
+        "delta_": "(Δ)",
+        "hw_nohw_diff_": "HW-NHW ",
+        "Double_Differencing_": "(Δ)HW-NHW ",
+    }
+    
+    feature_group = feature_name
+    for prefix in prefix_to_symbol.keys():
+        if feature_name.startswith(prefix):
+            feature_group = feature_name[len(prefix):]
+            break
+
+    # Get the unit from the unit dictionary
+    unit = unit_dict.get(feature_group)
+    
+    # Return empty string if no unit found
+    if pd.isna(unit) or unit == "":
+        return ""
+    return unit
+
+def get_long_name_without_unit(feature_name: str) -> str:
+    """
+    Gets the long name without unit for a feature. Used specifically for plot titles.
+
+    Args:
+        feature_name (str): The name of the feature.
+
+    Returns:
+        str: The long name without unit.
+    """
+    # Initialize lookup dictionary if not already initialized
+    _initialize_lookup()
+    
+    # Strip "extbf_" prefix if it exists
+    if feature_name.startswith("extbf_"):
+        feature_name = feature_name[len("extbf_"):]
+    
+    # Define mapping from prefixes to symbols
+    prefix_to_symbol = {
+        "delta_": "Difference of ",
+        "hw_nohw_diff_": "HW-NHW Difference of ",
+        "Double_Differencing_": "Double Difference of ",
+    }
+    
+    symbol = ""
+    feature_group = feature_name
+    for prefix in prefix_to_symbol.keys():
+        if feature_name.startswith(prefix):
+            feature_group = feature_name[len(prefix):]
+            symbol = prefix_to_symbol[prefix]
+            break
+
+    # Get the long name from the lookup dictionary
+    long_name = long_name_dict.get(feature_group)
+    
+    # Use the original feature group if long name is not found
+    if pd.isna(long_name) or long_name == "":
+        long_name = feature_group
+        
+    # Combine symbol and long name
+    final_label = f"{symbol}{long_name}"
+    final_label = final_label.strip()
+    if final_label.startswith(r"\textbf{") and final_label.endswith("}"):
+        return fr"\mbox{{{final_label}}}"
+    return final_label
+
+def get_label_with_unit(feature_name: str) -> str:
+    """
+    Gets the LaTeX label with unit for a feature.
+
+    Args:
+        feature_name (str): The name of the feature.
+
+    Returns:
+        str: The LaTeX label with unit.
+    """
+    label = get_latex_label(feature_name)
+    unit = get_unit(feature_name)
+    if unit:
+        return f"{label} ({unit})"
+    return label
 
 def get_latex_label(feature_name: str) -> str:
     """
@@ -26,6 +126,10 @@ def get_latex_label(feature_name: str) -> str:
     """
     # Initialize lookup dictionary if not already initialized
     _initialize_lookup()
+    
+    # Strip "extbf_" prefix if it exists
+    if feature_name.startswith("extbf_"):
+        feature_name = feature_name[len("extbf_"):]
     
     if feature_name == "UHI_diff":
         return "HW-NHW UHII"
@@ -53,6 +157,9 @@ def get_latex_label(feature_name: str) -> str:
         latex_label = feature_group
     # Combine symbol and LaTeX label
     final_label = f"{symbol}{latex_label}".strip()
+    # If final_label seems to be a \textbf command, wrap it in \mbox for robustness
+    if final_label.startswith(r"\textbf{") and final_label.endswith("}"):
+        return fr"\mbox{{{final_label}}}"
     return final_label
 
 def replace_cold_with_continental(kg_main_group: str) -> str:

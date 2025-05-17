@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import logging
 from typing import Optional, Dict, Tuple, List
-from mlflow_tools.plot_util import get_latex_label
+from mlflow_tools.plot_util import get_latex_label, FEATURE_COLORS
 
 
 
@@ -122,6 +122,7 @@ def plot_feature_group_stacked_bar(
     output_path: str,
     title: str,
     base_values: Optional[pd.Series] = None,
+    color_mapping: Optional[Dict[str, str]] = None,
 ) -> None:
     """
     Plots a stacked bar chart of mean feature group contributions with mean SHAP value line.
@@ -146,8 +147,19 @@ def plot_feature_group_stacked_bar(
     # Create figure and axis
     fig, ax = plt.subplots(figsize=(12, 8))
 
+    # Use color_mapping if provided
+    plot_colors = None
+    if color_mapping:
+        # Ensure columns are sorted consistently if needed, or map directly
+        # Assuming pivot_df columns match keys in color_mapping (after potential suffix removal)
+        try:
+            plot_colors = [color_mapping[col.replace('_shap', '')] for col in pivot_df.columns]
+        except KeyError as e:
+            logging.warning(f"Color key not found: {e}. Falling back to default colormap.")
+            plot_colors = None # Fallback if a key is missing
+
     # Plot stacked bars starting from base_values
-    pivot_df.plot(kind="bar", stacked=True, ax=ax, bottom=base_values)
+    pivot_df.plot(kind="bar", stacked=True, ax=ax, bottom=base_values, color=plot_colors, colormap=None if plot_colors else 'tab20')
 
     # Plot mean values including base_values for feature group reports
     mean_values = pivot_df.sum(axis=1) + base_values
@@ -174,7 +186,8 @@ def plot_feature_group_stacked_bar(
             clean_label = label.replace('_shap', '')
             new_labels.append(get_latex_label(clean_label))
 
-    ax.legend(handles, new_labels, bbox_to_anchor=(1.05, 1), loc="upper left")
+    # Adjust legend position for potentially wider labels
+    ax.legend(handles, new_labels, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5)
 
     plt.title(title)
     ax.set_xlabel(group_by_column.replace("_", " ").title())
