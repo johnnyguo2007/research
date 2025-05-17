@@ -87,14 +87,45 @@ def generate_group_shap_plots_by_climate_zone(
 
         # Generate side-by-side plots for each feature group
         for group_name in obj_group_data.group_names:
-            # Get SHAP and feature data for this group and kg_class
-            shap_plot_df = obj_group_data.shap_group_hourly_mean_df(kg_class)[[group_name]]  # Only select current group
-            feature_values_plot_df = obj_group_data.feature_hourly_mean_for_a_given_group_df(kg_class, group_name)  # Only select current group
+            # Get feature data for this group. Its columns are the features in this group.
+            feature_values_plot_df = obj_group_data.feature_hourly_mean_for_a_given_group_df(kg_class, group_name)
+
+            if feature_values_plot_df.empty:
+                logging.info(f"No feature data for group '{group_name}' in KGMajorClass '{kg_class}'. Side-by-side SHAP plot will be empty.")
+                # Create an empty shap_df with same index and columns as the (empty) feature_values_plot_df
+                shap_plot_df = pd.DataFrame(index=feature_values_plot_df.index, columns=feature_values_plot_df.columns)
+            else:
+                features_in_group = feature_values_plot_df.columns
+                all_shap_df_for_kg_class = obj_group_data.shap_group_hourly_mean_df(kg_class) # This is shap_plot_df_kg
+
+                # Select SHAP values for features present in the current group AND in the main SHAP DataFrame
+                columns_to_select_for_shap = [f for f in features_in_group if f in all_shap_df_for_kg_class.columns]
+
+                if not columns_to_select_for_shap:
+                    logging.warning(f"No SHAP data found for any features in group '{group_name}' (features: {list(features_in_group)}) for KGMajorClass '{kg_class}'. SHAP values will be plotted as zero.")
+                    # Create a DataFrame of zeros, indexed like all_shap_df_for_kg_class, columns like features_in_group
+                    shap_plot_df = pd.DataFrame(0, index=all_shap_df_for_kg_class.index, columns=features_in_group)
+                else:
+                    shap_plot_df = all_shap_df_for_kg_class[columns_to_select_for_shap]
+                    # Ensure shap_plot_df has all columns from features_in_group, filling missing SHAP values with 0.
+                    # This makes shap_df.columns identical to feature_values_df.columns.
+                    shap_plot_df = shap_plot_df.reindex(columns=features_in_group, fill_value=0)
+
+                if len(columns_to_select_for_shap) < len(features_in_group):
+                    missing_shap_features = set(features_in_group) - set(columns_to_select_for_shap)
+                    logging.warning(f"SHAP data missing for some features in group '{group_name}': {missing_shap_features}. Their SHAP contributions will be shown as 0.")
 
             # --- Ensure consistent x-axis (local hour) for both plots ---
-            common_index = shap_plot_df.index.intersection(feature_values_plot_df.index)
-            shap_plot_df = shap_plot_df.reindex(common_index)
-            feature_values_plot_df = feature_values_plot_df.reindex(common_index)
+            common_index = feature_values_plot_df.index.intersection(shap_plot_df.index)
+            shap_plot_df = shap_plot_df.reindex(index=common_index)
+            feature_values_plot_df = feature_values_plot_df.reindex(index=common_index)
+            
+            # Determine the base value for the plot, defaulting to 0.0 if not found or incorrect type
+            base_val_for_plot = 0.0
+            if isinstance(base_values, pd.Series):
+                base_val_for_plot = base_values.get(kg_class, 0.0)
+            elif isinstance(base_values, (int, float)):
+                base_val_for_plot = float(base_values)
 
             create_side_by_side_group_plot(
                 shap_df=shap_plot_df,
@@ -103,7 +134,7 @@ def generate_group_shap_plots_by_climate_zone(
                 output_dir=kg_class_dir,
                 kg_class=kg_class,
                 color_mapping=color_mapping,
-                base_value=base_values,
+                base_value=base_val_for_plot,
                 show_total_feature_line=show_total_feature_line,
                 x_axis_label="Local Hour",
             )
@@ -202,7 +233,18 @@ def create_side_by_side_group_plot(
     )
 
     # Plot feature values on axes[1]
-    feature_values_df.plot(ax=axes[1], color=feature_colors)
+    # Determine color(s) for feature plot
+    if len(feature_values_df.columns) == 1:
+        # Single feature group (group_name is the feature)
+        # Use group_name for color lookup, assuming group_name is canonical
+        plot_colors_for_features = [color_mapping.get(group_name, "#333333")]
+    else:
+        # Multi-feature group, colors based on individual feature column names in feature_values_df
+        # These column names are assumed to be canonical for color_mapping
+        plot_colors_for_features = [color_mapping.get(col, "#333333") for col in feature_values_df.columns]
+
+    feature_values_df.plot(ax=axes[1], color=plot_colors_for_features) # Apply determined colors
+    
     axes[1].set_title(f"Feature Values - Group: {get_label_with_unit(group_name)}")
     axes[1].set_xlabel(x_axis_label)
     
@@ -246,10 +288,21 @@ def create_side_by_side_group_plot(
 
     # Construct the title using LaTeX for bold text and preserving spaces
     # Escaping curly braces for f-string and LaTeX interaction
-    # example r"This is a Normal and $\bf{Bold}$ Title"
+    # example r"This is a Normal and $\\bf{Bold}$ Title"
     title = f"HW-NHW UHI Contribution and Feature Values by Hour - $\\bf{{{group_name_formatted_for_title}}}$ - Climate Zone $\\bf{{{kg_class_formatted_for_title}}}$"
     print(title)
     plt.suptitle(title, y=1.02)
+    
+    # X-axis ticks for axes[1] to match axes[0]
+    if not feature_values_df.empty:
+        tick_values = feature_values_df.index
+        axes[1].set_xticks(tick_values)
+        try:
+            # Ensure tick labels are simple integers if the index values are numeric hours
+            axes[1].set_xticklabels([str(int(val)) for val in tick_values])
+        except ValueError:
+            # Fallback if index values are not convertible to int (e.g., already strings or other format)
+            axes[1].set_xticklabels([str(val) for val in tick_values])
 
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches="tight")
