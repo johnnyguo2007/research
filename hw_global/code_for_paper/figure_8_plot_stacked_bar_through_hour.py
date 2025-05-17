@@ -10,9 +10,12 @@ sys.path.append('/home/jguo/research/hw_global/ultimate/')
 
 # Assuming plot_shap_stacked_bar.py and plot_util.py are in the same directory
 from mlflow_tools.plot_shap_stacked_bar import plot_feature_group_stacked_bar, _save_plot_data
-from mlflow_tools.plot_util import get_latex_label
+from mlflow_tools.plot_util import get_latex_label, FEATURE_COLORS
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+BASE_VALUE = 0.186
 
 
 def plot_feature_group_from_csv(csv_path: str, output_path: str, title: str, group_by_column: str, base_value_path: Optional[str] = None):
@@ -54,7 +57,7 @@ def plot_feature_group_from_csv(csv_path: str, output_path: str, title: str, gro
                 base_values = pd.Series([0] * len(df.index), index=df.index)
         else:
             logging.info("No base value CSV path provided. Using default base value of 0.")
-            base_values = pd.Series([0.112] * len(df.index), index=df.index)
+            base_values = pd.Series([BASE_VALUE] * len(df.index), index=df.index)
 
 
         plot_feature_group_stacked_bar(
@@ -62,7 +65,8 @@ def plot_feature_group_from_csv(csv_path: str, output_path: str, title: str, gro
             group_by_column=group_by_column,
             output_path=output_path,
             title=title,
-            base_values=base_values
+            base_values=base_values,
+            color_mapping=FEATURE_COLORS
         )
         logging.info(f"Feature group stacked bar plot created from '{csv_path}' and saved to '{output_path}'")
 
@@ -82,7 +86,7 @@ if __name__ == "__main__":
                         help="Path to the input CSV data file.")
     parser.add_argument("--output_path", 
                         # default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_7/Figure_7_stacked_bar_through_hour_Arid.png', 
-                        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_7/Figure_7_stacked_bar_through_hour_Tropical.png', 
+                        default='/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_8/Figure_8_stacked_bar_through_hour_Tropical.png', 
                         help="Path to save the output plot image.")
     parser.add_argument("--title", default='Tropical', help="Title of the plot.")
     parser.add_argument("--group_by_column", default="local_hour", help="Column to group by (default: local_hour).")

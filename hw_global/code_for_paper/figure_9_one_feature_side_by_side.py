@@ -110,6 +110,7 @@ def plot_side_by_side_from_csv(
         logging.error(f"An error occurred while plotting: {e}")
 
 # run command like: /home/jguo/anaconda3/envs/pipJupyter/bin/python /home/jguo/research/hw_global/code_for_paper/figure_9_one_feature_side_by_side.py --group_name Q2M --shap_csv_path "/home/jguo/tmp/output/global/Q2M/shap_contributions_Q2M_global_shap_data.csv" --feature_csv_path "/home/jguo/tmp/output/global/Q2M/shap_and_feature_values_Q2M_global_feature_data.csv"
+# To plot all features: /home/jguo/anaconda3/envs/pipJupyter/bin/python /home/jguo/research/hw_global/code_for_paper/figure_9_one_feature_side_by_side.py --shap_csv_path "/home/jguo/tmp/output/global/global_group_shap_contribution_data.csv" --feature_csv_path "/home/jguo/tmp/output/global/shap_and_feature_values_global_feature_data.csv"
 if __name__ == "__main__":
     # default_out_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper'
     default_out_dir = '/home/jguo/tmp/output'
@@ -132,7 +133,7 @@ if __name__ == "__main__":
     parser.add_argument("--shap_csv_path", default=default_shap_csv_path, help="Path to the SHAP data CSV file.")
     parser.add_argument("--feature_csv_path", default=default_feature_csv_path, help="Path to the feature data CSV file.")
     parser.add_argument("--output_dir", default=default_out_dir, help="Directory to save the output plot.")
-    parser.add_argument("--group_name", default="U10", help="Name of the feature group.")
+    parser.add_argument("--group_name", default=None, help="Name of the feature group to plot. If not provided, plots all groups defined in FEATURE_COLORS.")
     parser.add_argument("--kg_class", default="global", help="KGMajorClass name.")
     parser.add_argument("--show_total_feature_line", action='store_true', help="Show total feature value line in feature plot.")
     parser.add_argument("--no_total_feature_line", dest='show_total_feature_line', action='store_false', help="Do not show total feature value line.")
@@ -143,11 +144,31 @@ if __name__ == "__main__":
 
     os.makedirs(args.output_dir, exist_ok=True)
 
-    plot_side_by_side_from_csv(
-        shap_csv_path=args.shap_csv_path,
-        feature_csv_path=args.feature_csv_path,
-        output_dir=args.output_dir,
-        group_name=args.group_name,
-        kg_class=args.kg_class,
-        show_total_feature_line=args.show_total_feature_line,
-    )
+    if args.group_name:
+        # Plot only the specified group
+        logging.info(f"Processing specified group: {args.group_name}")
+        group_output_dir = os.path.join(args.output_dir, args.kg_class, args.group_name)
+        os.makedirs(group_output_dir, exist_ok=True)
+        plot_side_by_side_from_csv(
+            shap_csv_path=args.shap_csv_path,
+            feature_csv_path=args.feature_csv_path,
+            output_dir=group_output_dir,
+            group_name=args.group_name,
+            kg_class=args.kg_class,
+            show_total_feature_line=args.show_total_feature_line,
+        )
+    else:
+        # Plot all feature groups defined in FEATURE_COLORS
+        logging.info("No specific group provided. Processing all groups from FEATURE_COLORS.")
+        for group_name in FEATURE_COLORS.keys():
+            logging.info(f"Processing group: {group_name}")
+            group_output_dir = os.path.join(args.output_dir, args.kg_class, group_name)
+            os.makedirs(group_output_dir, exist_ok=True)
+            plot_side_by_side_from_csv(
+                shap_csv_path=args.shap_csv_path,
+                feature_csv_path=args.feature_csv_path,
+                output_dir=group_output_dir,
+                group_name=group_name,
+                kg_class=args.kg_class,
+                show_total_feature_line=args.show_total_feature_line,
+            )
