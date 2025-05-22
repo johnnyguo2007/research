@@ -8,7 +8,7 @@ import seaborn as sns
 import sys
 sys.path.append('/home/jguo/research/hw_global/ultimate/')
 # Assuming plot_side_by_side.py and plot_util.py are in the same directory
-from mlflow_tools.plot_side_by_side import create_side_by_side_group_plot
+from mlflow_tools.plot_side_by_side import create_side_by_side_group_plot, create_combined_plot
 from mlflow_tools.plot_util import get_latex_label, replace_cold_with_continental, FEATURE_COLORS
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -104,6 +104,18 @@ def plot_side_by_side_from_csv(
         )
         logging.info(f"Side-by-side plot created and saved in '{output_dir}'.")
 
+        # Add call to the new combined plot function
+        create_combined_plot(
+            shap_df=shap_df,
+            feature_values_df=feature_values_df,
+            group_name=group_name,
+            output_dir=output_dir, # This should be the kg_class_output_dir, group-specific dir is handled inside
+            kg_class=kg_class,
+            color_mapping=color_mapping,
+            show_total_feature_line=show_total_feature_line,
+        )
+        logging.info(f"Combined plot created and saved in '{output_dir}'.")
+
     except FileNotFoundError:
         logging.error("CSV file not found. Please check the file paths.")
     except Exception as e:
@@ -142,17 +154,22 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    os.makedirs(args.output_dir, exist_ok=True)
+    # os.makedirs(args.output_dir, exist_ok=True) # This top-level output_dir is fine, but kg_class specific one is made below
+
+    # Base directory for the given kg_class, where group-specific folders will be created
+    kg_class_output_dir = os.path.join(args.output_dir, args.kg_class)
+    os.makedirs(kg_class_output_dir, exist_ok=True)
 
     if args.group_name:
         # Plot only the specified group
         logging.info(f"Processing specified group: {args.group_name}")
-        group_output_dir = os.path.join(args.output_dir, args.kg_class, args.group_name)
-        os.makedirs(group_output_dir, exist_ok=True)
+        # The group-specific subdirectory will be created by plot_side_by_side_from_csv (via create_side_by_side_group_plot)
+        # group_output_dir = os.path.join(args.output_dir, args.kg_class, args.group_name) # Old problematic line
+        # os.makedirs(group_output_dir, exist_ok=True) # Old problematic line
         plot_side_by_side_from_csv(
             shap_csv_path=args.shap_csv_path,
             feature_csv_path=args.feature_csv_path,
-            output_dir=group_output_dir,
+            output_dir=kg_class_output_dir, # Pass the base directory for kg_class
             group_name=args.group_name,
             kg_class=args.kg_class,
             show_total_feature_line=args.show_total_feature_line,
@@ -160,15 +177,16 @@ if __name__ == "__main__":
     else:
         # Plot all feature groups defined in FEATURE_COLORS
         logging.info("No specific group provided. Processing all groups from FEATURE_COLORS.")
-        for group_name in FEATURE_COLORS.keys():
-            logging.info(f"Processing group: {group_name}")
-            group_output_dir = os.path.join(args.output_dir, args.kg_class, group_name)
-            os.makedirs(group_output_dir, exist_ok=True)
+        for group_name_key in FEATURE_COLORS.keys(): # Renamed loop variable for clarity
+            logging.info(f"Processing group: {group_name_key}")
+            # The group-specific subdirectory will be created by plot_side_by_side_from_csv
+            # group_output_dir = os.path.join(args.output_dir, args.kg_class, group_name_key) # Old problematic line
+            # os.makedirs(group_output_dir, exist_ok=True) # Old problematic line
             plot_side_by_side_from_csv(
                 shap_csv_path=args.shap_csv_path,
                 feature_csv_path=args.feature_csv_path,
-                output_dir=group_output_dir,
-                group_name=group_name,
+                output_dir=kg_class_output_dir, # Pass the base directory for kg_class
+                group_name=group_name_key,
                 kg_class=args.kg_class,
                 show_total_feature_line=args.show_total_feature_line,
             )

@@ -218,7 +218,8 @@ def create_side_by_side_group_plot(
 
     # Calculate and plot mean SHAP values on the same axis
     mean_shap = mean_shap_df.sum(axis=1)  # Sum across features for each hour
-    mean_shap.plot(kind="line", color="black", marker="o", linewidth=2, ax=axes[0])
+    # Ensure mean_shap is plotted correctly even with NaNs that might come from sum() if all values are NaN
+    # ax1.plot(mean_shap.index, mean_shap.values, color="black", marker="o", linewidth=2, label="Mean SHAP Contribution") # Removed as per user request
 
     # Get handles and labels for SHAP plot, convert feature names to LaTeX labels with units
     handles, labels = axes[0].get_legend_handles_labels()
@@ -322,3 +323,138 @@ def create_side_by_side_group_plot(
     # Save data before plotting
     _save_plot_data(shap_df, total_shap, output_path, "shap")
     _save_plot_data(feature_values_df, total_features, output_path, "feature")
+
+
+def create_combined_plot(
+    shap_df: pd.DataFrame,
+    feature_values_df: pd.DataFrame,
+    group_name: str,
+    output_dir: str,
+    kg_class: str,
+    color_mapping: Dict[str, str],
+    base_value: float = 0, # Base value is not directly used in this combined plot but kept for consistency
+    show_total_feature_line: bool = True, # This might be re-evaluated based on how feature values are plotted
+    x_axis_label: str = "Local Hour",
+) -> None:
+    """
+    Creates a single plot with SHAP contributions and feature values, using two y-axes.
+    SHAP contributions are on the left y-axis, and feature values are on the right y-axis.
+
+    Args:
+        shap_df: DataFrame containing SHAP values for the feature group
+        feature_values_df: DataFrame containing feature values for the group
+        group_name: Name of the feature group
+        output_dir: Directory to save output
+        kg_class: KGMajorClass name
+        color_mapping: Dictionary mapping features to colors
+        base_value: Base value for SHAP contributions (default: 0)
+        show_total_feature_line: Whether to show total feature value line (default: True)
+        x_axis_label: Label for the x-axis (default: "Local Hour")
+    """
+    import matplotlib.pyplot as plt
+    import os
+    import numpy as np # For handling potential NaN in mean_shap for plotting
+
+    plt.rcParams['text.usetex'] = False
+
+    if shap_df.empty or feature_values_df.empty:
+        logging.warning(
+            f"No data available for group '{group_name}' in KGMajorClass '{kg_class}' for combined plot. Skipping."
+        )
+        return
+
+    group_dir = os.path.join(output_dir, group_name)
+    os.makedirs(group_dir, exist_ok=True)
+    output_filename = f"combined_shap_and_feature_{group_name}_{kg_class}.png"
+    output_path = os.path.join(group_dir, output_filename)
+
+    fig, ax1 = plt.subplots(figsize=(12, 7)) # Single Axes object
+
+    # Plot SHAP contributions on the first y-axis (ax1)
+    shap_colors = [color_mapping.get(feature, "#333333") for feature in shap_df.columns]
+    mean_shap_df = shap_df.copy()
+    mean_shap_df.plot(kind="bar", stacked=True, ax=ax1, color=shap_colors, legend=False) # Legend handled later
+
+    ax1.set_xlabel(x_axis_label)
+    ax1.set_ylabel(f"{get_latex_label(group_name)} SHAP Contribution (°C)", color='tab:orange')
+    ax1.tick_params(axis='y', labelcolor='tab:orange')
+
+    # Plot mean SHAP line
+    mean_shap = mean_shap_df.sum(axis=1)
+    # Ensure mean_shap is plotted correctly even with NaNs that might come from sum() if all values are NaN
+    # ax1.plot(mean_shap.index, mean_shap.values, color="black", marker="o", linewidth=2, label="Mean SHAP Contribution") # Removed as per user request
+
+
+    # Create a second y-axis for feature values, sharing the same x-axis
+    ax2 = ax1.twinx()
+
+    # Determine color(s) for feature plot
+    if len(feature_values_df.columns) == 1:
+        plot_colors_for_features = [color_mapping.get(group_name, "#333333")]
+    else:
+        plot_colors_for_features = [color_mapping.get(col, "#333333") for col in feature_values_df.columns]
+
+    # Plot feature values on ax2
+    # If multiple features, plot them individually. If single, it's just one line.
+    for i, col in enumerate(feature_values_df.columns):
+        ax2.plot(feature_values_df.index, feature_values_df[col], color=plot_colors_for_features[i], linestyle='-', marker='.', linewidth=1.5, label=get_label_with_unit(col))
+
+    unit = get_unit(group_name)
+    y_label_feature = f"{get_latex_label(group_name)} Value{f' ({unit})' if unit else ''}"
+    ax2.set_ylabel(y_label_feature, color='tab:blue')
+    ax2.tick_params(axis='y', labelcolor='tab:blue')
+
+    # Add total feature values line if enabled and there are multiple features
+    if show_total_feature_line and len(feature_values_df.columns) > 1:
+        total_features = feature_values_df.sum(axis=1)
+        ax2.plot(total_features.index, total_features.values, color="dimgray", linestyle='--', marker='x', linewidth=2, label="Total Feature Value")
+
+    # --- Legend Handling ---
+    # Collect handles and labels from both axes
+    handles1, labels1 = ax1.get_legend_handles_labels() # ax1 has no direct legendable items anymore after removing mean SHAP line, so handles1/labels1 might be empty.
+    handles2, labels2 = ax2.get_legend_handles_labels() # For feature lines
+
+    # Create labels for SHAP bars (since legend=False was used in bar plot)
+    # We want one label per bar color/feature in SHAP
+    shap_bar_labels = [f"{get_latex_label(col)} SHAP Contribution (°C)" for col in shap_df.columns]
+    shap_bar_handles = [plt.Rectangle((0, 0), 1, 1, color=color_mapping.get(feature, "#333333")) for feature in shap_df.columns]
+    
+    # Combine all handles and labels
+    # Order: SHAP bars, Feature lines, Total Feature line (if exists)
+    all_handles = shap_bar_handles + handles2 # handles1 from ax1 is no longer needed for mean SHAP line
+    all_labels = shap_bar_labels + labels2   # labels1 from ax1 is no longer needed
+
+    # Filter out duplicate labels if any, keeping the first occurrence
+    unique_handles_labels = {}
+    for handle, label in zip(all_handles, all_labels):
+        if label not in unique_handles_labels:
+            unique_handles_labels[label] = handle
+    
+    fig.legend(unique_handles_labels.values(), unique_handles_labels.keys(), loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=max(1, len(unique_handles_labels) // 2))
+
+
+    # Title and Layout
+    group_name_formatted = get_long_name_without_unit(group_name)
+    kg_class_formatted = replace_cold_with_continental(kg_class)
+    group_name_formatted_for_title = group_name_formatted.replace(' ', r'\ ')
+    kg_class_formatted_for_title = kg_class_formatted.replace(' ', r'\ ')
+
+    title = f"Combined SHAP and Feature Values - $\\bf{{{group_name_formatted_for_title}}}$ - Climate Zone $\\bf{{{kg_class_formatted_for_title}}}$"
+    plt.title(title, y=1.08) # Adjust y for suptitle if using subplots, else for single plot
+
+    # Ensure x-axis ticks are displayed correctly (e.g., as integers for hours)
+    if not shap_df.empty: # or feature_values_df, they share index
+        tick_values = shap_df.index
+        ax1.set_xticks(tick_values)
+        try:
+            ax1.set_xticklabels([str(int(val)) for val in tick_values])
+        except ValueError:
+            ax1.set_xticklabels([str(val) for val in tick_values])
+
+
+    fig.tight_layout(rect=[0, 0.05, 1, 0.95]) # Adjust rect to make space for legend below
+    plt.savefig(output_path, bbox_inches="tight")
+    plt.close(fig)
+    logging.info(
+        f"Combined plot saved as '{output_path}' for group '{group_name}' and KGMajorClass '{kg_class}'."
+    )
