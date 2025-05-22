@@ -124,69 +124,78 @@ def plot_side_by_side_from_csv(
 # run command like: /home/jguo/anaconda3/envs/pipJupyter/bin/python /home/jguo/research/hw_global/code_for_paper/figure_9_one_feature_side_by_side.py --group_name Q2M --shap_csv_path "/home/jguo/tmp/output/global/Q2M/shap_contributions_Q2M_global_shap_data.csv" --feature_csv_path "/home/jguo/tmp/output/global/Q2M/shap_and_feature_values_Q2M_global_feature_data.csv"
 # To plot all features: /home/jguo/anaconda3/envs/pipJupyter/bin/python /home/jguo/research/hw_global/code_for_paper/figure_9_one_feature_side_by_side.py --shap_csv_path "/home/jguo/tmp/output/global/global_group_shap_contribution_data.csv" --feature_csv_path "/home/jguo/tmp/output/global/shap_and_feature_values_global_feature_data.csv"
 if __name__ == "__main__":
-    # default_out_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper'
     default_out_dir = '/home/jguo/tmp/output'
-    default_input_dir = ("/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/",
-                        "summary/mlflow/mlartifacts/",
-                        "893793682234305734/67f2e168085e4507b0a79941b74d7eb7/",
-                        "artifacts/data_only_24_hourly/"
-    )
-    climate_zone = "global"
-    # default_input_dir = "/home/jguo/tmp/output/global/"
-    # climate_zone = "Q2M"
-    #path join the default_input_dir
-    default_input_dir = os.path.join(*default_input_dir, climate_zone)
-    default_shap_csv_path = os.path.join(default_input_dir, "global_group_shap_contribution_data.csv")
-    default_feature_csv_path = os.path.join(default_input_dir, "shap_and_feature_values_global_feature_data.csv")
-    #print the default_shap_csv_path and default_feature_csv_path   
-    print(default_shap_csv_path)
-    print(default_feature_csv_path)
-    parser = argparse.ArgumentParser(description="Plot side-by-side group plot from CSV data.")
-    parser.add_argument("--shap_csv_path", default=default_shap_csv_path, help="Path to the SHAP data CSV file.")
-    parser.add_argument("--feature_csv_path", default=default_feature_csv_path, help="Path to the feature data CSV file.")
-    parser.add_argument("--output_dir", default=default_out_dir, help="Directory to save the output plot.")
+    # Base input directory tuple, before appending the climate zone
+    default_input_dir_base_tuple = ("/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/",
+                                    "summary/mlflow/mlartifacts/",
+                                    "893793682234305734/67f2e168085e4507b0a79941b74d7eb7/",
+                                    "artifacts/data_only_24_hourly/")
+
+    parser = argparse.ArgumentParser(description="Plot side-by-side group plot from CSV data for multiple climate zones.")
+    parser.add_argument("--shap_csv_path", default=None, help="Path to the SHAP data CSV file. If not provided, it's constructed based on the climate zone.")
+    parser.add_argument("--feature_csv_path", default=None, help="Path to the feature data CSV file. If not provided, it's constructed based on the climate zone.")
+    parser.add_argument("--output_dir", default=default_out_dir, help="Base directory to save the output plots.")
     parser.add_argument("--group_name", default=None, help="Name of the feature group to plot. If not provided, plots all groups defined in FEATURE_COLORS.")
-    parser.add_argument("--kg_class", default="global", help="KGMajorClass name.")
+    parser.add_argument("--kg_class", default=None, help="KGMajorClass name. If not provided, it's inferred from the climate zone during looping.")
     parser.add_argument("--show_total_feature_line", action='store_true', help="Show total feature value line in feature plot.")
     parser.add_argument("--no_total_feature_line", dest='show_total_feature_line', action='store_false', help="Do not show total feature value line.")
     parser.set_defaults(show_total_feature_line=True)
 
-
     args = parser.parse_args()
 
-    # os.makedirs(args.output_dir, exist_ok=True) # This top-level output_dir is fine, but kg_class specific one is made below
+    climate_zones_to_process = ["Arid", "Continental", "global", "Temperate", "Tropical"]
 
-    # Base directory for the given kg_class, where group-specific folders will be created
-    kg_class_output_dir = os.path.join(args.output_dir, args.kg_class)
-    os.makedirs(kg_class_output_dir, exist_ok=True)
+    for current_climate_zone in climate_zones_to_process:
+        logging.info(f"--- Processing climate zone: {current_climate_zone} ---")
 
-    if args.group_name:
-        # Plot only the specified group
-        logging.info(f"Processing specified group: {args.group_name}")
-        # The group-specific subdirectory will be created by plot_side_by_side_from_csv (via create_side_by_side_group_plot)
-        # group_output_dir = os.path.join(args.output_dir, args.kg_class, args.group_name) # Old problematic line
-        # os.makedirs(group_output_dir, exist_ok=True) # Old problematic line
-        plot_side_by_side_from_csv(
-            shap_csv_path=args.shap_csv_path,
-            feature_csv_path=args.feature_csv_path,
-            output_dir=kg_class_output_dir, # Pass the base directory for kg_class
-            group_name=args.group_name,
-            kg_class=args.kg_class,
-            show_total_feature_line=args.show_total_feature_line,
-        )
-    else:
-        # Plot all feature groups defined in FEATURE_COLORS
-        logging.info("No specific group provided. Processing all groups from FEATURE_COLORS.")
-        for group_name_key in FEATURE_COLORS.keys(): # Renamed loop variable for clarity
-            logging.info(f"Processing group: {group_name_key}")
-            # The group-specific subdirectory will be created by plot_side_by_side_from_csv
-            # group_output_dir = os.path.join(args.output_dir, args.kg_class, group_name_key) # Old problematic line
-            # os.makedirs(group_output_dir, exist_ok=True) # Old problematic line
+        current_input_dir_for_zone = os.path.join(*default_input_dir_base_tuple, current_climate_zone)
+
+        # Determine SHAP and Feature CSV paths for the current zone
+        # If user provided specific paths via CLI for args.shap_csv_path or args.feature_csv_path,
+        # those would override this per-zone logic. However, the intent of this modification
+        # is to loop and generate paths per zone. For simplicity, we assume CLI paths are not
+        # intended to override the loop's path generation, or this script is run without them
+        # when looping is desired.
+        shap_csv_path_for_zone = args.shap_csv_path if args.shap_csv_path else os.path.join(current_input_dir_for_zone, f"{current_climate_zone}_group_shap_contribution_data.csv")
+        feature_csv_path_for_zone = args.feature_csv_path if args.feature_csv_path else os.path.join(current_input_dir_for_zone, f"shap_and_feature_values_{current_climate_zone}_feature_data.csv")
+
+        # The KGMajorClass for this iteration is the current climate zone
+        # If args.kg_class is specified, it might be intended as a global override,
+        # but typically it should align with the climate zone for output organization.
+        kg_class_for_zone = args.kg_class if args.kg_class else current_climate_zone
+
+        # Output directory for the current climate_zone/kg_class
+        output_dir_for_kg_class = os.path.join(args.output_dir, kg_class_for_zone)
+        os.makedirs(output_dir_for_kg_class, exist_ok=True)
+
+        logging.info(f"Using SHAP CSV path: {shap_csv_path_for_zone}")
+        logging.info(f"Using Feature CSV path: {feature_csv_path_for_zone}")
+        logging.info(f"Output directory for {kg_class_for_zone}: {output_dir_for_kg_class}")
+
+        if args.group_name:
+            logging.info(f"Processing specified group: {args.group_name} for climate zone: {current_climate_zone}")
             plot_side_by_side_from_csv(
-                shap_csv_path=args.shap_csv_path,
-                feature_csv_path=args.feature_csv_path,
-                output_dir=kg_class_output_dir, # Pass the base directory for kg_class
-                group_name=group_name_key,
-                kg_class=args.kg_class,
+                shap_csv_path=shap_csv_path_for_zone,
+                feature_csv_path=feature_csv_path_for_zone,
+                output_dir=output_dir_for_kg_class,
+                group_name=args.group_name,
+                kg_class=kg_class_for_zone,
                 show_total_feature_line=args.show_total_feature_line,
             )
+        else:
+            logging.info(f"No specific group provided. Processing all groups from FEATURE_COLORS for climate zone: {current_climate_zone}.")
+            if not FEATURE_COLORS:
+                logging.warning(f"FEATURE_COLORS is empty. Cannot process all groups for climate zone: {current_climate_zone}.")
+                continue # Skip to the next climate zone
+
+            for group_name_key in FEATURE_COLORS.keys():
+                logging.info(f"Processing group: {group_name_key} for climate zone: {current_climate_zone}")
+                plot_side_by_side_from_csv(
+                    shap_csv_path=shap_csv_path_for_zone,
+                    feature_csv_path=feature_csv_path_for_zone,
+                    output_dir=output_dir_for_kg_class,
+                    group_name=group_name_key,
+                    kg_class=kg_class_for_zone,
+                    show_total_feature_line=args.show_total_feature_line,
+                )
+    logging.info("--- All climate zones processed ---")
