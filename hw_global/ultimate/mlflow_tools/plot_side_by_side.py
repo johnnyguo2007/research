@@ -430,7 +430,7 @@ def create_combined_plot(
         if label not in unique_handles_labels:
             unique_handles_labels[label] = handle
     
-    fig.legend(unique_handles_labels.values(), unique_handles_labels.keys(), loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=max(1, len(unique_handles_labels) // 2))
+    fig.legend(unique_handles_labels.values(), unique_handles_labels.keys(), loc="upper center", bbox_to_anchor=(0.5, 0.01), ncol=max(1, len(unique_handles_labels) // 3))
 
 
     # Title and Layout
@@ -452,7 +452,7 @@ def create_combined_plot(
             ax1.set_xticklabels([str(val) for val in tick_values])
 
 
-    fig.tight_layout(rect=[0, 0.05, 1, 0.95]) # Adjust rect to make space for legend below
+    fig.tight_layout(rect=[0, 0.01, 1, 0.95]) # Adjust rect to make space for legend below
     plt.savefig(output_path, bbox_inches="tight")
     plt.close(fig)
     logging.info(
