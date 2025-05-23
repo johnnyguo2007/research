@@ -135,16 +135,68 @@ def main():
 
     # Generate summary plots if requested
     if args.summary_plots:
-        generate_summary_and_kg_plots(
-            obj_group_data,
-            output_dir,
-            plot_type="feature",
-        )
-        generate_summary_and_kg_plots(
-            obj_group_data,
-            output_dir,
-            plot_type="group",
-        )
+        logging.info("Processing summary plots with day/night separation...")
+        day_hours = set(range(7, 19))  # 7 AM to 6 PM (18:00) inclusive
+
+        if 'local_hour' not in all_df.columns:
+            logging.error("'local_hour' column not found in all_df. Cannot separate day/night for summary plots.")
+        else:
+            # Filter all_df for daytime
+            day_df = all_df[all_df['local_hour'].isin(day_hours)].copy()
+            # Filter all_df for nighttime
+            night_df = all_df[~all_df['local_hour'].isin(day_hours)].copy()
+
+            # --- Daytime Plots ---
+            if not day_df.empty:
+                logging.info("Generating daytime summary plots...")
+                day_obj_group_data = calculate_group_shap_values(day_df, feature_to_group_mapping)
+                
+                day_output_sub_dir_name = "daytime_summary_plots"
+                day_specific_output_dir = os.path.join(output_dir, day_output_sub_dir_name)
+                os.makedirs(day_specific_output_dir, exist_ok=True)
+                
+                logging.info(f"Daytime data shape for summary: {day_df.shape}")
+                if hasattr(day_obj_group_data, 'group_names'):
+                    logging.info(f"Daytime GroupData groups for summary: {day_obj_group_data.group_names}")
+
+                generate_summary_and_kg_plots(
+                    day_obj_group_data,
+                    day_specific_output_dir, 
+                    plot_type="feature",
+                )
+                generate_summary_and_kg_plots(
+                    day_obj_group_data,
+                    day_specific_output_dir,
+                    plot_type="group",
+                )
+            else:
+                logging.warning("No daytime data found (hours 7-18). Skipping daytime summary plots.")
+
+            # --- Nighttime Plots ---
+            if not night_df.empty:
+                logging.info("Generating nighttime summary plots...")
+                night_obj_group_data = calculate_group_shap_values(night_df, feature_to_group_mapping)
+
+                night_output_sub_dir_name = "nighttime_summary_plots"
+                night_specific_output_dir = os.path.join(output_dir, night_output_sub_dir_name)
+                os.makedirs(night_specific_output_dir, exist_ok=True)
+
+                logging.info(f"Nighttime data shape for summary: {night_df.shape}")
+                if hasattr(night_obj_group_data, 'group_names'):
+                    logging.info(f"Nighttime GroupData groups for summary: {night_obj_group_data.group_names}")
+
+                generate_summary_and_kg_plots(
+                    night_obj_group_data,
+                    night_specific_output_dir,
+                    plot_type="feature",
+                )
+                generate_summary_and_kg_plots(
+                    night_obj_group_data,
+                    night_specific_output_dir,
+                    plot_type="group",
+                )
+            else:
+                logging.warning("No nighttime data found (hours outside 7-18). Skipping nighttime summary plots.")
 
     # Generate day/night summary if requested
     if args.day_night_summary:
