@@ -91,7 +91,7 @@ def main():
             -   Generates shap.summary_plot and shap.waterfall_plot for individual features.
             -   Separated for daytime and nighttime.
             -   Generated for global data and for each KGMajorClass.
-            -   Saves underlying data to CSV.
+            -   Saves underlying data (including feature importance for day/night plots) to CSV.
         *   Group Summary & Importance Plots: --summary-group
             -   Generates shap.summary_plot and shap.waterfall_plot for feature groups.
             -   Separated for daytime and nighttime.
