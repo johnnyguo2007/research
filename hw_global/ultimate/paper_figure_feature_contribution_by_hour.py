@@ -9,6 +9,8 @@ import mlflow
 import seaborn as sns
 import shap
 from typing import List, Dict, Tuple, Optional
+sys.path.append('/home/jguo/research/hw_global/ultimate/')
+
 from mlflow_tools import (
     generate_summary_and_kg_plots,
     create_day_night_summary,
@@ -16,6 +18,7 @@ from mlflow_tools import (
     plot_feature_group_stacked_bar,
     get_feature_groups,
     get_latex_label,
+    get_label_with_unit,
     generate_group_shap_plots_by_climate_zone,
 )
 from mlflow_tools.group_data import calculate_group_shap_values, GroupData
@@ -94,6 +97,7 @@ def main():
         args.summary_plots = True
         args.day_night_summary = True
         args.group_shap_plots = True
+        args.plot_fsh_interaction_global = True
 
     # Get experiment and run
     experiment_id, run_id = get_experiment_and_run(args.experiment_name)
@@ -262,6 +266,113 @@ def main():
                 show_total_feature_line=not args.hide_total_feature_line,
             )
 
+    # Generate FSH interaction plots if requested
+    if args.plot_fsh_interaction_global:
+        logging.info("Generating FSH SHAP interaction plots for global (day/night)...")
+        day_hours = set(range(7, 19))  # 7 AM to 6 PM (18:00) inclusive
+
+        # Define the specific FSH column names
+        fsh_feature_col = "hw_nohw_diff_FSH"
+        fsh_shap_col = "hw_nohw_diff_FSH_shap"
+
+        if 'local_hour' not in all_df.columns:
+            logging.error("'local_hour' column not found. Cannot create day/night FSH interaction plots.")
+        elif fsh_feature_col not in all_df.columns or fsh_shap_col not in all_df.columns:
+            logging.error(f"'{fsh_feature_col}' or '{fsh_shap_col}' column not found. Cannot create FSH interaction plots.")
+        else:
+            # Prepare dataframes for day and night
+            day_df_interaction = all_df[all_df['local_hour'].isin(day_hours)].copy()
+            night_df_interaction = all_df[~all_df['local_hour'].isin(day_hours)].copy()
+
+            # Get the list of other features to interact with
+            other_feature_cols_for_interaction = [col for col in feature_cols if col != fsh_feature_col]
+
+            # Plot for daytime
+            if not day_df_interaction.empty:
+                logging.info(f"Generating daytime FSH interaction plots against all other features ({len(other_feature_cols_for_interaction)} plots).")
+                shap_values_day = day_df_interaction[shap_cols].values
+                features_day = day_df_interaction[feature_cols]
+                for interaction_feature in other_feature_cols_for_interaction:
+                    if interaction_feature not in features_day.columns:
+                        logging.warning(f"Interaction feature '{interaction_feature}' not found in daytime data. Skipping.")
+                        continue
+                    plt.figure(figsize=(10, 8))
+                    try:
+                        shap.dependence_plot(
+                            fsh_feature_col,  # Feature whose SHAP values are on y-axis
+                            shap_values_day,
+                            features_day,
+                            interaction_index=interaction_feature, # Feature to color by
+                            show=False
+                        )
+                        fsh_latex = get_latex_label(fsh_feature_col)
+                        interaction_latex = get_latex_label(interaction_feature)
+
+                        # Use get_label_with_unit for x-axis
+                        x_axis_label = get_label_with_unit(fsh_feature_col)
+
+                        # Define SHAP values unit (assuming Kelvin for model output units)
+                        # This should be configured if model output unit is different
+                        shap_values_unit_latex = "K"
+                        y_axis_label = f"SHAP value for {fsh_latex} ({shap_values_unit_latex})"
+
+                        plt.xlabel(x_axis_label)
+                        plt.ylabel(y_axis_label)
+
+                        plt.title(f"{fsh_latex} SHAP Interaction with {interaction_latex} (Global - Daytime)")
+                        day_interaction_plot_path = os.path.join(output_dir, f"fsh_interaction_with_{interaction_feature.replace('/', '_')}_global_daytime.png") # Sanitize filename
+                        plt.savefig(day_interaction_plot_path)
+                        plt.close()
+                        logging.info(f"Daytime FSH interaction plot with {interaction_latex} saved to: {day_interaction_plot_path}")
+                    except Exception as e:
+                        logging.error(f"Error generating daytime FSH interaction plot with {interaction_feature}: {e}")
+                        plt.close() # Ensure plot is closed on error
+            else:
+                logging.warning("No daytime data for FSH interaction plot.")
+
+            # Plot for nighttime
+            if not night_df_interaction.empty:
+                logging.info(f"Generating nighttime FSH interaction plots against all other features ({len(other_feature_cols_for_interaction)} plots).")
+                shap_values_night = night_df_interaction[shap_cols].values
+                features_night = night_df_interaction[feature_cols]
+                for interaction_feature in other_feature_cols_for_interaction:
+                    if interaction_feature not in features_night.columns:
+                        logging.warning(f"Interaction feature '{interaction_feature}' not found in nighttime data. Skipping.")
+                        continue
+                    plt.figure(figsize=(10, 8))
+                    try:
+                        shap.dependence_plot(
+                            fsh_feature_col,  # Feature whose SHAP values are on y-axis
+                            shap_values_night,
+                            features_night,
+                            interaction_index=interaction_feature, # Feature to color by
+                            show=False
+                        )
+                        fsh_latex = get_latex_label(fsh_feature_col)
+                        interaction_latex = get_latex_label(interaction_feature)
+
+                        # Use get_label_with_unit for x-axis
+                        x_axis_label = get_label_with_unit(fsh_feature_col)
+
+                        # Define SHAP values unit (assuming Kelvin for model output units)
+                        # This should be configured if model output unit is different
+                        shap_values_unit_latex = "K"
+                        y_axis_label = f"SHAP value for {fsh_latex} ({shap_values_unit_latex})"
+
+                        plt.xlabel(x_axis_label)
+                        plt.ylabel(y_axis_label)
+
+                        plt.title(f"{fsh_latex} SHAP Interaction with {interaction_latex} (Global - Nighttime)")
+                        night_interaction_plot_path = os.path.join(output_dir, f"fsh_interaction_with_{interaction_feature.replace('/', '_')}_global_nighttime.png") # Sanitize filename
+                        plt.savefig(night_interaction_plot_path)
+                        plt.close()
+                        logging.info(f"Nighttime FSH interaction plot with {interaction_latex} saved to: {night_interaction_plot_path}")
+                    except Exception as e:
+                        logging.error(f"Error generating nighttime FSH interaction plot with {interaction_feature}: {e}")
+                        plt.close() # Ensure plot is closed on error
+            else:
+                logging.warning("No nighttime data for FSH interaction plot.")
+
     logging.info("Analysis completed successfully.")
     logging.info(f"All outputs have been saved to: {output_dir}")
 
@@ -320,7 +431,13 @@ def parse_arguments() -> argparse.Namespace:
         "--all",
         action="store_true",
         default=False,
-        help="Run all analyses (summary plots, day/night summary, and group SHAP plots).",
+        help="Run all analyses (summary plots, day/night summary, group SHAP plots, and FSH interaction plots).",
+    )
+    parser.add_argument(
+        "--plot_fsh_interaction_global",
+        action="store_true",
+        default=False,
+        help="Generate SHAP interaction plot for FSH (global, day/night).",
     )
     return parser.parse_args()
 
