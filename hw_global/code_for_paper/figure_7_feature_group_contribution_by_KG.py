@@ -108,6 +108,9 @@ def create_feature_group_plot(time_period):
             latex_label = feature_group
         latex_index.append(latex_label)
     data_pivot.index = latex_index
+
+    # Sort feature groups alphabetically
+    data_pivot = data_pivot.sort_index()
     
     # Plot the grouped bar chart
     fig, ax = plt.subplots(figsize=(16, 10))
