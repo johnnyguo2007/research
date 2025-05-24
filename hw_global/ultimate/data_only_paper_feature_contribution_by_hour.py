@@ -264,6 +264,109 @@ def save_climate_zone_group_details(
         _save_data_csv(shap_grouped_features_df, output_path_base_grouped, "group_shap_contribution", total_values=total_values_with_base) # Saves as ..._group_shap_contribution_data.csv
 
 
+def save_feature_importance_data(
+    all_df: pd.DataFrame,
+    kg_class: str,
+    day_night: str,  # "day" or "night"
+    output_dir: str,
+    feature_to_group_mapping: Dict[str, str]
+) -> None:
+    """
+    Calculate and save feature importance data (mean SHAP values) for a specific climate zone and time period.
+    
+    Args:
+        all_df: DataFrame containing SHAP values for the specific KG class and time period
+        kg_class: Climate zone class (e.g., 'Arid', 'Cold', 'global')
+        day_night: Time period - either "day" or "night"
+        output_dir: Base output directory
+        feature_to_group_mapping: Mapping of features to groups
+    """
+    if all_df.empty:
+        logging.warning(f"Empty DataFrame for {kg_class} {day_night}. Skipping feature importance data.")
+        return
+    
+    # Get display name for paths
+    kg_class_display_name = replace_cold_with_continental(kg_class)
+    
+    # Create subdirectory structure matching the figure script
+    time_dir = f"{day_night}time_feature_summary_plots"
+    kg_dir = os.path.join(output_dir, time_dir, kg_class_display_name)
+    os.makedirs(kg_dir, exist_ok=True)
+    
+    # Extract SHAP and feature columns
+    shap_cols = [col for col in all_df.columns if col.endswith("_shap")]
+    feature_cols = [col.replace("_shap", "") for col in shap_cols]
+    
+    # Calculate mean SHAP values for individual features
+    individual_shap_means = all_df[shap_cols].mean()
+    individual_shap_means.index = [col.replace("_shap", "") for col in individual_shap_means.index]
+    
+    # Calculate mean feature values
+    feature_means = all_df[feature_cols].mean()
+    
+    # Add base value, UHI_diff, y_pred, and Estimation_Error if available
+    if 'base_value' in all_df.columns:
+        individual_shap_means['base_value'] = all_df['base_value'].mean()
+        feature_means['base_value'] = all_df['base_value'].mean()
+    if 'UHI_diff' in all_df.columns:
+        individual_shap_means['UHI_diff'] = all_df['UHI_diff'].mean()
+        feature_means['UHI_diff'] = all_df['UHI_diff'].mean()
+    if 'y_pred' in all_df.columns:
+        individual_shap_means['y_pred'] = all_df['y_pred'].mean()
+        feature_means['y_pred'] = all_df['y_pred'].mean()
+    if 'Estimation_Error' in all_df.columns:
+        individual_shap_means['Estimation_Error'] = all_df['Estimation_Error'].mean()
+        feature_means['Estimation_Error'] = all_df['Estimation_Error'].mean()
+    
+    # Save individual feature importance data
+    feature_importance_base = os.path.join(kg_dir, f"feature_importance_{kg_class_display_name}_{day_night}")
+    
+    # Convert Series to DataFrame for saving
+    individual_shap_df = pd.DataFrame({'mean_shap': individual_shap_means})
+    feature_values_df = pd.DataFrame({'mean_value': feature_means})
+    
+    # Save using the existing _save_data_csv function format
+    _save_data_csv(individual_shap_df.T, feature_importance_base, "individual_shap")
+    _save_data_csv(feature_values_df.T, feature_importance_base, "individual_feature")
+    
+    # Calculate group-level data
+    obj_group_data = calculate_group_shap_values(all_df, feature_to_group_mapping)
+    
+    # Get group SHAP means - calculate mean for each group column
+    group_shap_cols = obj_group_data._group_shap_cols  # e.g., ['group1_group_shap', 'group2_group_shap', ...]
+    group_shap_means = {}
+    
+    for col in group_shap_cols:
+        # Extract group name from column (e.g., 'group1_group_shap' -> 'group1')
+        group_name = col.replace('_group_shap', '')
+        group_shap_means[group_name] = all_df[col].mean() if col in all_df.columns else obj_group_data._df[col].mean()
+    
+    # Convert to Series for consistency with the rest of the code
+    group_shap_means = pd.Series(group_shap_means)
+    
+    # Add metadata columns if they exist
+    if 'base_value' in all_df.columns:
+        group_shap_means['base_value'] = all_df['base_value'].mean()
+    if 'UHI_diff' in all_df.columns:
+        group_shap_means['UHI_diff'] = all_df['UHI_diff'].mean()
+    if 'y_pred' in all_df.columns:
+        group_shap_means['y_pred'] = all_df['y_pred'].mean()
+    if 'Estimation_Error' in all_df.columns:
+        group_shap_means['Estimation_Error'] = all_df['Estimation_Error'].mean()
+    
+    # Save group importance data
+    time_dir_group = f"{day_night}time_group_summary_plots"
+    kg_dir_group = os.path.join(output_dir, time_dir_group, kg_class_display_name)
+    os.makedirs(kg_dir_group, exist_ok=True)
+    
+    group_importance_base = os.path.join(kg_dir_group, f"group_importance_{kg_class_display_name}_{day_night}")
+    # Convert Series to DataFrame for saving
+    group_shap_df = pd.DataFrame({'mean_shap': group_shap_means})
+    _save_data_csv(group_shap_df.T, group_importance_base, "group_shap")
+    
+    logging.info(f"Saved feature importance data for {kg_class_display_name} ({day_night})")
+
+
 def main():
     """Main function to process SHAP values and generate data CSVs."""
     logging.info("Starting feature contribution data generation...")
@@ -356,6 +459,45 @@ def main():
         logging.info("\n" + str(summary_df))
     except Exception as e:
         logging.error(f"Error generating day/night summary: {e}")
+
+    # --- Generate feature importance data for each climate zone ---
+    logging.info("Generating feature importance data for each climate zone...")
+    
+    # Define day/night hours
+    day_hours = set(range(7, 19))  # 7 AM to 6 PM
+    
+    if 'local_hour' not in all_df.columns:
+        logging.error("'local_hour' column not found. Cannot generate day/night feature importance data.")
+    else:
+        # Get unique climate zones
+        kg_classes_for_importance = ["global"]
+        if 'KGMajorClass' in all_df.columns:
+            kg_classes_for_importance += sorted(all_df['KGMajorClass'].dropna().unique().tolist())
+        
+        for kg_class in kg_classes_for_importance:
+            # Filter data for this climate zone
+            if kg_class == "global":
+                kg_df = all_df.copy()
+            else:
+                kg_df = all_df[all_df['KGMajorClass'] == kg_class].copy()
+            
+            if kg_df.empty:
+                logging.warning(f"No data found for KGMajorClass '{kg_class}'. Skipping.")
+                continue
+            
+            # Process day data
+            day_df = kg_df[kg_df['local_hour'].isin(day_hours)]
+            if not day_df.empty:
+                save_feature_importance_data(
+                    day_df, kg_class, "day", output_dir, feature_to_group_mapping
+                )
+            
+            # Process night data
+            night_df = kg_df[~kg_df['local_hour'].isin(day_hours)]
+            if not night_df.empty:
+                save_feature_importance_data(
+                    night_df, kg_class, "night", output_dir, feature_to_group_mapping
+                )
 
     # --- Always process and save hourly group SHAP data --- 
     # if args.group_shap_data:
