@@ -48,41 +48,31 @@ def create_feature_group_plot(time_period):
     
     # Read each CSV file and append it to the consolidated DataFrame
     for zone, file_zone in zip(climate_zones, file_climate_zones):
+        # Construct the new file name
+        new_file_name = f"group_importance_{file_zone}_{time_period}_group_shap_importance.csv"
         file_path = os.path.join(
             base_directory, 
             time_dir, 
             file_zone, 
-            f"group_importance_{file_zone}_{time_period}_group_shap_data.csv"
+            new_file_name
         )
         
         if os.path.exists(file_path):
-            # Read the CSV - the data is transposed, so we need to handle it properly
-            df = pd.read_csv(file_path, index_col=0)
+            df = pd.read_csv(file_path) # Read CSV without index_col
             
-            # The data has groups as columns and 'mean_shap' as the row
-            # We need to transpose it and calculate percentages
-            if 'mean_shap' in df.index:
-                shap_values = df.loc['mean_shap']
-                
-                # Remove metadata columns
-                metadata_cols = ['base_value', 'UHI_diff', 'y_pred', 'Estimation_Error']
-                shap_values = shap_values.drop(metadata_cols, errors='ignore')
-                
-                # Calculate percentages
-                total_shap = shap_values.abs().sum()
-                if total_shap > 0:
-                    percentages = (shap_values.abs() / total_shap) * 100
-                    
-                    # Create a DataFrame with the results
-                    zone_df = pd.DataFrame({
-                        'Feature Group': percentages.index,
-                        'Percentage': percentages.values,
-                        'Region': zone  # Use original zone name for consistency
-                    })
-                    
-                    consolidated_data = pd.concat([consolidated_data, zone_df], ignore_index=True)
+            # The new CSV has 'Group' and 'Percentage' columns.
+            # 'Percentage' is already calculated correctly.
+            if not df.empty and 'Group' in df.columns and 'Percentage' in df.columns:
+                # Create a DataFrame with the results
+                zone_df = pd.DataFrame({
+                    'Feature Group': df['Group'],
+                    'Percentage': df['Percentage'],
+                    'Region': zone  # Use original zone name for consistency
+                })
+                consolidated_data = pd.concat([consolidated_data, zone_df], ignore_index=True)
             else:
-                print(f"Warning: 'mean_shap' row not found in {file_path}")
+                # Update warning message for new format
+                print(f"Warning: Required columns ('Group', 'Percentage') not found or file is empty in {file_path}")
         else:
             print(f"Warning: File not found: {file_path}")
     
@@ -90,6 +80,10 @@ def create_feature_group_plot(time_period):
         print(f"No data found for {time_period} period")
         return
     
+    # Filter out FSA features for nighttime plot
+    if time_period == 'night':
+        consolidated_data = consolidated_data[~consolidated_data['Feature Group'].str.contains('FSA', case=False, na=False)]
+
     # Pivot the data for grouped bar chart
     data_pivot = consolidated_data.pivot(index='Feature Group', columns='Region', values='Percentage')
     

@@ -21,6 +21,45 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+def _calculate_importance_df(shap_values: np.ndarray, feature_names: List[str]) -> pd.DataFrame:
+    """
+    Calculate feature importance from SHAP values, following the same logic as plot_summary.py get_shap_feature_importance.
+    
+    Args:
+        shap_values: NumPy array of SHAP values (samples x features)
+        feature_names: List of feature names
+        
+    Returns:
+        DataFrame with columns: Feature, Importance, Percentage (sorted by Importance descending)
+    """
+    # Debug information
+    logging.info(f"SHAP values shape: {shap_values.shape}")
+    logging.info(f"Number of feature names: {len(feature_names)}")
+    logging.info(f"Feature names: {feature_names[:5]}...")  # Show first 5 feature names
+    
+    # Ensure we have the right number of features
+    if shap_values.shape[1] != len(feature_names):
+        logging.error(f"Mismatch: SHAP values has {shap_values.shape[1]} features but feature_names has {len(feature_names)} features")
+        # Use the minimum to avoid index errors
+        min_features = min(shap_values.shape[1], len(feature_names))
+        shap_values = shap_values[:, :min_features]
+        feature_names = feature_names[:min_features]
+        logging.warning(f"Truncated to {min_features} features")
+    
+    shap_feature_importance = np.abs(shap_values).mean(axis=0)
+    total_importance = np.sum(shap_feature_importance)
+    
+    # Ensure all arrays have the same length
+    assert len(feature_names) == len(shap_feature_importance), f"Length mismatch: {len(feature_names)} vs {len(shap_feature_importance)}"
+    
+    importance_df = pd.DataFrame({
+        'Feature': feature_names,
+        'Importance': shap_feature_importance,
+        'Percentage': (shap_feature_importance / total_importance) * 100
+    })
+    importance_df.sort_values(by='Importance', ascending=False, inplace=True)
+    return importance_df
+
 # Copied from mlflow_tools.plot_shap_stacked_bar
 def _save_data_csv(
     df: pd.DataFrame, output_path: str, data_type: str, total_values: Optional[pd.Series] = None
@@ -293,78 +332,105 @@ def save_feature_importance_data(
     kg_dir = os.path.join(output_dir, time_dir, kg_class_display_name)
     os.makedirs(kg_dir, exist_ok=True)
     
-    # Extract SHAP and feature columns
-    shap_cols = [col for col in all_df.columns if col.endswith("_shap")]
-    feature_cols = [col.replace("_shap", "") for col in shap_cols]
-    
-    # Calculate mean SHAP values for individual features
-    individual_shap_means = all_df[shap_cols].mean()
-    individual_shap_means.index = [col.replace("_shap", "") for col in individual_shap_means.index]
-    
-    # Calculate mean feature values
-    feature_means = all_df[feature_cols].mean()
-    
-    # Add base value, UHI_diff, y_pred, and Estimation_Error if available
-    if 'base_value' in all_df.columns:
-        individual_shap_means['base_value'] = all_df['base_value'].mean()
-        feature_means['base_value'] = all_df['base_value'].mean()
-    if 'UHI_diff' in all_df.columns:
-        individual_shap_means['UHI_diff'] = all_df['UHI_diff'].mean()
-        feature_means['UHI_diff'] = all_df['UHI_diff'].mean()
-    if 'y_pred' in all_df.columns:
-        individual_shap_means['y_pred'] = all_df['y_pred'].mean()
-        feature_means['y_pred'] = all_df['y_pred'].mean()
-    if 'Estimation_Error' in all_df.columns:
-        individual_shap_means['Estimation_Error'] = all_df['Estimation_Error'].mean()
-        feature_means['Estimation_Error'] = all_df['Estimation_Error'].mean()
-    
-    # Save individual feature importance data
-    feature_importance_base = os.path.join(kg_dir, f"feature_importance_{kg_class_display_name}_{day_night}")
-    
-    # Convert Series to DataFrame for saving
-    individual_shap_df = pd.DataFrame({'mean_shap': individual_shap_means})
-    feature_values_df = pd.DataFrame({'mean_value': feature_means})
-    
-    # Save using the existing _save_data_csv function format
-    _save_data_csv(individual_shap_df.T, feature_importance_base, "individual_shap")
-    _save_data_csv(feature_values_df.T, feature_importance_base, "individual_feature")
-    
-    # Calculate group-level data
+    # Create GroupData object to match main script's data processing exactly
     obj_group_data = calculate_group_shap_values(all_df, feature_to_group_mapping)
     
-    # Get group SHAP means - calculate mean for each group column
-    group_shap_cols = obj_group_data._group_shap_cols  # e.g., ['group1_group_shap', 'group2_group_shap', ...]
-    group_shap_means = {}
+    # Get data the same way as the main script for individual features
+    if kg_class == "global":
+        shap_df = obj_group_data.shap_detail_df.copy()
+        feature_values_df = obj_group_data.feature_detail_df
+        # feature_names = obj_group_data.feature_cols_names # Not directly used for importance calc
+    else:
+        # Filter for specific kg_class the same way as main script
+        kg_mask = obj_group_data.df["KGMajorClass"] == kg_class
+        shap_df = obj_group_data.shap_detail_df[kg_mask].copy()
+        feature_values_df = obj_group_data.feature_detail_df[kg_mask]
+        # feature_names = obj_group_data.feature_cols_names # Not directly used for importance calc
     
-    for col in group_shap_cols:
-        # Extract group name from column (e.g., 'group1_group_shap' -> 'group1')
-        group_name = col.replace('_group_shap', '')
-        group_shap_means[group_name] = all_df[col].mean() if col in all_df.columns else obj_group_data._df[col].mean()
+    # Debug information
+    logging.info(f"SHAP DataFrame shape for importance calc ({kg_class} - {day_night}): {shap_df.shape}")
     
-    # Convert to Series for consistency with the rest of the code
-    group_shap_means = pd.Series(group_shap_means)
+    # Use the actual columns from the SHAP DataFrame instead of feature_names
+    actual_feature_names = shap_df.columns.tolist()
+    logging.info(f"Using actual SHAP DataFrame columns as feature names: {len(actual_feature_names)} features for {kg_class} - {day_night}")
     
-    # Add metadata columns if they exist
-    if 'base_value' in all_df.columns:
-        group_shap_means['base_value'] = all_df['base_value'].mean()
-    if 'UHI_diff' in all_df.columns:
-        group_shap_means['UHI_diff'] = all_df['UHI_diff'].mean()
-    if 'y_pred' in all_df.columns:
-        group_shap_means['y_pred'] = all_df['y_pred'].mean()
-    if 'Estimation_Error' in all_df.columns:
-        group_shap_means['Estimation_Error'] = all_df['Estimation_Error'].mean()
+    # Calculate feature importance using the processed data
+    shap_values = shap_df.values
+    # _calculate_importance_df returns a DataFrame with 'Feature', 'Importance', 'Percentage'
+    individual_importance_df = _calculate_importance_df(shap_values, actual_feature_names) 
     
-    # Save group importance data
+    # --- Save individual SHAP importance data in the new format ---
+    feature_importance_base_path_for_individual = os.path.join(kg_dir, f"feature_importance_{kg_class_display_name}_{day_night}")
+    # individual_importance_df directly contains 'Feature', 'Importance', 'Percentage'
+    csv_path_individual_shap_importance = f"{feature_importance_base_path_for_individual}_individual_shap_importance.csv" # Changed suffix for clarity
+    individual_importance_df[['Feature', 'Importance', 'Percentage']].to_csv(csv_path_individual_shap_importance, index=False)
+    logging.info(f"Saved individual SHAP importance data to {csv_path_individual_shap_importance}")
+
+    # --- Prepare and save individual feature values (this part remains mostly as is) ---
+    ordered_feature_cols = individual_importance_df['Feature'].tolist()
+    
+    available_feature_cols = [col for col in ordered_feature_cols if col in feature_values_df.columns]
+    if len(available_feature_cols) != len(ordered_feature_cols):
+        logging.warning(f"Some features missing in feature_values_df for {kg_class} {day_night}. Available: {len(available_feature_cols)}, Expected from importance: {len(ordered_feature_cols)}")
+        logging.warning(f"Missing features: {set(ordered_feature_cols) - set(available_feature_cols)}") # Corrected missing set
+        # Use only available_feature_cols for feature_means if there's a mismatch
+        ordered_feature_cols_for_means = available_feature_cols 
+    else:
+        ordered_feature_cols_for_means = ordered_feature_cols
+
+    if ordered_feature_cols_for_means and not feature_values_df.empty: # Check if feature_values_df is not empty
+        feature_means = feature_values_df[ordered_feature_cols_for_means].mean()
+    else:
+        feature_means = pd.Series(dtype=float) # Empty series if no features or empty df
+        logging.warning(f"No feature means to calculate for {kg_class} {day_night} as ordered_feature_cols_for_means is empty or feature_values_df is empty.")
+
+    feature_values_df_output = pd.DataFrame({
+        feature: feature_means[feature] for feature in ordered_feature_cols_for_means if feature in feature_means.index
+    }, index=['mean_value'])
+    
+    metadata_cols = ['base_value', 'UHI_diff', 'y_pred', 'Estimation_Error']
+    if not all_df.empty: # Ensure all_df is not empty before accessing columns
+        for col in metadata_cols:
+            if col in all_df.columns:
+                mean_val = all_df[col].mean()
+                feature_values_df_output[col] = mean_val
+    
+    # Save individual feature values using the existing _save_data_csv function
+    # feature_importance_base_path_for_individual defined above
+    _save_data_csv(feature_values_df_output, feature_importance_base_path_for_individual, "individual_feature_values")
+    
+    # Calculate group-level importance data using the same method
+    if kg_class == "global":
+        group_shap_df = obj_group_data.shap_group_detail_df.copy()
+        # group_feature_names = obj_group_data.group_names # Not directly used
+    else:
+        kg_mask = obj_group_data.df["KGMajorClass"] == kg_class
+        group_shap_df = obj_group_data.shap_group_detail_df[kg_mask].copy()
+        # group_feature_names = obj_group_data.group_names # Not directly used
+    
+    actual_group_names = group_shap_df.columns.tolist()
+    logging.info(f"Group SHAP DataFrame shape for importance calc ({kg_class} - {day_night}): {group_shap_df.shape}")
+    logging.info(f"Using actual group SHAP DataFrame columns: {actual_group_names} for {kg_class} - {day_night}")
+    
+    group_shap_values = group_shap_df.values
+    # _calculate_importance_df returns 'Feature' (which are group names here), 'Importance', 'Percentage'
+    group_importance_df = _calculate_importance_df(group_shap_values, actual_group_names) 
+    
+    # --- Save group SHAP importance data in the new format ---
+    group_importance_to_save = group_importance_df.rename(
+        columns={'Feature': 'Group'}
+    )[['Group', 'Importance', 'Percentage']].copy()
+    
     time_dir_group = f"{day_night}time_group_summary_plots"
     kg_dir_group = os.path.join(output_dir, time_dir_group, kg_class_display_name)
     os.makedirs(kg_dir_group, exist_ok=True)
     
-    group_importance_base = os.path.join(kg_dir_group, f"group_importance_{kg_class_display_name}_{day_night}")
-    # Convert Series to DataFrame for saving
-    group_shap_df = pd.DataFrame({'mean_shap': group_shap_means})
-    _save_data_csv(group_shap_df.T, group_importance_base, "group_shap")
+    group_importance_base_path = os.path.join(kg_dir_group, f"group_importance_{kg_class_display_name}_{day_night}")
+    csv_path_group_shap_importance = f"{group_importance_base_path}_group_shap_importance.csv" # Changed suffix for clarity
+    group_importance_to_save.to_csv(csv_path_group_shap_importance, index=False)
+    logging.info(f"Saved group SHAP importance data to {csv_path_group_shap_importance}")
     
-    logging.info(f"Saved feature importance data for {kg_class_display_name} ({day_night})")
+    logging.info(f"Saved feature and group importance data for {kg_class_display_name} ({day_night})")
 
 
 def main():
