@@ -33,12 +33,13 @@ major_zone_colors = {
 }
 
 # Function to create and save a plot for a specific time period
-def create_feature_group_plot(time_period):
+def create_feature_group_plot(time_period, ax):
     """
     Create and save a feature group contribution plot for the specified time period.
     
     Args:
         time_period: Either 'day' or 'night'
+        ax: Matplotlib Axes object to draw the plot on.
     """
     # Initialize an empty DataFrame to consolidate data
     consolidated_data = pd.DataFrame()
@@ -107,7 +108,6 @@ def create_feature_group_plot(time_period):
     data_pivot = data_pivot.sort_index()
     
     # Plot the grouped bar chart
-    fig, ax = plt.subplots(figsize=(16, 10))
     data_pivot.plot(kind='bar', ax=ax, width=0.75, color=colors)
     
     # Add gridlines for better readability
@@ -116,8 +116,7 @@ def create_feature_group_plot(time_period):
     
     # Set plot title and labels
     time_label = "Daytime" if time_period == "day" else "Nighttime"
-    ax.set_title(f'Percentage Contribution of Feature Groups by Region ({time_label})', 
-                 fontsize=20, weight='bold', pad=20)
+    ax.set_title(f'{time_label}', fontsize=20, weight='bold', pad=20)
     ax.set_xlabel('Feature Group', fontsize=16, labelpad=10)
     ax.set_ylabel('Percentage Contribution (%)', fontsize=16, labelpad=10)
     
@@ -157,12 +156,92 @@ def create_feature_group_plot(time_period):
     plt.tight_layout()
     
     # Save the plot
+    # output_filename = f'Figure_7_feature_group_contribution_by_KG_{time_period}.png'
+    # plt.savefig(os.path.join(output_dir, output_filename), bbox_inches='tight', dpi=600)
+    # plt.close()
+    
+    # print(f"Saved {output_filename}")
+
+# Function to generate and save a single plot (day or night)
+def generate_single_plot(time_period):
+    """
+    Generates and saves a single feature group contribution plot for the specified time period.
+    Args:
+        time_period: Either 'day' or 'night'
+    """
+    fig, ax = plt.subplots(figsize=(16, 10))
+    create_feature_group_plot(time_period, ax) # Call the main plotting function
+
+    # Improve layout
+    plt.tight_layout()
+
+    # Save the plot
     output_filename = f'Figure_7_feature_group_contribution_by_KG_{time_period}.png'
-    plt.savefig(os.path.join(output_dir, output_filename), bbox_inches='tight', dpi=600)
-    plt.close()
+    fig.savefig(os.path.join(output_dir, output_filename), bbox_inches='tight', dpi=600)
+    plt.close(fig)
     
     print(f"Saved {output_filename}")
 
+
 # Generate plots for both day and night
-create_feature_group_plot('day')
-create_feature_group_plot('night')
+# create_feature_group_plot('day') # Old direct calls
+# create_feature_group_plot('night') # Old direct calls
+
+def create_combined_feature_group_plot():
+    """
+    Creates a combined plot with side-by-side feature group contributions for day and night.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(34, 12)) # Adjusted figsize for two plots
+
+    # Create day plot
+    create_feature_group_plot('day', axes[0])
+    
+    # Create night plot
+    create_feature_group_plot('night', axes[1])
+
+    # Remove individual legends if they are identical and add a shared one
+    handles, labels = axes[0].get_legend_handles_labels()
+    # Use display_regions for labels in the shared legend
+    # We need to ensure display_regions is consistent or derived correctly for the shared legend
+    # For now, let's assume the labels from axes[0] are representative
+    # And that climate_zones (which determines colors) and display_regions are what we want
+    
+    # Get the display names for the legend from the first plot's legend
+    # This assumes the regions are the same for both plots, which should be the case.
+    # The `labels` variable from `axes[0].get_legend_handles_labels()` already gives us this.
+
+    for ax in axes:
+        if ax.get_legend() is not None: # Check if legend exists before trying to remove
+            ax.get_legend().remove()
+            
+    # Use the `labels` obtained from `axes[0].get_legend_handles_labels()`
+    # The `handles` are also from `axes[0]`, which should be fine.
+    fig.legend(handles, labels, 
+               loc='upper center', # Position the legend at the top center
+               bbox_to_anchor=(0.5, 0.97), # Adjust anchor to place it neatly below suptitle
+               ncol=len(labels), # Number of columns based on number of regions
+               title='Region', 
+               fontsize=12, 
+               title_fontsize=14,
+               frameon=False # Optional: remove frame for a cleaner look
+    )
+
+    # Set overall title
+    fig.suptitle('Percentage Contribution of Feature Groups by Region', fontsize=24, weight='bold', y=1.03)
+    
+    # Improve layout
+    plt.tight_layout(rect=[0, 0.05, 1, 0.95]) # Adjust rect to make space for suptitle and shared legend
+
+    # Save the combined plot
+    output_filename = 'Figure_7_feature_group_contribution_by_KG_combined.png'
+    fig.savefig(os.path.join(output_dir, output_filename), bbox_inches='tight', dpi=600)
+    plt.close(fig)
+    
+    print(f"Saved {output_filename}")
+
+# Generate individual plots first
+generate_single_plot('day')
+generate_single_plot('night')
+
+# Generate the combined plot
+create_combined_feature_group_plot()
