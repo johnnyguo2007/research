@@ -166,9 +166,9 @@ def get_trajectory(v0, theta_deg, h0):
 def update(frame, x_traj, y_traj):
     # Animate the ball along the calculated trajectory
     if frame < len(x_traj):
-        ball.set_data(x_traj[frame], y_traj[frame])
+        ball.set_data([x_traj[frame]], [y_traj[frame]]) # Wrap in lists
     else: # Keep ball at the end if animation frames exceed trajectory points
-        ball.set_data(x_traj[-1], y_traj[-1])
+        ball.set_data([x_traj[-1]], [y_traj[-1]]) # Wrap in lists
     return ball,
 
 def run_animation():
