@@ -66,20 +66,45 @@ calculus_explanation_text = (
 
 
 # --- Setup the Figure and Axes ---
-fig, ax = plt.subplots(figsize=(16, 7)) # Increased figure width to accommodate text
+fig, ax = plt.subplots(figsize=(16, 10)) # Increased figure width to accommodate text
 # Adjust subplot parameters:
 # left: space on the left of the plot
 # bottom: space below the plot (for sliders)
 # right: space on the right of the plot (where the text box will go)
 # top: space above the plot
-plt.subplots_adjust(left=0.12, bottom=0.30, right=0.58, top=0.97, wspace=0.3)
+VERTICAL_SHIFT = 0.45# Define a general vertical shift for the left column elements
+plt.subplots_adjust(left=0.12, bottom=0.52 + VERTICAL_SHIFT, right=0.58, top=0.99, wspace=0.3)
 
 # --- Initialize Text Objects here, after fig is created ---
-angle_range_text_obj = fig.text(0.15, 0.065, "", fontsize=9, color='green', zorder=5)
+# Adjusted y-positions for all text and interactive elements to make space for the embedded chart
+
+VERTICAL_SHIFT = 0.04 # Define a general vertical shift for the left column elements
+
+# Main plot area adjustment
+# Original bottom was 0.52. New bottom = 0.52 + VERTICAL_SHIFT
+plt.subplots_adjust(left=0.12, bottom=0.52 + VERTICAL_SHIFT, right=0.58, top=0.99, wspace=0.3)
+
+# --- Create Axes for the new embedded chart (bottom left) ---
+# Dimensions: [left, bottom, width, height]
+# Original bottom was 0.03. New bottom = 0.03 + VERTICAL_SHIFT
+ax_embedded_chart = fig.add_axes([0.12, 0.03 + VERTICAL_SHIFT, 0.46, 0.18]) 
+
+# --- UI Elements Repositioning ---
+# Original Y values are shifted up by VERTICAL_SHIFT
+AX_BUTTON_Y = 0.27 + VERTICAL_SHIFT
+ANGLE_RANGE_TEXT_Y = 0.32 + VERTICAL_SHIFT
+AX_H0_Y = 0.35 + VERTICAL_SHIFT
+AX_ANGLE_Y = 0.39 + VERTICAL_SHIFT
+AX_V0_Y = 0.43 + VERTICAL_SHIFT
+STATUS_TEXT_Y = 0.47 + VERTICAL_SHIFT
+UI_TOP_ALIGNMENT_Y = 0.90 # This moves the calculus text box down
+
+angle_range_text_obj = fig.text(0.15, ANGLE_RANGE_TEXT_Y, "", fontsize=9, color='green', zorder=5)
 hover_tooltip_text = fig.text(0, 0, "", visible=False, fontsize=8, zorder=10,
                               ha='left', va='bottom',
                               bbox=dict(boxstyle='round,pad=0.3', fc='lemonchiffon', ec='black', alpha=0.85))
-status_text_obj = fig.text(0.15, 0.25, "Adjust sliders and click 'Serve!'", fontsize=10, zorder=5)
+status_text_obj = fig.text(0.15, STATUS_TEXT_Y, "Adjust sliders and click 'Serve!'", fontsize=10, zorder=5)
+
 
 # Draw court elements
 ax.plot([0, court_length / 2], [0, 0], 'k-', lw=1) # Baseline to net (server side)
@@ -124,10 +149,11 @@ ax.grid(True, linestyle=':', alpha=0.7)
 ax.legend(loc='upper right')
 
 # Add the calculus explanation text box
-# Position it to the right of the plot
-props = dict(boxstyle='round,pad=0.5', facecolor='wheat', alpha=0.4)
-fig.text(0.62, 0.05, calculus_explanation_text, transform=fig.transFigure, fontsize=8,
-         verticalalignment='bottom', bbox=props, wrap=True)
+# Position it to the right of the plot, aligning its top with the main plot's top
+# Made narrower by increasing x-coordinate from 0.62 to 0.64 to elongate it vertically.
+props = dict(boxstyle='round,pad=0.2', facecolor='wheat', alpha=0.4)
+fig.text(0.62, UI_TOP_ALIGNMENT_Y, calculus_explanation_text, transform=fig.transFigure, fontsize=9,
+         verticalalignment='top', bbox=props, wrap=True)
 
 # --- Restored Function Definitions ---
 def find_valid_angle_range(v0, h0, min_angle=-10, max_angle=5, step=0.1):
@@ -367,10 +393,10 @@ def run_animation():
 # --- Sliders and Button ---
 axcolor = 'lightgoldenrodyellow'
 # Adjust slider positions to be under the plot area
-ax_v0 = plt.axes([0.15, 0.20, 0.4, 0.03], facecolor=axcolor)
-ax_angle = plt.axes([0.15, 0.15, 0.4, 0.03], facecolor=axcolor)
-ax_h0 = plt.axes([0.15, 0.10, 0.4, 0.03], facecolor=axcolor)
-ax_button = plt.axes([0.41, 0.03, 0.09, 0.04]) # Reset button
+ax_v0 = plt.axes([0.15, AX_V0_Y, 0.4, 0.03], facecolor=axcolor)
+ax_angle = plt.axes([0.15, AX_ANGLE_Y, 0.4, 0.03], facecolor=axcolor)
+ax_h0 = plt.axes([0.15, AX_H0_Y, 0.4, 0.03], facecolor=axcolor)
+ax_button = plt.axes([0.41, AX_BUTTON_Y, 0.09, 0.04]) # Reset button
 
 slider_v0 = Slider(ax_v0, r'Initial Velocity ($v_0$) mph', 5.0 * MPS_TO_MPH, 70.0 * MPS_TO_MPH, valinit=initial_velocity_magnitude_mph)
 slider_angle = Slider(ax_angle, r'Launch Angle ($	heta$) degrees', -10.0, 5.0, valinit=launch_angle_degrees)
@@ -432,5 +458,45 @@ def on_hover(event):
 
 # Connect the hover event to the figure
 fig.canvas.mpl_connect('motion_notify_event', on_hover)
+
+# --- Function to plot angle bounds vs. velocity (modified to plot on target_ax) ---
+def plot_angle_bounds_vs_velocity(target_ax):
+    fixed_h0 = 3.0  # meters
+    velocities_mph = np.linspace(50, 100, 51)
+    
+    lower_bounds_theta = []
+    upper_bounds_theta = []
+    plotable_velocities_mph = [] 
+
+    # print("\nGenerating data for 'Angle Bounds vs. Velocity' chart...") # Optional: less verbose for embedded
+    for v_mph in velocities_mph:
+        min_theta, max_theta = find_valid_angle_range(v_mph, fixed_h0)
+        if min_theta is not None and max_theta is not None:
+            lower_bounds_theta.append(min_theta)
+            upper_bounds_theta.append(max_theta)
+            plotable_velocities_mph.append(v_mph)
+
+    if not plotable_velocities_mph:
+        target_ax.text(0.5, 0.5, "No valid angle ranges found for 50-100 mph at 3m height.",
+                       horizontalalignment='center', verticalalignment='center', transform=target_ax.transAxes)
+        # print("No valid angle ranges found for any velocity. Cannot generate chart.") # Optional
+        return
+    
+    target_ax.plot(plotable_velocities_mph, lower_bounds_theta, 'bo-', markersize=4, label='Min Valid θ') # Shorter labels
+    target_ax.plot(plotable_velocities_mph, upper_bounds_theta, 'ro-', markersize=4, label='Max Valid θ') # Shorter labels
+    target_ax.fill_between(plotable_velocities_mph, lower_bounds_theta, upper_bounds_theta, color='green', alpha=0.3, label='Valid Range')
+    
+    target_ax.set_xlabel("Initial Velocity (mph)", fontsize=9)
+    target_ax.set_ylabel("Launch Angle θ (deg)", fontsize=9)
+    target_ax.set_title(f"Valid Angle Range vs. Velocity (H₀={fixed_h0}m)", fontsize=10) # Shorter title
+    target_ax.legend(loc='best', fontsize='small')
+    target_ax.grid(True, linestyle='--', alpha=0.6)
+    target_ax.tick_params(axis='x', labelsize=8)
+    target_ax.tick_params(axis='y', labelsize=8)
+    
+    # print("'Angle Bounds vs. Velocity' chart generated.") # Optional
+
+# Generate the new chart on the ax_embedded_chart Axes object
+plot_angle_bounds_vs_velocity(ax_embedded_chart)
 
 plt.show()
