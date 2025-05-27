@@ -155,6 +155,42 @@ props = dict(boxstyle='round,pad=0.2', facecolor='wheat', alpha=0.4)
 fig.text(0.62, UI_TOP_ALIGNMENT_Y, calculus_explanation_text, transform=fig.transFigure, fontsize=9,
          verticalalignment='top', bbox=props, wrap=True)
 
+# --- Function to plot angle bounds vs. velocity (modified to plot on target_ax) ---
+def plot_angle_bounds_vs_velocity(target_ax, current_h0):
+    velocities_mph = np.linspace(50, 100, 51)
+    
+    lower_bounds_theta = []
+    upper_bounds_theta = []
+    plotable_velocities_mph = [] 
+
+    # print("\nGenerating data for 'Angle Bounds vs. Velocity' chart...") # Optional: less verbose for embedded
+    for v_mph in velocities_mph:
+        min_theta, max_theta = find_valid_angle_range(v_mph, current_h0)
+        if min_theta is not None and max_theta is not None:
+            lower_bounds_theta.append(min_theta)
+            upper_bounds_theta.append(max_theta)
+            plotable_velocities_mph.append(v_mph)
+
+    if not plotable_velocities_mph:
+        target_ax.text(0.5, 0.5, f"No valid angle ranges found for 50-100 mph at {current_h0:.1f}m height.",
+                       horizontalalignment='center', verticalalignment='center', transform=target_ax.transAxes)
+        # print("No valid angle ranges found for any velocity. Cannot generate chart.") # Optional
+        return
+    
+    target_ax.plot(plotable_velocities_mph, lower_bounds_theta, 'bo-', markersize=4, label='Min Valid θ') # Shorter labels
+    target_ax.plot(plotable_velocities_mph, upper_bounds_theta, 'ro-', markersize=4, label='Max Valid θ') # Shorter labels
+    target_ax.fill_between(plotable_velocities_mph, lower_bounds_theta, upper_bounds_theta, color='green', alpha=0.3, label='Valid Range')
+    
+    target_ax.set_xlabel("Initial Velocity (mph)", fontsize=9)
+    target_ax.set_ylabel("Launch Angle θ (deg)", fontsize=9)
+    target_ax.set_title(f"Valid Angle Range vs. Velocity (H₀={current_h0:.1f}m)", fontsize=10) # Shorter title
+    target_ax.legend(loc='best', fontsize='small')
+    target_ax.grid(True, linestyle='--', alpha=0.6)
+    target_ax.tick_params(axis='x', labelsize=8)
+    target_ax.tick_params(axis='y', labelsize=8)
+    
+    # print("'Angle Bounds vs. Velocity' chart generated.") # Optional
+
 # --- Restored Function Definitions ---
 def find_valid_angle_range(v0, h0, min_angle=-10, max_angle=5, step=0.1):
     valid_angles = []
@@ -180,7 +216,7 @@ def update_angle_range_display(val=None): # val is passed by slider on_changed
     if angle_range_text_obj is None: 
         # print("Debug: angle_range_text_obj is None in update_angle_range_display")
         return
-    if not hasattr(slider_v0, 'val') or not hasattr(slider_h0, 'val'):
+    if not hasattr(slider_v0, 'val') or not hasattr(slider_h0, 'val') or not hasattr(slider_angle, 'val'):
         # print("Debug: Sliders not ready in update_angle_range_display")
         return
 
@@ -191,7 +227,12 @@ def update_angle_range_display(val=None): # val is passed by slider on_changed
         angle_range_text_obj.set_text(f"Good Serve Angle Range: [{min_a:.1f}°, {max_a:.1f}°]")
     else:
         angle_range_text_obj.set_text("Good Serve Angle Range: None")
-    
+
+    # Update the embedded chart when h0 changes
+    if ax_embedded_chart is not None: # Ensure the axes object exists
+        ax_embedded_chart.clear() # Clear the previous plot
+        plot_angle_bounds_vs_velocity(ax_embedded_chart, h0) # Redraw with new h0
+
     if fig.canvas: # Ensure canvas exists
         fig.canvas.draw_idle()
 
@@ -459,44 +500,7 @@ def on_hover(event):
 # Connect the hover event to the figure
 fig.canvas.mpl_connect('motion_notify_event', on_hover)
 
-# --- Function to plot angle bounds vs. velocity (modified to plot on target_ax) ---
-def plot_angle_bounds_vs_velocity(target_ax):
-    fixed_h0 = 3.0  # meters
-    velocities_mph = np.linspace(50, 100, 51)
-    
-    lower_bounds_theta = []
-    upper_bounds_theta = []
-    plotable_velocities_mph = [] 
-
-    # print("\nGenerating data for 'Angle Bounds vs. Velocity' chart...") # Optional: less verbose for embedded
-    for v_mph in velocities_mph:
-        min_theta, max_theta = find_valid_angle_range(v_mph, fixed_h0)
-        if min_theta is not None and max_theta is not None:
-            lower_bounds_theta.append(min_theta)
-            upper_bounds_theta.append(max_theta)
-            plotable_velocities_mph.append(v_mph)
-
-    if not plotable_velocities_mph:
-        target_ax.text(0.5, 0.5, "No valid angle ranges found for 50-100 mph at 3m height.",
-                       horizontalalignment='center', verticalalignment='center', transform=target_ax.transAxes)
-        # print("No valid angle ranges found for any velocity. Cannot generate chart.") # Optional
-        return
-    
-    target_ax.plot(plotable_velocities_mph, lower_bounds_theta, 'bo-', markersize=4, label='Min Valid θ') # Shorter labels
-    target_ax.plot(plotable_velocities_mph, upper_bounds_theta, 'ro-', markersize=4, label='Max Valid θ') # Shorter labels
-    target_ax.fill_between(plotable_velocities_mph, lower_bounds_theta, upper_bounds_theta, color='green', alpha=0.3, label='Valid Range')
-    
-    target_ax.set_xlabel("Initial Velocity (mph)", fontsize=9)
-    target_ax.set_ylabel("Launch Angle θ (deg)", fontsize=9)
-    target_ax.set_title(f"Valid Angle Range vs. Velocity (H₀={fixed_h0}m)", fontsize=10) # Shorter title
-    target_ax.legend(loc='best', fontsize='small')
-    target_ax.grid(True, linestyle='--', alpha=0.6)
-    target_ax.tick_params(axis='x', labelsize=8)
-    target_ax.tick_params(axis='y', labelsize=8)
-    
-    # print("'Angle Bounds vs. Velocity' chart generated.") # Optional
-
 # Generate the new chart on the ax_embedded_chart Axes object
-plot_angle_bounds_vs_velocity(ax_embedded_chart)
+plot_angle_bounds_vs_velocity(ax_embedded_chart, initial_height) # Pass initial_height
 
 plt.show()
