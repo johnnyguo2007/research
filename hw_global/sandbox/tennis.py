@@ -4,6 +4,15 @@ import matplotlib.animation as animation
 from matplotlib.widgets import Slider, Button
 from matplotlib.patches import Rectangle
 
+# --- Global Variables for Matplotlib Text Objects ---
+angle_range_text_obj = None
+hover_tooltip_text = None
+status_text_obj = None # Added for consistency, will be assigned later
+
+# --- Conversion Factors ---
+MPS_TO_MPH = 2.23694
+MPH_TO_MPS = 1 / MPS_TO_MPH
+
 # --- Simulation Parameters ---
 g = 9.81  # Acceleration due to gravity (m/s^2)
 court_length = 23.77  # Length of a tennis court (m)
@@ -11,9 +20,10 @@ net_height = 0.914  # Height of the net (m)
 service_box_depth = 6.40 # Depth of service box from net
 
 # Initial conditions (can be adjusted by sliders)
-initial_height = 2.5  # Initial height of the ball (m) - typical for a serve
-initial_velocity_magnitude = 30  # Initial velocity of the ball (m/s) - about 67 mph
-launch_angle_degrees = 10  # Launch angle in degrees
+initial_height = 3.0  # Initial height of the ball (m) - User requested 3.0m
+initial_velocity_magnitude_mph = 80.0 # User requested 80 mph
+initial_velocity_magnitude_mps = initial_velocity_magnitude_mph * MPH_TO_MPS # Convert to m/s for internal use
+launch_angle_degrees = 0.0  # Launch angle in degrees, adjusted to be within the new slider range [-10, 5]
 
 # --- Calculus Explanations ---
 calculus_explanation_text = (
@@ -64,6 +74,13 @@ fig, ax = plt.subplots(figsize=(16, 7)) # Increased figure width to accommodate 
 # top: space above the plot
 plt.subplots_adjust(left=0.12, bottom=0.30, right=0.58, top=0.97, wspace=0.3)
 
+# --- Initialize Text Objects here, after fig is created ---
+angle_range_text_obj = fig.text(0.15, 0.065, "", fontsize=9, color='green', zorder=5)
+hover_tooltip_text = fig.text(0, 0, "", visible=False, fontsize=8, zorder=10,
+                              ha='left', va='bottom',
+                              bbox=dict(boxstyle='round,pad=0.3', fc='lemonchiffon', ec='black', alpha=0.85))
+status_text_obj = fig.text(0.15, 0.25, "Adjust sliders and click 'Serve!'", fontsize=10, zorder=5)
+
 # Draw court elements
 ax.plot([0, court_length / 2], [0, 0], 'k-', lw=1) # Baseline to net (server side)
 ax.plot([court_length / 2, court_length / 2], [0, net_height], 'r-', lw=2)  # Net post
@@ -112,6 +129,52 @@ props = dict(boxstyle='round,pad=0.5', facecolor='wheat', alpha=0.4)
 fig.text(0.62, 0.05, calculus_explanation_text, transform=fig.transFigure, fontsize=8,
          verticalalignment='bottom', bbox=props, wrap=True)
 
+# --- Restored Function Definitions ---
+def find_valid_angle_range(v0, h0, min_angle=-10, max_angle=5, step=0.1):
+    valid_angles = []
+    # v0 is passed in from the slider, which is in mph. Convert to m/s for get_trajectory.
+    v0_mps = v0 * MPH_TO_MPS
+
+    # Iterate with a finer step for better accuracy of the range
+    for angle_deg in np.arange(min_angle, max_angle + step, step):
+        # We only need serve_in status from get_trajectory
+        results = get_trajectory(v0_mps, angle_deg, h0) # Use v0_mps here
+        serve_in_status = results[6] # 7th element is serve_in
+        if serve_in_status:
+            valid_angles.append(angle_deg)
+
+    if not valid_angles:
+        return None, None
+    else:
+        return min(valid_angles), max(valid_angles)
+
+def update_angle_range_display(val=None): # val is passed by slider on_changed
+    global angle_range_text_obj
+    # Ensure the text object is created and sliders are initialized before trying to set its text
+    if angle_range_text_obj is None: 
+        # print("Debug: angle_range_text_obj is None in update_angle_range_display")
+        return
+    if not hasattr(slider_v0, 'val') or not hasattr(slider_h0, 'val'):
+        # print("Debug: Sliders not ready in update_angle_range_display")
+        return
+
+    v0 = slider_v0.val
+    h0 = slider_h0.val
+    min_a, max_a = find_valid_angle_range(v0, h0)
+    if min_a is not None and max_a is not None:
+        angle_range_text_obj.set_text(f"Good Serve Angle Range: [{min_a:.1f}°, {max_a:.1f}°]")
+    else:
+        angle_range_text_obj.set_text("Good Serve Angle Range: None")
+    
+    if fig.canvas: # Ensure canvas exists
+        fig.canvas.draw_idle()
+
+def on_slider_change(val):
+    # This function can be used if you want live updates as sliders change,
+    # but for a distinct "Serve!" button, we call run_animation from the button click.
+    # For now, it's a placeholder for the angle slider, which doesn't trigger range recalculation.
+    pass
+# --- End of Restored Function Definitions ---
 
 # --- Animation and Calculation Functions ---
 line_ani = None # Global variable for the animation
@@ -228,6 +291,10 @@ def run_animation():
     theta_deg = slider_angle.val
     h0 = slider_h0.val
 
+    # Convert v0 from mph (from slider) to m/s for calculations
+    v0_mph = v0
+    v0_mps = v0_mph * MPH_TO_MPS
+
     # Update player arm position based on h0 (simplified)
     player_body.set_ydata([0, h0 - 0.5])
     player_arm.set_data([player_x, player_x + 0.3], [h0-0.5, h0])
@@ -236,7 +303,7 @@ def run_animation():
     (x_data, y_data,
     x_max_h, y_max_h,
     x_land, y_land,
-    is_in, y_net_clearance, t_net, t_land_actual) = get_trajectory(v0, theta_deg, h0)
+    is_in, y_net_clearance, t_net, t_land_actual) = get_trajectory(v0_mps, theta_deg, h0)
 
     trajectory.set_data(x_data, y_data)
     ball.set_data([], []) # Clear ball for new animation
@@ -254,10 +321,11 @@ def run_animation():
         landing_point_marker.set_label(f"Landing: {x_land:.1f}m ({status})")
 
         # Display velocities at landing (using derivatives)
-        v_land_x = v0 * np.cos(np.deg2rad(theta_deg))
-        v_land_y = v0 * np.sin(np.deg2rad(theta_deg)) - g * t_land_actual
-        speed_land = np.sqrt(v_land_x**2 + v_land_y**2)
-        ax.set_title(f"Serve Status: {status} | Landing Speed: {speed_land:.1f} m/s", color='green' if is_in else 'red')
+        v_land_x = v0_mps * np.cos(np.deg2rad(theta_deg))
+        v_land_y = v0_mps * np.sin(np.deg2rad(theta_deg)) - g * t_land_actual
+        speed_land_mps = np.sqrt(v_land_x**2 + v_land_y**2)
+        speed_land_mph = speed_land_mps * MPS_TO_MPH
+        ax.set_title(f"Serve Status: {status} | Landing Speed: {speed_land_mph:.1f} mph", color='green' if is_in else 'red')
 
     else:
         landing_point_marker.set_data([],[])
@@ -281,11 +349,12 @@ def run_animation():
     # Create and start the animation
     if len(x_data) > 0:
         num_frames = len(x_data)
-        # Ensure num_frames * v0 is not zero for division, and interval is an int
-        denominator = num_frames * v0
-        interval_ms = 50 # Default interval if denominator is zero (should not happen with v0 > 0)
-        if denominator > 0: # v0 slider starts at 5.0, num_frames > 0 here
-            interval_ms = int(50000 / denominator) # 5000 * 10 / (num_frames * v0)
+        # Ensure num_frames * v0_mps is not zero for division, and interval is an int
+        # Use v0_mps for interval calculation as it relates to physical travel time
+        denominator = num_frames * v0_mps 
+        interval_ms = 50 # Default interval if denominator is zero
+        if denominator > 0: 
+            interval_ms = int(50000 / denominator) # 5000 * 10 / (num_frames * v0_mps)
 
         line_ani = animation.FuncAnimation(fig, update, frames=num_frames,
                                            fargs=(x_data, y_data), interval=max(1, interval_ms),
@@ -303,26 +372,65 @@ ax_angle = plt.axes([0.15, 0.15, 0.4, 0.03], facecolor=axcolor)
 ax_h0 = plt.axes([0.15, 0.10, 0.4, 0.03], facecolor=axcolor)
 ax_button = plt.axes([0.41, 0.03, 0.09, 0.04]) # Reset button
 
-slider_v0 = Slider(ax_v0, r'Initial Velocity ($v_0$) m/s', 5.0, 70.0, valinit=initial_velocity_magnitude)
-slider_angle = Slider(ax_angle, r'Launch Angle ($	heta$) degrees', -10.0, 45.0, valinit=launch_angle_degrees)
+slider_v0 = Slider(ax_v0, r'Initial Velocity ($v_0$) mph', 5.0 * MPS_TO_MPH, 70.0 * MPS_TO_MPH, valinit=initial_velocity_magnitude_mph)
+slider_angle = Slider(ax_angle, r'Launch Angle ($	heta$) degrees', -10.0, 5.0, valinit=launch_angle_degrees)
 slider_h0 = Slider(ax_h0, r'Initial Height ($h_0$) m', 1.5, 3.5, valinit=initial_height)
 btn_animate = Button(ax_button, 'Serve!', color='lightblue', hovercolor='0.975')
 
-# Status text below sliders, aligned with sliders
-status_text_obj = fig.text(0.15, 0.25, "Adjust sliders and click 'Serve!'", fontsize=10)
-
-
-def on_slider_change(val):
-    # This function can be used if you want live updates as sliders change,
-    # but for a distinct "Serve!" button, we call run_animation from the button click.
-    # For now, we'll just let the button trigger the animation.
-    pass
-
-slider_v0.on_changed(on_slider_change)
-slider_angle.on_changed(on_slider_change)
-slider_h0.on_changed(on_slider_change)
+slider_v0.on_changed(update_angle_range_display)
+slider_angle.on_changed(on_slider_change) # Angle slider does not change the valid range itself
+slider_h0.on_changed(update_angle_range_display)
 btn_animate.on_clicked(lambda event: run_animation())
 
-# Initial plot
-run_animation()
+# Initial plot setup
+run_animation() # This will also create the plot and sliders
+
+# Now that sliders are created by run_animation (which calls get_trajectory etc., and sets up UI),
+# and angle_range_text_obj is initialized above, we can update the display.
+update_angle_range_display() 
+
+# --- Mouse Hover Event for Sliders ---
+def on_hover(event):
+    global hover_tooltip_text 
+    if hover_tooltip_text is None: return
+
+    active_slider_text = None
+    # Check if mouse is over any of the slider axes and event.xdata is available
+    if event.inaxes == ax_v0 and event.xdata is not None:
+        value_at_cursor_mph = np.clip(event.xdata, slider_v0.valmin, slider_v0.valmax)
+        active_slider_text = f"Velocity: {value_at_cursor_mph:.1f} mph"
+    elif event.inaxes == ax_angle and event.xdata is not None:
+        value_at_cursor = np.clip(event.xdata, slider_angle.valmin, slider_angle.valmax)
+        active_slider_text = f"Angle: {value_at_cursor:.1f}°"
+    elif event.inaxes == ax_h0 and event.xdata is not None:
+        value_at_cursor = np.clip(event.xdata, slider_h0.valmin, slider_h0.valmax)
+        active_slider_text = f"Height: {value_at_cursor:.1f} m"
+
+    if active_slider_text and event.x is not None and event.y is not None:
+        fig_width_px = fig.get_size_inches()[0] * fig.dpi
+        fig_height_px = fig.get_size_inches()[1] * fig.dpi
+
+        if fig_width_px == 0 or fig_height_px == 0: # Fig not ready
+            hover_tooltip_text.set_visible(False)
+            if fig.canvas:
+                 fig.canvas.draw_idle()
+            return
+
+        # Convert mouse display coordinates to figure fraction coordinates
+        fx = event.x / fig_width_px
+        fy = event.y / fig_height_px
+
+        hover_tooltip_text.set_text(active_slider_text)
+        # Position slightly above and to the right of the cursor
+        hover_tooltip_text.set_position((fx + 0.015, fy + 0.015)) 
+        hover_tooltip_text.set_visible(True)
+    else:
+        hover_tooltip_text.set_visible(False)
+    
+    if fig.canvas:
+        fig.canvas.draw_idle()
+
+# Connect the hover event to the figure
+fig.canvas.mpl_connect('motion_notify_event', on_hover)
+
 plt.show()
