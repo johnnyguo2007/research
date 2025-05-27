@@ -61,7 +61,7 @@ fig, ax = plt.subplots(figsize=(16, 7)) # Increased figure width to accommodate 
 # bottom: space below the plot (for sliders)
 # right: space on the right of the plot (where the text box will go)
 # top: space above the plot
-plt.subplots_adjust(left=0.08, bottom=0.30, right=0.60, top=0.97, wspace=0.3)
+plt.subplots_adjust(left=0.12, bottom=0.30, right=0.58, top=0.97, wspace=0.3)
 
 # Draw court elements
 ax.plot([0, court_length / 2], [0, 0], 'k-', lw=1) # Baseline to net (server side)
@@ -282,18 +282,18 @@ def run_animation():
 # --- Sliders and Button ---
 axcolor = 'lightgoldenrodyellow'
 # Adjust slider positions to be under the plot area
-ax_v0 = plt.axes([0.1, 0.20, 0.4, 0.03], facecolor=axcolor)
-ax_angle = plt.axes([0.1, 0.15, 0.4, 0.03], facecolor=axcolor)
-ax_h0 = plt.axes([0.1, 0.10, 0.4, 0.03], facecolor=axcolor)
+ax_v0 = plt.axes([0.15, 0.20, 0.4, 0.03], facecolor=axcolor)
+ax_angle = plt.axes([0.15, 0.15, 0.4, 0.03], facecolor=axcolor)
+ax_h0 = plt.axes([0.15, 0.10, 0.4, 0.03], facecolor=axcolor)
 ax_button = plt.axes([0.41, 0.03, 0.09, 0.04]) # Reset button
 
 slider_v0 = Slider(ax_v0, r'Initial Velocity ($v_0$) m/s', 5.0, 70.0, valinit=initial_velocity_magnitude)
-slider_angle = Slider(ax_angle, r'Launch Angle ($\theta$) degrees', -10.0, 45.0, valinit=launch_angle_degrees)
+slider_angle = Slider(ax_angle, r'Launch Angle ($	heta$) degrees', -10.0, 45.0, valinit=launch_angle_degrees)
 slider_h0 = Slider(ax_h0, r'Initial Height ($h_0$) m', 1.5, 3.5, valinit=initial_height)
 btn_animate = Button(ax_button, 'Serve!', color='lightblue', hovercolor='0.975')
 
 # Status text below sliders, aligned with sliders
-status_text_obj = fig.text(0.1, 0.25, "Adjust sliders and click 'Serve!'", fontsize=10)
+status_text_obj = fig.text(0.15, 0.25, "Adjust sliders and click 'Serve!'", fontsize=10)
 
 
 def on_slider_change(val):
