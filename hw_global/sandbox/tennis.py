@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.widgets import Slider, Button
+from matplotlib.patches import Rectangle
 
 # --- Simulation Parameters ---
 g = 9.81  # Acceleration due to gravity (m/s^2)
@@ -66,8 +67,23 @@ plt.subplots_adjust(left=0.12, bottom=0.30, right=0.58, top=0.97, wspace=0.3)
 # Draw court elements
 ax.plot([0, court_length / 2], [0, 0], 'k-', lw=1) # Baseline to net (server side)
 ax.plot([court_length / 2, court_length / 2], [0, net_height], 'r-', lw=2)  # Net post
-ax.plot([court_length / 2, court_length / 2 + service_box_depth], [0,0], 'b-', lw=1) # Service line
+service_box_marker = Rectangle((court_length / 2, -0.01), service_box_depth, 0.02, color='cornflowerblue', alpha=0.4)
+ax.add_patch(service_box_marker)
 ax.plot([0,0],[0, initial_height + 1], 'gray', lw=0.5) # For y-axis reference
+
+# Mark service box end on x-axis with a circle
+service_box_end_x = court_length / 2 + service_box_depth
+ax.plot([service_box_end_x], [0], 'bo', markersize=5) # Small blue circle, removed label
+
+# Annotate the service box end marker
+ax.annotate('Service Box End', 
+            xy=(service_box_end_x, 0), 
+            xytext=(service_box_end_x, -1.0), # Position text lower, making arrow longer
+            textcoords='data',
+            arrowprops=dict(arrowstyle="->", connectionstyle="arc3", color='blue'),
+            fontsize=8, color='blue',
+            bbox=dict(boxstyle='round,pad=0.3', fc='aliceblue', ec='grey', alpha=0.9),
+            horizontalalignment='center', verticalalignment='top')
 
 # Player representation (simple stick figure)
 player_x = -0.5
