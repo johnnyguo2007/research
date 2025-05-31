@@ -440,7 +440,7 @@ def create_combined_plot(
     kg_class_formatted_for_title = kg_class_formatted.replace(' ', r'\ ')
 
     title = f"Combined SHAP and Feature Values - $\\bf{{{group_name_formatted_for_title}}}$ - Climate Zone $\\bf{{{kg_class_formatted_for_title}}}$"
-    plt.title(title, y=1.08) # Adjust y for suptitle if using subplots, else for single plot
+    plt.title(title, y=1.02, fontsize=14) # Adjust y for suptitle and increase fontsize
 
     # Ensure x-axis ticks are displayed correctly (e.g., as integers for hours)
     if not shap_df.empty: # or feature_values_df, they share index

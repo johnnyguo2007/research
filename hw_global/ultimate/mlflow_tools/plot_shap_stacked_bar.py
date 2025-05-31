@@ -123,6 +123,7 @@ def plot_feature_group_stacked_bar(
     title: str,
     base_values: Optional[pd.Series] = None,
     color_mapping: Optional[Dict[str, str]] = None,
+    save_data_dump: bool = True,
 ) -> None:
     """
     Plots a stacked bar chart of mean feature group contributions with mean SHAP value line.
@@ -138,8 +139,9 @@ def plot_feature_group_stacked_bar(
     # Calculate means including base_values
     mean_values = pivot_df.sum(axis=1) + base_values
 
-    # Save data before plotting
-    _save_plot_data(pivot_df, mean_values, output_path, "group")
+    # Save data before plotting, if requested
+    if save_data_dump:
+        _save_plot_data(pivot_df, mean_values, output_path, "group")
 
     # Sort the index if necessary
     pivot_df = pivot_df.sort_index()
