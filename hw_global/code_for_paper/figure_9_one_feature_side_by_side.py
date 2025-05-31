@@ -91,20 +91,20 @@ def create_2x2_composite_plot(
 
     try:
         font_path = "arial.ttf"
-        font_size = max(16, int(min(max_width, max_height) * 0.04)) # Adjusted font size slightly
+        font_size = max(18, int(min(max_width, max_height) * 0.04)) # Reduced font size
         font = ImageFont.truetype(font_path, font_size)
     except IOError:
         logging.warning(f"Font '{font_path}' not found for {kg_class} composite plot. Using default font.")
         # Attempt to load a larger default font if possible, otherwise standard default
         try:
-            font = ImageFont.load_default(size=max(12, int(min(max_width, max_height) * 0.035)))
+            font = ImageFont.load_default(size=max(13, int(min(max_width, max_height) * 0.035))) # Reduced default font size too
         except TypeError: # Older Pillow versions might not support size argument for load_default
             font = ImageFont.load_default()
 
 
     draw = ImageDraw.Draw(composite_image)
-    plot_labels = [f"({chr(97+i)}) {name}" for i, name in enumerate(features)]
-    margin = int(min(max_width, max_height) * 0.025) # Adjusted margin slightly
+    plot_labels = [f"({chr(97+i)})" for i in range(len(features))] # Remove feature name from label
+    margin = int(min(max_width, max_height) * 0.015) # Reduced margin to bring label closer
 
     positions = [
         (margin, margin),
