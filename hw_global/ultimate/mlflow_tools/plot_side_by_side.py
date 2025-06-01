@@ -306,7 +306,7 @@ def create_side_by_side_group_plot(
             axes[1].set_xticklabels([str(val) for val in tick_values])
 
     plt.tight_layout()
-    plt.savefig(output_path, bbox_inches="tight")
+    plt.savefig(output_path, bbox_inches="tight", dpi=600)
     plt.close()
     logging.info(
         f"Plot saved as '{output_path}' for group '{group_name}' and KGMajorClass '{kg_class}'."
@@ -453,7 +453,7 @@ def create_combined_plot(
 
 
     fig.tight_layout(rect=[0, 0.01, 1, 0.95]) # Adjust rect to make space for legend below
-    plt.savefig(output_path, bbox_inches="tight")
+    plt.savefig(output_path, bbox_inches="tight", dpi=600)
     plt.close(fig)
     logging.info(
         f"Combined plot saved as '{output_path}' for group '{group_name}' and KGMajorClass '{kg_class}'."

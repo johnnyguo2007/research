@@ -14,8 +14,8 @@ from mlflow_tools.plot_util import get_latex_label, replace_cold_with_continenta
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Define the features for the 2x2 composite plot
-FEATURES_FOR_2X2_COMPOSITE = ["FIRA", "FSH", "Q2M", "U10"]
+# Define the features for the 2x3 composite plot
+FEATURES_FOR_2X2_COMPOSITE = ["FIRA", "FSH", "Q2M", "U10", "SOILWATER_10CM", "FGR"]
 
 def create_2x2_composite_plot(
     kg_class: str,
@@ -24,8 +24,8 @@ def create_2x2_composite_plot(
     image_format: str = "png"
 ):
     """
-    Combines four 'combined_shap_and_feature' plots for specified features
-    into a single 2x2 composite image for a given kg_class.
+    Combines six 'combined_shap_and_feature' plots for specified features
+    into a single 2x3 composite image for a given kg_class.
 
     Args:
         kg_class: The climate zone or KGMajorClass (e.g., "Arid").
@@ -33,14 +33,14 @@ def create_2x2_composite_plot(
                                       (within their respective subdirectories) are located,
                                       and where the composite plot will be saved.
                                       Example: /home/jguo/tmp/output/Arid
-        features: A list of four feature names (group_name) whose plots are to be combined.
+        features: A list of six feature names (group_name) whose plots are to be combined.
                   The order determines their position:
-                  features[0]: top-left, features[1]: top-right,
-                  features[2]: bottom-left, features[3]: bottom-right.
+                  features[0-2]: top row (left, middle, right)
+                  features[3-5]: bottom row (left, middle, right)
         image_format: The file extension of the images (default: "png").
     """
-    if len(features) != 4:
-        logging.error(f"Exactly 4 features are required for a 2x2 composite plot for {kg_class}. Got {len(features)}.")
+    if len(features) != 6:
+        logging.error(f"Exactly 6 features are required for a 2x3 composite plot for {kg_class}. Got {len(features)}.")
         return
 
     loaded_images = []
@@ -56,15 +56,15 @@ def create_2x2_composite_plot(
             loaded_images.append(img)
             logging.debug(f"Successfully loaded image for composite: {image_path}")
         except FileNotFoundError:
-            logging.error(f"Image not found for 2x2 composite: {image_path}. Skipping composite plot for {kg_class}.")
+            logging.error(f"Image not found for 2x3 composite: {image_path}. Skipping composite plot for {kg_class}.")
             return
         except Exception as e:
-            logging.error(f"Error loading image {image_path} for 2x2 composite: {e}. Skipping composite plot for {kg_class}.")
+            logging.error(f"Error loading image {image_path} for 2x3 composite: {e}. Skipping composite plot for {kg_class}.")
             return
 
-    if len(loaded_images) != 4:
+    if len(loaded_images) != 6:
         # This case should ideally be caught by the FileNotFoundError above, but as a safeguard:
-        logging.warning(f"Could not load all 4 required images for 2x2 composite plot for {kg_class} (loaded {len(loaded_images)}). Composite plot will not be generated.")
+        logging.warning(f"Could not load all 6 required images for 2x3 composite plot for {kg_class} (loaded {len(loaded_images)}). Composite plot will not be generated.")
         return
 
     # Determine target size (max width and height of the loaded images)
@@ -80,14 +80,18 @@ def create_2x2_composite_plot(
 
     resized_images = [img.resize((max_width, max_height), Image.LANCZOS) for img in loaded_images]
 
-    composite_width = max_width * 2
-    composite_height = max_height * 2
+    composite_width = max_width * 3 # 3 images in a row
+    composite_height = max_height * 2 # 2 rows
     composite_image = Image.new('RGB', (composite_width, composite_height), color='white')
 
+    # Top row
     composite_image.paste(resized_images[0], (0, 0))
     composite_image.paste(resized_images[1], (max_width, 0))
-    composite_image.paste(resized_images[2], (0, max_height))
-    composite_image.paste(resized_images[3], (max_width, max_height))
+    composite_image.paste(resized_images[2], (max_width * 2, 0))
+    # Bottom row
+    composite_image.paste(resized_images[3], (0, max_height))
+    composite_image.paste(resized_images[4], (max_width, max_height))
+    composite_image.paste(resized_images[5], (max_width * 2, max_height))
 
     try:
         font_path = "arial.ttf"
@@ -107,10 +111,12 @@ def create_2x2_composite_plot(
     margin = int(min(max_width, max_height) * 0.015) # Reduced margin to bring label closer
 
     positions = [
-        (margin, margin),
-        (max_width + margin, margin),
-        (margin, max_height + margin),
-        (max_width + margin, max_height + margin)
+        (margin, margin),                                      # Top-left
+        (max_width + margin, margin),                          # Top-middle
+        (max_width * 2 + margin, margin),                      # Top-right
+        (margin, max_height + margin),                         # Bottom-left
+        (max_width + margin, max_height + margin),             # Bottom-middle
+        (max_width * 2 + margin, max_height + margin)          # Bottom-right
     ]
 
     for label_text, pos in zip(plot_labels, positions):
@@ -119,13 +125,13 @@ def create_2x2_composite_plot(
         # draw.text((pos[0]+shadow_offset, pos[1]+shadow_offset), label_text, font=font, fill=(100,100,100)) # Shadow
         draw.text(pos, label_text, font=font, fill=(0,0,0)) # Main text
 
-    output_filename = f"{kg_class}_composite_2x2_{'_'.join(features)}.{image_format}"
+    output_filename = f"{kg_class}_composite_2x3_{'_'.join(features)}.{image_format}"
     output_path = os.path.join(base_output_dir_for_kg_class, output_filename)
-    print(f"Saving composite 2x2 plot to {output_path}")
+    print(f"Saving composite 2x3 plot to {output_path}")
     
     try:
-        composite_image.save(output_path)
-        logging.info(f"Composite 2x2 plot for {kg_class} (features: {', '.join(features)}) saved to {output_path}")
+        composite_image.save(output_path, dpi=(600, 600))
+        logging.info(f"Composite 2x3 plot for {kg_class} (features: {', '.join(features)}) saved to {output_path}")
         logging.info(f"Images used for composite: {', '.join(image_paths_info)}")
     except Exception as e:
         logging.error(f"Error saving composite image {output_path}: {e}")
@@ -234,7 +240,7 @@ def create_feature_climate_composite_plot(
     print(f"Saving feature-climate composite 2x2 plot to {output_path}")
 
     try:
-        composite_image.save(output_path)
+        composite_image.save(output_path, dpi=(600, 600))
         logging.info(f"Feature-climate composite 2x2 plot for {feature_to_composite} (zones: {', '.join(climate_zones)}) saved to {output_path}")
         logging.info(f"Images used for composite: {', '.join(image_paths_info)}")
     except Exception as e:
@@ -430,8 +436,8 @@ if __name__ == "__main__":
                 )
         
         # After processing all groups (or the specified group) for the current climate zone,
-        # attempt to create the 2x2 composite plot.
-        logging.info(f"Attempting to create 2x2 composite plot for {kg_class_for_zone} using features: {FEATURES_FOR_2X2_COMPOSITE}")
+        # attempt to create the 2x3 composite plot.
+        logging.info(f"Attempting to create 2x3 composite plot for {kg_class_for_zone} using features: {FEATURES_FOR_2X2_COMPOSITE}")
         create_2x2_composite_plot(
             kg_class=kg_class_for_zone,
             base_output_dir_for_kg_class=output_dir_for_kg_class, # This is the directory like /home/jguo/tmp/output/Arid
