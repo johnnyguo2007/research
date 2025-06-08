@@ -1,3 +1,79 @@
+"""
+Overview:
+This script automates the generation of feature importance and feature value plots from SHAP and feature data,
+primarily for climate model analysis. It processes data for multiple climate zones, generates individual plots
+for various feature groups, and then assembles these individual plots into larger composite figures for comparison.
+
+The script performs two main types of composite plot generation:
+1.  **Climate-Specific Composite (2x3):** For each climate zone (e.g., Arid, Continental), it creates a
+    2x3 composite image. This image combines the plots of six key features, providing a comprehensive
+    overview of feature behavior within that single climate zone.
+2.  **Feature-Specific Composite (2x2):** For each of the key features, it creates a 2x2 composite
+    image. This image compares the behavior of that single feature across four different climate zones,
+    allowing for cross-climate comparison.
+
+Workflow:
+1.  The script iterates through a predefined list of climate zones (e.g., "Arid", "Continental", "Tropical", "Temperate", "global").
+2.  For each climate zone, it reads SHAP contribution data and feature value data from CSV files.
+    The paths to these files can be specified via command-line arguments or are constructed based on a
+    default directory structure.
+3.  For each feature group within a climate zone, it generates and saves two types of plots:
+    - A side-by-side plot of SHAP values and feature values.
+    - A combined plot overlaying SHAP values on feature values.
+4.  After processing all feature groups for a climate zone, it generates the 2x3 climate-specific composite plot.
+5.  After all climate zones have been processed, it generates the 2x2 feature-specific composite plots.
+
+Inputs:
+-   **SHAP Data CSV:** A CSV file containing SHAP contribution values for different features.
+    Path can be provided via `--shap_csv_path` or is inferred based on the climate zone.
+    Example filename: `Arid_group_shap_contribution_data.csv`.
+-   **Feature Data CSV:** A CSV file containing the corresponding feature values.
+    Path can be provided via `--feature_csv_path` or is inferred.
+    Example filename: `shap_and_feature_values_Arid_feature_data.csv`.
+-   **Command-Line Arguments:**
+    - `--output_dir`: The base directory where all generated plots and composites will be saved.
+      Default: `/home/jguo/tmp/output`.
+    - `--group_name`: (Optional) Specify a single feature group to process (e.g., "FIRA", "Q2M").
+      If not provided, the script processes all feature groups defined in `mlflow_tools.plot_util.FEATURE_COLORS`.
+    - `--kg_class`: (Optional) Specify the climate class name. Defaults to the climate zone being processed.
+    - `--[no-]show_total_feature_line`: Flag to control the visibility of a total feature value line in plots.
+
+Outputs:
+-   **Individual Plots:** Saved in `<output_dir>/<climate_zone>/<group_name>/`.
+    - `side_by_side_{group_name}_{climate_zone}.png`
+    - `combined_shap_and_feature_{group_name}_{climate_zone}.png`
+-   **Climate-Specific Composite Plots (2x3):** Saved in `<output_dir>/<climate_zone>/`.
+    - `<climate_zone>_composite_2x3_FIRA_FSH_Q2M_U10_SOILWATER_10CM_FGR.png`
+-   **Feature-Specific Composite Plots (2x2):** Saved in `<output_dir>/`.
+    - `<feature_name>_climate_zones_composite_2x2.png`
+
+Dependencies:
+- pandas
+- matplotlib
+- seaborn
+- Pillow (PIL)
+- Custom modules: `mlflow_tools.plot_side_by_side`, `mlflow_tools.plot_util`
+
+Example Usage:
+The following commands assume the input data CSVs are located in the default directory structure.
+The base path for default inputs is:
+`/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/summary/mlflow/mlartifacts/893793682234305734/67f2e168085e4507b0a79941b74d7eb7/artifacts/data_only_24_hourly/`
+The script expects a subdirectory for each climate zone (e.g., `Arid/`) inside this base path, containing the relevant CSV files.
+
+To process all defined feature groups for all climate zones and generate all plots and composites, explicitly setting the default output directory:
+```
+python figure_9_one_feature_side_by_side.py --output_dir /home/jguo/tmp/output
+```
+
+To process only the "Q2M" feature group for all climate zones, explicitly setting the default output directory:
+```
+python figure_9_one_feature_side_by_side.py --output_dir /home/jguo/tmp/output --group_name Q2M
+```
+
+python /home/jguo/research/hw_global/code_for_paper/figure_9_one_feature_side_by_side.py \
+    --group_name Q2M --shap_csv_path "/home/jguo/tmp/output/global/Q2M/shap_contributions_Q2M_global_shap_data.csv" \
+    --feature_csv_path "/home/jguo/tmp/output/global/Q2M/shap_and_feature_values_Q2M_global_feature_data.csv"
+"""
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
@@ -15,9 +91,9 @@ from mlflow_tools.plot_util import get_latex_label, replace_cold_with_continenta
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Define the features for the 2x3 composite plot
-FEATURES_FOR_2X2_COMPOSITE = ["FIRA", "FSH", "Q2M", "U10", "SOILWATER_10CM", "FGR"]
+FEATURES_FOR_2X3_COMPOSITE = ["FIRA", "FSH", "Q2M", "U10", "SOILWATER_10CM", "FGR"]
 
-def create_2x2_composite_plot(
+def create_2x3_composite_plot(
     kg_class: str,
     base_output_dir_for_kg_class: str,
     features: list[str],
@@ -221,7 +297,7 @@ def create_feature_climate_composite_plot(
 
     draw = ImageDraw.Draw(composite_image)
     # Labels are the climate zones
-    plot_labels = [f"({chr(97+i)}) {get_latex_label(zone)}" for i, zone in enumerate(climate_zones)] # Use get_latex_label for consistency if needed
+    plot_labels = [f"({chr(97+i)})" for i in range(len(climate_zones))] # Use get_latex_label for consistency if needed
     margin = int(min(max_width, max_height) * 0.025)
 
     positions = [
@@ -437,11 +513,11 @@ if __name__ == "__main__":
         
         # After processing all groups (or the specified group) for the current climate zone,
         # attempt to create the 2x3 composite plot.
-        logging.info(f"Attempting to create 2x3 composite plot for {kg_class_for_zone} using features: {FEATURES_FOR_2X2_COMPOSITE}")
-        create_2x2_composite_plot(
+        logging.info(f"Attempting to create 2x3 composite plot for {kg_class_for_zone} using features: {FEATURES_FOR_2X3_COMPOSITE}")
+        create_2x3_composite_plot(
             kg_class=kg_class_for_zone,
             base_output_dir_for_kg_class=output_dir_for_kg_class, # This is the directory like /home/jguo/tmp/output/Arid
-            features=FEATURES_FOR_2X2_COMPOSITE,
+            features=FEATURES_FOR_2X3_COMPOSITE,
             image_format="png" # Ensure this matches the output of create_combined_plot
         )
 
@@ -459,7 +535,7 @@ if __name__ == "__main__":
         missing_zones = list(required_zones_for_new_composite_set - processed_zones_set)
         logging.warning(f"Cannot create feature-climate composites. The following climate zones, required for these composites, were not in the processing list: {missing_zones}. Please ensure they are processed first.")
     else:
-        for feature_name_for_fc_composite in FEATURES_FOR_2X2_COMPOSITE:
+        for feature_name_for_fc_composite in FEATURES_FOR_2X3_COMPOSITE:
             logging.info(f"Attempting to create feature-climate 2x2 composite plot for feature: {feature_name_for_fc_composite} using climate zones: {CLIMATE_ZONES_FOR_FEATURE_COMPOSITE}")
             create_feature_climate_composite_plot(
                 feature_to_composite=feature_name_for_fc_composite,
