@@ -1,3 +1,63 @@
+"""
+This script processes SHAP (SHapley Additive exPlanations) data from an MLflow experiment
+to generate various data summaries as CSV files. It focuses on analyzing feature and feature
+group contributions to model predictions (specifically for Urban Heat Island - UHI effects),
+breaking them down by climate zone, hour of the day, and day/night periods.
+
+Core Functionality:
+-------------------
+1.  Connects to an MLflow tracking server to find the latest run of a specified experiment.
+2.  Loads a feather file containing detailed SHAP values and feature data from the run's artifacts.
+3.  Calculates `y_pred` from `UHI_diff` and `Estimation_Error` if not present.
+4.  Groups individual features into broader categories (e.g., 'Urban Fabric', 'Climate').
+5.  Generates and saves several CSV data files to a sub-directory within the MLflow run's artifact path (`data_only_24_hourly/`).
+
+Generated Outputs (CSV files):
+----------------------------
+1.  **Day/Night Summary**: A summary table of mean feature group SHAP contributions for day vs. night periods across all climate zones.
+2.  **Hourly Data by Climate Zone**: For each climate zone (including a 'global' view):
+    - `*_group_shap_contribution_data.csv`: Hourly mean SHAP values for each *feature group*. Includes columns for `UHI_diff`, `y_pred`, `Estimation_Error`, and a calculated `Total` prediction.
+    - `*_shap_data.csv`: Hourly mean SHAP values for *individual features*.
+    - `*_feature_data.csv`: Hourly mean values for *individual features*.
+3.  **Feature Importance by Climate Zone (Day/Night)**: For each climate zone (and 'global'), separated into day and night periods:
+    - `*individual_shap_importance.csv`: Mean absolute SHAP values for each *individual feature*, indicating its overall importance.
+    - `*individual_feature_values.csv`: Mean values for each *individual feature*, corresponding to the importance ranking.
+    - `*group_shap_importance.csv`: Mean absolute SHAP values for each *feature group*.
+
+Usage:
+------
+The script is run from the command line.
+
+Command-line Arguments (Switches):
+----------------------------------
+--experiment-name : str
+    The name of the MLflow experiment to process.
+    (Default: "Combined_Final3_NO_LE_Hourly_HW98_Hour")
+
+--feather-file-name : str
+    The name of the feather file within the MLflow run's artifacts that contains the SHAP data.
+    (Default: "shap_values_with_additional_columns.feather")
+
+Inputs:
+-------
+- An MLflow experiment with at least one run.
+- A feather file (`.feather`) in the specified run's artifacts. This file must contain:
+  - SHAP values for each feature (columns ending in `_shap`).
+  - The corresponding feature values.
+  - `KGMajorClass`: Koppen-Geiger climate classification.
+  - `local_hour`: The hour of the day (0-23).
+  - `UHI_diff`: The target variable.
+  - `Estimation_Error`: The model's estimation error.
+  - `base_value`: The model's base SHAP value.
+
+Example:
+--------
+```bash
+python ultimate/data_only_paper_feature_contribution_by_hour.py \
+    --experiment-name "Combined_Final3_NO_LE_Hourly_HW98_Hour" \
+        --feather-file-name "shap_values_with_additional_columns.feather"
+```
+"""
 import pandas as pd
 import numpy as np
 import os
