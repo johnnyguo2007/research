@@ -124,7 +124,13 @@ def main():
     Global Control Flags:
         --all: Enables all the above plot/report generation options.
         --only-summary: Enables only --summary-feature and --summary-group. Disables all others.
+
+    Exmpale command:
+    time python paper_figure_feature_contribution_by_hour.py --experiment-name Combined_Final3_NO_LE_Hourly_HW98_Hour  \
+        --feather-file-name adj_shap_values_with_additional_columns.feather  \
+            --summary-feature --summary-group --global-only 2>&1 | tee rlog
     '''
+    
     """Main function to process SHAP values and generate plots."""
     logging.info("Starting feature contribution analysis...")
 
