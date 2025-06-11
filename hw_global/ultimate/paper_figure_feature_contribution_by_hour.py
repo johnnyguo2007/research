@@ -207,7 +207,7 @@ def main():
                 day_specific_output_dir = os.path.join(output_dir, day_output_sub_dir_name)
                 os.makedirs(day_specific_output_dir, exist_ok=True)
                 generate_summary_and_kg_plots(
-                    day_obj_group_data, day_specific_output_dir, plot_type="feature"
+                    day_obj_group_data, day_specific_output_dir, plot_type="feature", global_only=args.global_only
                 )
             else:
                 logging.warning("No daytime data found. Skipping daytime feature-level summary plots.")
@@ -219,7 +219,7 @@ def main():
                 night_specific_output_dir = os.path.join(output_dir, night_output_sub_dir_name)
                 os.makedirs(night_specific_output_dir, exist_ok=True)
                 generate_summary_and_kg_plots(
-                    night_obj_group_data, night_specific_output_dir, plot_type="feature"
+                    night_obj_group_data, night_specific_output_dir, plot_type="feature", global_only=args.global_only
                 )
             else:
                 logging.warning("No nighttime data found. Skipping nighttime feature-level summary plots.")
@@ -242,7 +242,7 @@ def main():
                 day_specific_output_dir = os.path.join(output_dir, day_output_sub_dir_name)
                 os.makedirs(day_specific_output_dir, exist_ok=True)
                 generate_summary_and_kg_plots(
-                    day_obj_group_data, day_specific_output_dir, plot_type="group"
+                    day_obj_group_data, day_specific_output_dir, plot_type="group", global_only=args.global_only
                 )
             else:
                 logging.warning("No daytime data for group-level summary plots.")
@@ -254,7 +254,7 @@ def main():
                 night_specific_output_dir = os.path.join(output_dir, night_output_sub_dir_name)
                 os.makedirs(night_specific_output_dir, exist_ok=True)
                 generate_summary_and_kg_plots(
-                    night_obj_group_data, night_specific_output_dir, plot_type="group"
+                    night_obj_group_data, night_specific_output_dir, plot_type="group", global_only=args.global_only
                 )
             else:
                 logging.warning("No nighttime data for group-level summary plots.")
@@ -280,7 +280,8 @@ def main():
     # Generate hourly stacked bar plots if requested
     if args.hourly_stacked_bar:
         logging.info("Generating hourly stacked bar plots for feature groups...")
-        for kg_class in kg_classes_hourly:
+        kg_classes_to_plot = ["global"] if args.global_only else kg_classes_hourly
+        for kg_class in kg_classes_to_plot:
             feature_group_data = obj_group_data_hourly.shap_group_hourly_mean_df(kg_class)
             current_base_values = global_base_values
             if kg_class != "global":
@@ -305,7 +306,8 @@ def main():
     # Generate hourly SHAP plots (features within groups) if requested
     if args.hourly_shap:
         logging.info("Generating hourly SHAP plots (features within groups)...")
-        for kg_class in kg_classes_hourly: # Iterate through "global" and each KG class
+        kg_classes_to_plot = ["global"] if args.global_only else kg_classes_hourly
+        for kg_class in kg_classes_to_plot: # Iterate through "global" and each KG class
             current_base_values = global_base_values
             if kg_class != "global":
                 kg_base_values_df = base_values_by_hour_kg[base_values_by_hour_kg["KGMajorClass"] == kg_class]
@@ -481,6 +483,11 @@ def parse_arguments() -> argparse.Namespace:
         "--only-summary",
         action="store_true",
         help="Run only the feature and group summary plots (day/night, global/KG).",
+    )
+    parser.add_argument(
+        "--global-only",
+        action="store_true",
+        help="Only generate global plots, skip KGMajorClass-specific plots.",
     )
 
     return parser.parse_args()

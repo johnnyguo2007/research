@@ -101,7 +101,8 @@ def plot_summary(
 def generate_summary_and_kg_plots(
     group_data: GroupData,
     output_dir: str,
-    plot_type: str
+    plot_type: str,
+    global_only: bool = False
 ) -> None:
     """
     Generates summary plots for global data and each KGMajorClass using GroupData.
@@ -110,6 +111,7 @@ def generate_summary_and_kg_plots(
         group_data (GroupData): GroupData object containing SHAP values and feature values.
         output_dir (str): Directory to save output plots.
         plot_type (str): Type of plot ('feature' or 'group').
+        global_only (bool): If True, only generate global plots and skip KGMajorClass-specific plots.
     """
     summary_dir = _create_output_dir(os.path.join(output_dir, "summary_plots"))
 
@@ -129,17 +131,18 @@ def generate_summary_and_kg_plots(
         shap_df, feature_values_df, feature_names, summary_dir, plot_type=plot_type
     )
 
-    # Generate summary plots for each KGMajorClass
-    kg_classes = group_data.df["KGMajorClass"].dropna().unique()
-    for kg_class in kg_classes:
-        kg_mask = group_data.df["KGMajorClass"] == kg_class
-        logging.info(f"Generating {plot_type} summary plot for {kg_class}")
-        kg_output_dir = _create_output_dir(summary_dir, kg_class)
-        plot_summary(
-            shap_df[kg_mask],
-            feature_values_df[kg_mask],
-            feature_names,
-            kg_output_dir,
-            kg_class,
-            plot_type=plot_type
-        )
+    # Generate summary plots for each KGMajorClass if not global_only
+    if not global_only:
+        kg_classes = group_data.df["KGMajorClass"].dropna().unique()
+        for kg_class in kg_classes:
+            kg_mask = group_data.df["KGMajorClass"] == kg_class
+            logging.info(f"Generating {plot_type} summary plot for {kg_class}")
+            kg_output_dir = _create_output_dir(summary_dir, kg_class)
+            plot_summary(
+                shap_df[kg_mask],
+                feature_values_df[kg_mask],
+                feature_names,
+                kg_output_dir,
+                kg_class,
+                plot_type=plot_type
+            )
