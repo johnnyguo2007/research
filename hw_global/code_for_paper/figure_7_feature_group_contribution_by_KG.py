@@ -1,11 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-
-def replace_cold_with_continental(kg_main_group):
-    if kg_main_group == 'Cold':
-        return 'Continental'
-    return kg_main_group
+import sys
+sys.path.append('/home/jguo/research/hw_global/ultimate/')
+from mlflow_tools.plot_util import replace_cold_with_continental
 
 # Add lookup table reading
 lookup_df = pd.read_excel('/home/jguo/research/hw_global/Data/var_name_unit_lookup.xlsx')
@@ -88,11 +86,11 @@ def create_feature_group_plot(time_period, ax):
     # Pivot the data for grouped bar chart
     data_pivot = consolidated_data.pivot(index='Feature Group', columns='Region', values='Percentage')
     
-    # Apply replacement to Regions for plotting
-    display_regions = [replace_cold_with_continental(zone) for zone in data_pivot.columns]
-    
-    # Use consistent colors for the bar chart
+    # Use consistent colors for the bar chart. This must be done before renaming the columns.
     colors = [major_zone_colors[zone] for zone in data_pivot.columns]
+    
+    # Rename the columns to replace 'Cold' with 'Continental' for display purposes.
+    data_pivot.columns = [replace_cold_with_continental(zone) for zone in data_pivot.columns]
     
     # Map feature groups to LaTeX labels
     latex_index = []
@@ -130,7 +128,6 @@ def create_feature_group_plot(time_period, ax):
         loc='upper left',
         fontsize=12,
         title_fontsize=14,
-        labels=display_regions,
     )
     
     # Add labels only to the bars with the highest value for each feature group
