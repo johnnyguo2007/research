@@ -22,21 +22,19 @@ grouped_df.to_csv(os.path.join(FIGURE_OUTPUT_DIR, 'Figure_1_global_mean_uhi_by_h
 plt.figure(figsize=(10, 6))
 
 # Plot the mean of UHI_diff
-plt.plot(grouped_df.index, grouped_df['mean'], marker='o', label='HW-NHW UHII Mean')
+plt.plot(grouped_df.index, grouped_df['mean'], marker='o', color='black', linewidth=1, markersize=6)
 
 # Plot the standard deviation as a shaded area around the mean
-plt.fill_between(grouped_df.index, grouped_df['mean'] - grouped_df['std'], grouped_df['mean'] + grouped_df['std'], color='cornflowerblue', alpha=0.1, label='HW-NHW UHII Mean ±1 Std Dev')
+plt.fill_between(grouped_df.index, grouped_df['mean'] - grouped_df['std'], grouped_df['mean'] + grouped_df['std'], color='grey', alpha=0.15)
 
-plt.title('Global HW-NHW UHII by Local Hour')
 plt.xlabel('Local Hour')
-plt.ylabel('HW-NHW UHII')
+plt.ylabel('HW-NHW UHII (°C)')
 
 # Enable horizontal grid lines only
 plt.grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.6)  # Horizontal grid ON
 plt.grid(False, axis='x')  # Vertical grid OFF
 
 plt.xticks(range(0, 24))
-plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'Figure_1_global_mean_uhi_by_hour.png'), dpi=600, bbox_inches='tight')
 plt.close()
