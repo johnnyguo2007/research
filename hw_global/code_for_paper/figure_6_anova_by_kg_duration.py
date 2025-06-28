@@ -164,7 +164,7 @@ for i, zone in enumerate(unique_zones):
                 
         # Only add left y-axis label to the first plot in one-row layout, or to all plots in grid layout
         if not one_row_layout or (one_row_layout and i == 0):
-            ax.set_ylabel("HW-NHW UHII (°C)", color=colors[0])
+            ax.set_ylabel("Δ UHII (°C)", color=colors[0])
         
         ax.tick_params(axis='y', labelcolor=colors[0])
         # Set consistent y-axis limits for UHI_diff

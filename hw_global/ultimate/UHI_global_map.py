@@ -531,8 +531,8 @@ def plot_all_uhi_maps_figure3_style(df, output_dir=None):
     # Create both maps using the top-level create_map_figure3_style
     # create_map_figure3_style(ax1, day_data, "Daytime ΔUHI", vmin, vmax, "RdBu_r")  # Using updated vmin and vmax
     # create_map_figure3_style(ax2, night_data, "Nighttime ΔUHI", vmin, vmax, "RdBu_r")  # Using updated vmin and vmax
-    create_map_figure3_style(ax1, day_data, "Daytime Average HW-NHW UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
-    create_map_figure3_style(ax2, night_data, "Nighttime Average HW-NHW UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
+    create_map_figure3_style(ax1, day_data, "Daytime Average Δ UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
+    create_map_figure3_style(ax2, night_data, "Nighttime Average Δ UHI", vmin, vmax, "coolwarm")  # Using updated vmin and vmax
     plt.tight_layout()
 
     if output_dir:

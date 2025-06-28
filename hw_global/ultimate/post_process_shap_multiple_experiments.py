@@ -25,8 +25,8 @@ def get_latex_label(feature_name):
     # Define mapping from prefixes to symbols
     prefix_to_symbol = {
         'delta_': '(Δ)',
-        'hw_nohw_diff_': 'HW-NHW ',
-        'Double_Differencing_': '(Δ)HW-NHW '
+        'hw_nohw_diff_': 'Δ',
+        'Double_Differencing_': 'Δδ'
     }
     symbol = ''
     feature_group = feature_name

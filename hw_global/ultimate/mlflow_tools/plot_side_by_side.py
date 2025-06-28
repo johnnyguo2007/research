@@ -290,7 +290,7 @@ def create_side_by_side_group_plot(
     # Construct the title using LaTeX for bold text and preserving spaces
     # Escaping curly braces for f-string and LaTeX interaction
     # example r"This is a Normal and $\\bf{Bold}$ Title"
-    title = f"HW-NHW UHI Contribution and Feature Values by Hour - $\\bf{{{group_name_formatted_for_title}}}$ - Climate Zone $\\bf{{{kg_class_formatted_for_title}}}$"
+    title = f"Δ UHI Contribution and Feature Values by Hour - $\\bf{{{group_name_formatted_for_title}}}$ - Climate Zone $\\bf{{{kg_class_formatted_for_title}}}$"
     print(title)
     plt.suptitle(title, y=1.02)
     

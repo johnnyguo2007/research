@@ -28,7 +28,7 @@ plt.plot(grouped_df.index, grouped_df['mean'], marker='o', color='black', linewi
 plt.fill_between(grouped_df.index, grouped_df['mean'] - grouped_df['std'], grouped_df['mean'] + grouped_df['std'], color='grey', alpha=0.15)
 
 plt.xlabel('Local Hour')
-plt.ylabel('HW-NHW UHII (°C)')
+plt.ylabel('Δ UHII (°C)')
 
 # Enable horizontal grid lines only
 plt.grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.6)  # Horizontal grid ON

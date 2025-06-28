@@ -184,7 +184,7 @@ if side_by_side:
     ax_day.text(0.1, label_height, 'Day', fontsize=14, weight='bold',
                 horizontalalignment='left', verticalalignment='top')
     
-    ax_day.set_ylabel('HW-NHW UHI °C', fontsize=14, labelpad=10)
+    ax_day.set_ylabel('Δ UHI °C', fontsize=14, labelpad=10)
     
     # Plot each zone (Day)
     for z in climate_zones:
@@ -256,7 +256,7 @@ else:
     ax_day.text(0.1, 1.4, 'Day', fontsize=14, weight='bold',
                 horizontalalignment='left', verticalalignment='top')
     
-    ax_day.set_ylabel('HW-NHW UHI °C', fontsize=14, labelpad=10)
+    ax_day.set_ylabel('Δ UHI °C', fontsize=14, labelpad=10)
     ax_day.axes.xaxis.set_visible(False)  # hide day x‐axis completely
     
     ax_day.text(-0.6, 1.7, 'a', fontsize=14, weight='bold',
@@ -282,7 +282,7 @@ else:
     
     ax_night.text(0.1, 1.9, 'Night', fontsize=14, weight='bold',
                   horizontalalignment='left', verticalalignment='top')
-    ax_night.set_ylabel('HW-NHW UHI °C', fontsize=14, labelpad=10)
+    ax_night.set_ylabel('Δ UHI °C', fontsize=14, labelpad=10)
     ax_night.text(-0.6, 2.2, 'b', fontsize=14, weight='bold',
                   horizontalalignment='left', verticalalignment='top')
     

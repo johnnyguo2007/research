@@ -289,7 +289,7 @@ if PLOT_KG_MAIN_GROUP:
     
         subset = avg_diff_by_hour_and_main_group[avg_diff_by_hour_and_main_group['KGMainGroup'] == main_group]
     
-        axs[row, col].plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label='HW-NHW UHI')
+        axs[row, col].plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o', color=kg_main_group_colors.get(main_group, 'black'), label='Δ UHI')
         
         axs[row, col].fill_between(
             subset['local_hour'],
@@ -326,7 +326,7 @@ if PLOT_KG_MAIN_GROUP:
         fig.delaxes(axs[row, col])
     
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust the top spacing
-    plt.suptitle('Average Hourly HW-NHW UHI by Climate Zone', size=20, weight='bold', y=0.99)  # Add an overall title
+    plt.suptitle('Average Hourly Δ UHI by Climate Zone', size=20, weight='bold', y=0.99)  # Add an overall title
     plt.savefig(os.path.join(FIGURE_OUTPUT_DIR, 'kg_main_group_uhi_diff.png'), dpi=600, bbox_inches='tight')
     plt.close()
     

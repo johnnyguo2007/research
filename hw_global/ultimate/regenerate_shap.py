@@ -20,8 +20,8 @@ def get_latex_label(feature_name):
     """
     prefix_to_symbol = {
         'delta_': '(Δ)',
-        'hw_nohw_diff_': 'HW-NHW ',
-        'Double_Differencing_': '(Δ)HW-NHW '
+        'hw_nohw_diff_': 'Δ',"
+        'Double_Differencing_': 'Δδ'
     }
     symbol = ''
     feature_group = feature_name
@@ -57,9 +57,9 @@ def get_long_name(var_name, df_daily_vars):
         original_var_name = var_name.replace('hw_nohw_diff_', '')
         original_long_name = df_daily_vars.loc[df_daily_vars['Variable'] == original_var_name, 'Long Name'].values
         if original_long_name.size > 0:
-            return f"HW Non-HW Difference of {original_long_name[0]}"
+            return f"Δ {original_long_name[0]}"
         else:
-            return f"HW Non-HW Difference of {original_var_name} (No long name found)"
+            return f"Δ {original_var_name} (No long name found)"
     elif var_name.startswith('Double_Differencing_'):
         original_var_name = var_name.replace('Double_Differencing_', '')
         original_long_name = df_daily_vars.loc[df_daily_vars['Variable'] == original_var_name, 'Long Name'].values

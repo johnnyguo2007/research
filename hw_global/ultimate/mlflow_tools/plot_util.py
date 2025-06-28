@@ -33,9 +33,9 @@ def get_unit(feature_name: str) -> str:
     
     # Define mapping from prefixes to symbols
     prefix_to_symbol = {
-        "delta_": "(Δ)",
-        "hw_nohw_diff_": "HW-NHW ",
-        "Double_Differencing_": "(Δ)HW-NHW ",
+        "delta_": "(δ)",
+        "hw_nohw_diff_": "Δ",
+        "Double_Differencing_": "Δδ",
     }
     
     feature_group = feature_name
@@ -72,8 +72,8 @@ def get_long_name_without_unit(feature_name: str) -> str:
     # Define mapping from prefixes to symbols
     prefix_to_symbol = {
         "delta_": "Difference of ",
-        "hw_nohw_diff_": "HW-NHW Difference of ",
-        "Double_Differencing_": "Double Difference of ",
+        "hw_nohw_diff_": "Δ Difference of ",
+        "Double_Differencing_": "Δδ Difference of ",
     }
     
     symbol = ""
@@ -132,12 +132,12 @@ def get_latex_label(feature_name: str) -> str:
         feature_name = feature_name[len("extbf_"):]
     
     if feature_name == "UHI_diff":
-        return "HW-NHW UHII"
+        return "Δ UHII"
     # Define mapping from prefixes to symbols
     prefix_to_symbol = {
-        "delta_": "(Δ)",
-        "hw_nohw_diff_": "HW-NHW ",
-        "Double_Differencing_": "(Δ)HW-NHW ",
+        "delta_": "(δ)",
+        "hw_nohw_diff_": "Δ",
+        "Double_Differencing_": "Δδ",
     }
     symbol = ""
     feature_group = feature_name
