@@ -33,7 +33,7 @@ def get_unit(feature_name: str) -> str:
     
     # Define mapping from prefixes to symbols
     prefix_to_symbol = {
-        "delta_": "(δ)",
+        "delta_": "δ",
         "hw_nohw_diff_": "Δ",
         "Double_Differencing_": "Δδ",
     }
@@ -135,7 +135,7 @@ def get_latex_label(feature_name: str) -> str:
         return "Δ UHII"
     # Define mapping from prefixes to symbols
     prefix_to_symbol = {
-        "delta_": "(δ)",
+        "delta_": "δ",
         "hw_nohw_diff_": "Δ",
         "Double_Differencing_": "Δδ",
     }
