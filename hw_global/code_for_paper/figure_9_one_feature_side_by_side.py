@@ -434,7 +434,8 @@ def plot_side_by_side_from_csv(
 # run command like: /home/jguo/anaconda3/envs/pipJupyter/bin/python /home/jguo/research/hw_global/code_for_paper/figure_9_one_feature_side_by_side.py --group_name Q2M --shap_csv_path "/home/jguo/tmp/output/global/Q2M/shap_contributions_Q2M_global_shap_data.csv" --feature_csv_path "/home/jguo/tmp/output/global/Q2M/shap_and_feature_values_Q2M_global_feature_data.csv"
 # To plot all features: /home/jguo/anaconda3/envs/pipJupyter/bin/python /home/jguo/research/hw_global/code_for_paper/figure_9_one_feature_side_by_side.py --shap_csv_path "/home/jguo/tmp/output/global/global_group_shap_contribution_data.csv" --feature_csv_path "/home/jguo/tmp/output/global/shap_and_feature_values_global_feature_data.csv"
 if __name__ == "__main__":
-    default_out_dir = '/home/jguo/tmp/output'
+    # default_out_dir = '/home/jguo/tmp/output'
+    default_out_dir = '/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/figures_for_paper/Figure_9_10'
     # Base input directory tuple, before appending the climate zone
     default_input_dir_base_tuple = ("/Trex/case_results/i.e215.I2000Clm50SpGs.hw_production.05/research_results/",
                                     "summary/mlflow/mlartifacts/",

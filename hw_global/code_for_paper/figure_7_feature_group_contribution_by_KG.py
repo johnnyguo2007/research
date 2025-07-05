@@ -119,7 +119,7 @@ def create_feature_group_plot(time_period, ax):
     ax.set_ylabel('Percentage Contribution (%)', fontsize=16, labelpad=10)
     
     # Customize x-axis labels
-    plt.xticks(rotation=45, ha='right', fontsize=12)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', fontsize=24)
     
     # Adjust legend to align with the defined regions and colors
     ax.legend(

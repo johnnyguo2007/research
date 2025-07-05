@@ -139,7 +139,7 @@ def plot_uhi_diff(data: pd.DataFrame, group_col: str, sorted_groups: list, outpu
                      color=get_kg_color(group), label=group_label)
 
         plt.xlabel('Local Hour')
-        plt.ylabel('Δ UHI (°C)')
+        plt.ylabel('ΔUHI (°C)')
         plt.grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.6)
         plt.xticks(range(0, 24))
         plt.legend()
@@ -156,7 +156,7 @@ def plot_uhi_diff(data: pd.DataFrame, group_col: str, sorted_groups: list, outpu
             subset = data[data[group_col] == group]
 
             axs[row, col].plot(subset['local_hour'], subset[('UHI_diff', 'mean')], marker='o',
-                               color=get_kg_color(group), label='Δ UHI')
+                               color=get_kg_color(group), label='ΔUHI')
             axs[row, col].fill_between(subset['local_hour'], subset[('UHI_diff', 'mean')] - subset[('UHI_diff', 'std')],
                                        subset[('UHI_diff', 'mean')] + subset[('UHI_diff', 'std')],
                                        color=get_kg_color(group), alpha=0.2, label='±1 Std Dev')
@@ -167,7 +167,7 @@ def plot_uhi_diff(data: pd.DataFrame, group_col: str, sorted_groups: list, outpu
             axs[row, col].text(0.5, 1.05, group_label, fontdict=group_font,
                                transform=axs[row, col].transAxes, ha='center', va='bottom')
             axs[row, col].set_xlabel('Local Hour')
-            axs[row, col].set_ylabel('Δ UHI (°C)')
+            axs[row, col].set_ylabel('ΔUHI (°C)')
             axs[row, col].grid(True, axis='y')
             axs[row, col].legend()
             axs[row, col].set_ylim(min_uhi_diff, max_uhi_diff)
