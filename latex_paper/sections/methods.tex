@@ -1,0 +1,86 @@
+\section*{Methods}
+
+
+
+
+\subsection*{Simulation setup }We employ a simulation approach in this study to allow full global coverage. The Community Land Model (CLM), the land component of the Community Earth System Model (CESM)\unskip~\cite{2755510:33598890} , simulates land-atmosphere interactions. CLM employs a sub-grid approach to represent land surface heterogeneity, partitioning each grid cell into up to five distinct land units:   glacier, lake, urban, vegetated, and crop. All sub-grid units within a single grid cell are driven by the same atmospheric forcing. We use the CLM 5.0\unskip~\cite{2755510:33598910}  Satellite Phenology mode, which uses satellite-derived data to prescribe vegetation characteristics. With 0.9\ensuremath{^\circ} latitude x 1.2\ensuremath{^\circ} longitude resolution, we simulate the climate between 1985 and 2013.  The atmospheric forcing was driven by Global Soil Wetness Project Phase 3 Version 1, which is bias-corrected\unskip~\cite{2755510:33598910}  and suitable for land-only simulation. This "offline" approach enables analysis of variables not typically archived from fully-coupled runs while preserving realistic feedback effects\unskip~\cite{2755510:33598945} . The simulations were run after spin-up periods of 20 years to ensure the equilibrium of the soil variables.
+
+This study today focuses explicitly on heatwaves (HWs), and thus, our analysis is centered on the summer months, June to August for the Northern Hemisphere and December through February for the Southern Hemisphere. Tropospheric temperature seasonality is weaker in the tropics (18\ensuremath{^\circ}S{\textendash}20\ensuremath{^\circ}N) relative to mid- and high latitudes. While grid-cell specific peak warming can occur in March/April (0\ensuremath{^\circ}{\textendash}18\ensuremath{^\circ}S) or May/September (0\ensuremath{^\circ}{\textendash}20\ensuremath{^\circ}N), the climatological warmest periods for the tropics are June{\textendash}July{\textendash}August in the Northern Hemisphere and December{\textendash}January{\textendash}February in the Southern Hemisphere.\unskip~\cite{2755510:33598947}  We utilize hourly data, specifically from 8 AM to 6 PM local solar time, to represent daytime conditions, while the remaining hours are designated as nighttime. Among 55296 (288 \ensuremath{\times} 192) global grid cells, 3648 cells have the urban portion and are studied.
+
+
+
+
+
+\subsection*{Definition of Heat waves and UHI interaction}Definitions of heat waves (HW) vary across studies\unskip~\cite{2755510:33598930,2755510:33598927} . In this research, heat waves are defined for each grid cell individually, based on its corresponding rural 2-meter air temperature data, as the rural sub-grid represents the local background environment. Specifically, a heat wave (HW) for a given location is identified as:
+\let\saveeqnno\theequation
+\let\savefrac\frac
+\def\dispfrac{\displaystyle\savefrac}
+\begin{eqnarray}
+\let\frac\dispfrac
+\gdef\theequation{1}
+\let\theHequation\theequation
+\label{dfg-2755510:33598937}
+\begin{array}{@{}l}\style{font-family:'Times New Roman'}{\mathrm{HW}=\{day\vert T_{r,m}>T_{98}\}\;\mathrm{for}\;3\;\mathrm{or}\;\mathrm{more}\;\mathrm{consecutive}\;\mathrm{days}}\end{array}
+\end{eqnarray}
+\global\let\theequation\saveeqnno
+\addtocounter{equation}{-1}\ignorespaces 
+where maximum daily rural temperature  T\ensuremath{_{r,m\ }}is the area-weighted mean of daily maximum 2-meter air temperature of vegetated and cropland units in a grid cell, and T\ensuremath{_{98}} is the 98th percentile. This percentile value is based on the daily maximum in the summer, as defined previously, between 1985 and 2013 (a total of 2668 days for grids in the Northern Hemisphere and 2610 days for grids in the Southern Hemisphere). This approach was applied to 29 years of data, categorizing days into HW days and non-heatwave (NHW) days for each studied grid. Globally, the average length of HW is 4.24\ensuremath{\pm} 2.11 days (mean \ensuremath{\pm} 1 s.d.). The average lengths of HW in different climate zones range from 3.82 to 4.26 days, as detailed in Supplementary Table 1. 
+
+For simplicity, we use UHI to represent urban heat island intensity, which is defined as:
+\let\saveeqnno\theequation
+\let\savefrac\frac
+\def\dispfrac{\displaystyle\savefrac}
+\begin{eqnarray}
+\let\frac\dispfrac
+\gdef\theequation{2}
+\let\theHequation\theequation
+\label{dfg-a0dd176e2b84}
+\begin{array}{@{}l}\mathrm{UHI}\;=\;T_u-T_r\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\end{array}
+\end{eqnarray}
+\global\let\theequation\saveeqnno
+\addtocounter{equation}{-1}\ignorespaces 
+where \textit{T\ensuremath{_{u}}} and \textit{T\ensuremath{_{r}}}are the area-weighted mean of hourly 2-meter air temperature for urban and rural subgrids, respectively. To quantify the impact of heat waves' interaction with the UHI effect, we calculate the UHI difference (\ensuremath{\Delta }UHI) between heat wave and non-heat wave days, matching by the hour. The \ensuremath{\Delta }UHI at a specific hour (h) and a given year (y) is defined as:
+\let\saveeqnno\theequation
+\let\savefrac\frac
+\def\dispfrac{\displaystyle\savefrac}
+\begin{eqnarray}
+\let\frac\dispfrac
+\gdef\theequation{3}
+\let\theHequation\theequation
+\label{dfg-62c1426c5b48}
+\begin{array}{@{}l}\Delta{\mathrm{UHI}}_{\mathrm d,\mathrm h}={\mathrm{UHI}}_{\mathrm{hw},\mathrm d,\mathrm h}-{\mathrm{UHI}}_{\mathrm{nhw},\mathrm h,\mathrm y}\end{array}
+\end{eqnarray}
+\global\let\theequation\saveeqnno
+\addtocounter{equation}{-1}\ignorespaces 
+where UHI\ensuremath{_{hw,d,h}} is the UHI of date d at hour h. Hence, there is one interaction value for every hour in HW periods. Outside HW days, there is no interaction value. UHI\ensuremath{_{nhw,h,y}} is the average of all NHW UHI at hour h for year y. Hence, for a given year y, UHI\ensuremath{_{nhw}} consists of 24 data points, each representing the average UHI at a specific hour of the day.  We allow these 24 points to vary across different years to control year-over-year climate shifts.
+
+
+
+
+
+\subsection*{Machine Learning Model}This analysis utilizes an hourly frequency panel dataset where each observation is uniquely identified by location, a specific heatwave event ID, the corresponding day within the event, and the hour of the day. To ensure the model generalizes the underlying biophysical drivers rather than site- or time-specific conditions, explicit identifiers such as date and location are not used as model features. The rationale is that variations across different locations and times are treated not as unique contexts but as different realizations of the states of these core biophysical variables. To further isolate these drivers from interannual climate drift, any variable defined as a difference from the background is calculated using an NHW baseline drawn exclusively from the same year as the heatwave observation. While temporal dependence is not explicitly modeled with lagged variables, its potential contribution is considered in the Discussion. Although data are pooled across space and time for model estimation, each observation retains its temporal (e.g., hour of the day) and spatial (e.g., climate zone) attributes, which allow for subsequent analysis of diurnal and spatial patterns in UHI-HW interactions.
+
+The CatBoost model is employed to identify the key drivers of UHI-HW interactions. This gradient-boosting algorithm combines multiple weak learners to create a strong learner that predicts and, more importantly, attributes the UHI-HW interaction of cities across the globe. CatBoost is chosen for its robustness to outliers, collinearity, and efficiency in handling large datasets. To improve the interpretability of ML models and understand each feature's contribution, we integrate SHapley Additive exPlanations (SHAP). SHAP, an explainable AI technique, quantifies individual feature contributions to model predictions. It allows us to investigate the impact of land characteristics and meteorological conditions on UHI-HW dynamics. SHAP reveals feature importance, directional effects, and interaction effects.
+
+The initial feature universe included a comprehensive list of 38 biophysical variables, including local energy fluxes (sensible heat flux, latent heat flux, net radiation), background climate variables (humidity, wind speed, precipitation), and land surface characteristics.
+\let\saveeqnno\theequation
+\let\savefrac\frac
+\def\dispfrac{\displaystyle\savefrac}
+\begin{eqnarray}
+\let\frac\dispfrac
+\gdef\theequation{4}
+\let\theHequation\theequation
+\label{dfg-4c4021a68f1e}
+\begin{array}{@{}l}R_n\;+\;Q_A=H\;+\;\lambda E\;+\;G\;+\;Q_s\;\end{array}
+\end{eqnarray}
+\global\let\theequation\saveeqnno
+\addtocounter{equation}{-1}\ignorespaces 
+The surface layer energy balance is expressed in Equation~(\ref{dfg-4c4021a68f1e})  above\unskip~\cite{2755510:33600999} , where R\ensuremath{_{n}} represents the net all-wave radiation, containing both net short-wave radiation (K\ensuremath{_{n}}) and net long-wave radiation (L\ensuremath{_{n}}). Q\ensuremath{_{A}} denotes anthropogenic heat, H the sensible heat flux, \ensuremath{\lambda }E the latent heat flux, G the heat flux conducted into the soil, and Q\ensuremath{_{S}} the heat storage. These six terms exhibit perfect collinearity. Additionally, the turbulent fluxes H and \ensuremath{\lambda }E are highly correlated. Although the CatBoost algorithm can effectively manage redundancy, retaining \ensuremath{\lambda }E would disperse SHAP importance across interchangeable predictors and obscure the physical interpretability. Therefore, \ensuremath{\lambda }E was excluded from the feature list, and H was maintained as the sole turbulent flux term.
+
+A two-tiered differentiation structure inherently characterizes the interaction between the UHI and HW. Specifically, this includes the differences between urban and rural environments, which we use \ensuremath{\delta } to represent throughout this study,  and the contrasts between HW and NHW conditions, which we denote in \ensuremath{\Delta }. In the feature selection process, we derived up to four variables for each metric type (e.g., specific humidity) when data is available. These derived variables included: (1) the average value of the variable for a given grid cell; (2) the urban-rural difference in the variable during NHW conditions; (3) the HW NHW difference in the variable for a given grid cell; and (4) the HW NHW difference of the urban-rural difference in the variable. To manage the feature selection process and mitigate potential multicollinearity-related issues, we implemented a penalty to discourage the over-representation of variables derived from the same metric type.
+
+In the next step, the model underwent a feature selection process that was validated through training on a randomly selected subset of the data and validated on an independent hold-out set to ensure generalizability. The importance of features for the parameters was further analyzed for each feature variable to understand their relative contributions.  The method considers all possible combinations of features. Features with higher average absolute SHAP values are considered more impactful. Features with SHAP contribution not significant from zero will be removed. As a final step, highly correlated variables that describe the same metrics are removed for a more parsimonious and explainable model.  
+
+As mentioned earlier, using \ensuremath{\Delta } to represent HW-NHW differences and \ensuremath{\delta } to represent urban-rural differences, the final features selected are net longwave radiation (\ensuremath{\Delta }\ensuremath{\delta }L\ensuremath{_{n}}), specific humidity (\ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}}), 10-m wind speed (\ensuremath{\Delta }U10), ground heat flux (\ensuremath{\Delta }\ensuremath{\delta }G), sensible heat flux (\ensuremath{\Delta }SH), soil liquid water in the top 10cm of soil (\ensuremath{\Delta }\ensuremath{\Theta}\ensuremath{_{10cm}}), absorbed solar radiation (\ensuremath{\delta }K\ensuremath{_{n}}), and anthropogenic heat from AC (\ensuremath{\Delta }AHac). Since anthropogenic heat from AC represents a separate category of the variable, it was retained in the model even though its contribution is limited.
+
+To evaluate the model's performance and ensure its generalizability, a 10-fold cross-validation technique was employed. This method involves partitioning the dataset into ten equal-sized subsets, also known as "folds." The model is then trained on nine of these folds and validated on the remaining one. This process is repeated ten times, with each fold serving as the validation set exactly once. This approach minimizes the risk of overfitting and provides a reliable estimate of the model's predictive accuracy on unseen data. The performance was assessed using the Root Mean Square Error (RMSE), which measures the model's average prediction error. The average of the ten RMSEs is 0.0987 (\ensuremath{^{\ensuremath{\circ }}}C) with a 0.0007 (\ensuremath{^{\ensuremath{\circ }}}C) standard deviation. The stable RMSE values across the folds demonstrate that the model is robust, which gives us confidence that the subsequent climate zone specific attribution results are driven by physical relationships rather than artifacts of the sample used for model fitting. 
