@@ -1,0 +1,587 @@
+%% Template for a preprint Letter or Article for submission
+%% to the journal Nature.
+%% Written by Peter Czoschke, 26 February 2004
+%%
+\documentclass[]{nature}
+\makeatletter\if@twocolumn\PassOptionsToPackage{switch}{lineno}\else\fi\makeatother
+
+
+\usepackage{tabulary,graphicx,amsmath,amsfonts,amssymb}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+  
+%This is for overwrite figure and table definition used in the class file, because the figure and table position is not working properly when using definition from class file.
+\makeatletter
+\renewenvironment{figure}
+               {\@float{figure}}
+               {\end@float}
+\renewenvironment{figure*}
+               {\@dblfloat{figure}}
+               {\end@dblfloat}
+\renewenvironment{table}
+               {\@float{table}}
+               {\end@float}
+\renewenvironment{table*}
+               {\@dblfloat{table}}
+               {\end@dblfloat}
+
+\makeatother
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Following additional macros are required to function some 
+% functions which are not available in the class used.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{url,multirow,morefloats,floatflt,cancel,tfrupee}
+\makeatletter
+
+
+\AtBeginDocument{\@ifpackageloaded{textcomp}{}{\usepackage{textcomp}}}
+\makeatother
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{pifont}
+\usepackage[nointegrals]{wasysym}
+\urlstyle{rm}
+\makeatletter
+
+%%%For Table column width calculation.
+\def\mcWidth#1{\csname TY@F#1\endcsname+\tabcolsep}
+
+%%Hacking center and right align for table
+\def\cAlignHack{\rightskip\@flushglue\leftskip\@flushglue\parindent\z@\parfillskip\z@skip}
+\def\rAlignHack{\rightskip\z@skip\leftskip\@flushglue \parindent\z@\parfillskip\z@skip}
+
+%Etal definition in references
+\@ifundefined{etal}{\def\etal{\textit{et~al}}}{}
+
+
+%\if@twocolumn\usepackage{dblfloatfix}\fi
+\usepackage{ifxetex}
+\ifxetex\else\if@twocolumn\@ifpackageloaded{stfloats}{}{\usepackage{dblfloatfix}}\fi\fi
+
+\AtBeginDocument{
+\expandafter\ifx\csname eqalign\endcsname\relax
+\def\eqalign#1{\null\vcenter{\def\\{\cr}\openup\jot\m@th
+  \ialign{\strut$\displaystyle{##}$\hfil&$\displaystyle{{}##}$\hfil
+      \crcr#1\crcr}}\,}
+\fi
+}
+
+%For fixing hardfail when unicode letters appear inside table with endfloat
+\AtBeginDocument{%
+  \@ifpackageloaded{endfloat}%
+   {\renewcommand\efloat@iwrite[1]{\immediate\expandafter\protected@write\csname efloat@post#1\endcsname{}}}{\newif\ifefloat@tables}%
+}%
+
+\def\BreakURLText#1{\@tfor\brk@tempa:=#1\do{\brk@tempa\hskip0pt}}
+\let\lt=<
+\let\gt=>
+\def\processVert{\ifmmode|\else\textbar\fi}
+\let\processvert\processVert
+
+\@ifundefined{subparagraph}{
+\def\subparagraph{\@startsection{paragraph}{5}{2\parindent}{0ex plus 0.1ex minus 0.1ex}%
+{0ex}{\normalfont\small\itshape}}%
+}{}
+
+% These are now gobbled, so won't appear in the PDF.
+\newcommand\role[1]{\unskip}
+\newcommand\aucollab[1]{\unskip}
+  
+\@ifundefined{tsGraphicsScaleX}{\gdef\tsGraphicsScaleX{1}}{}
+\@ifundefined{tsGraphicsScaleY}{\gdef\tsGraphicsScaleY{.9}}{}
+% To automatically resize figures to fit inside the text area
+\def\checkGraphicsWidth{\ifdim\Gin@nat@width>\linewidth
+	\tsGraphicsScaleX\linewidth\else\Gin@nat@width\fi}
+
+\def\checkGraphicsHeight{\ifdim\Gin@nat@height>.9\textheight
+	\tsGraphicsScaleY\textheight\else\Gin@nat@height\fi}
+
+\def\fixFloatSize#1{}%\@ifundefined{processdelayedfloats}{\setbox0=\hbox{\includegraphics{#1}}\ifnum\wd0<\columnwidth\relax\renewenvironment{figure*}{\begin{figure}}{\end{figure}}\fi}{}}
+\let\ts@includegraphics\includegraphics
+
+\def\inlinegraphic[#1]#2{{\edef\@tempa{#1}\edef\baseline@shift{\ifx\@tempa\@empty0\else#1\fi}\edef\tempZ{\the\numexpr(\numexpr(\baseline@shift*\f@size/100))}\protect\raisebox{\tempZ pt}{\ts@includegraphics{#2}}}}
+
+%\renewcommand{\includegraphics}[1]{\ts@includegraphics[width=\checkGraphicsWidth]{#1}}
+\AtBeginDocument{\def\includegraphics{\@ifnextchar[{\ts@includegraphics}{\ts@includegraphics[width=\checkGraphicsWidth,height=\checkGraphicsHeight,keepaspectratio]}}}
+
+\DeclareMathAlphabet{\mathpzc}{OT1}{pzc}{m}{it}
+
+\def\URL#1#2{\@ifundefined{href}{#2}{\href{#1}{#2}}}
+
+%%For url break
+\def\UrlOrds{\do\*\do\-\do\~\do\'\do\"\do\-}%
+\g@addto@macro{\UrlBreaks}{\UrlOrds}
+
+
+
+\edef\fntEncoding{\f@encoding}
+\def\EUoneEnc{EU1}
+\makeatother
+\def\floatpagefraction{0.8} 
+\def\dblfloatpagefraction{0.8}
+\def\style#1#2{#2}
+\def\xxxguillemotleft{\fontencoding{T1}\selectfont\guillemotleft}
+\def\xxxguillemotright{\fontencoding{T1}\selectfont\guillemotright}
+
+\newif\ifmultipleabstract\multipleabstractfalse%
+\newenvironment{typesetAbstractGroup}{}{}%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+\RequirePackage[colorlinks=true, allcolors=blue]{hyperref}
+
+
+\usepackage[left=2cm,%
+                right=2cm,%
+                top=2.25cm,%
+                bottom=2.25cm,%
+                headheight=12pt,%
+                letterpaper]{geometry}%
+     
+\RequirePackage{authblk}
+
+\setlength{\affilsep}{1.5em}
+
+\renewcommand\Authfont{\fontsize{12}{12}\usefont{OT1}{phv}{b}{n}}
+\renewcommand\Affilfont{\fontsize{10}{12}\usefont{OT1}{phv}{m}{n}}
+
+\makeatletter
+\renewcommand\normalsize{%
+\@setfontsize\normalsize{10pt}{11.5pt}% Will look incredibly crabbed if line height is too small
+\abovedisplayskip 10\p@ \@plus2\p@ \@minus5\p@%
+\abovedisplayshortskip \z@ \@plus2\p@%
+\belowdisplayshortskip 5\p@ \@plus2\p@ \@minus3\p@%
+\belowdisplayskip \abovedisplayskip%
+\let\@listi\@listI%
+}
+\normalsize  
+\makeatother
+
+\usepackage{caption}
+\date{}
+\captionsetup[table]{labelsep=period,labelfont=bf}
+\captionsetup[figure]{labelsep=period,labelfont=bf}
+\captionsetup[graph]{labelsep=period,labelfont=bf}
+\captionsetup[plate]{labelsep=period,labelfont=bf}
+\captionsetup[chart]{labelsep=period,labelfont=bf}
+\captionsetup[diagram]{labelsep=period,labelfont=bf}
+
+\setlength{\parskip}{5pt}
+
+\linespread{1.3}
+\renewcommand\refname{References}
+\def\oupIndent{1pt}
+
+
+\RequirePackage{fancyhdr}  % custom headers/footers
+\RequirePackage{lastpage}  % Number of pages in the document
+\pagestyle{fancy}          % Enables the custom headers/footers
+% Headers
+\lhead{}%
+\chead{}%
+\rhead{}%
+% Footers
+\lfoot{}%
+\cfoot{}%
+\rfoot{\small\sffamily\bfseries\thepage/\pageref{LastPage}}%
+\renewcommand{\headrulewidth}{0pt}% % No header rule
+\renewcommand{\footrulewidth}{0pt}% % No footer rule
+
+
+\renewenvironment{abstract}{\vspace*{-1pc}\trivlist\item[]\leftskip\oupIndent\par\vskip4pt\noindent{\fontsize{12}{13}\selectfont{\sffamily\bfseries ABSTRACT}}\mbox{\null}\\[15pt]}{\par\noindent\endtrivlist}
+
+\newenvironment{keywords}{\vspace*{-.5pc}\trivlist\leftskip1.5pc\item[]\textbf{\sffamily Keywords: }\rightskip1.5pc}{\sffamily\par\noindent\endtrivlist}
+
+\makeatletter
+\def\title#1{\gdef\@title{\parbox{\textwidth}{\boldmath\raggedright\sffamily#1\strut}}}
+\renewcommand{\@biblabel}[1]{\bfseries#1.}
+\makeatother
+
+\makeatletter
+
+\renewcommand{\section}{\@startsection {section}{1}{0pt}%
+    {-6pt}{1pt}%
+    {\large\sffamily\bfseries}%
+    }
+\renewcommand{\subsection}{\@startsection {subsection}{2}{0pt}%
+    {-6pt}{0.1em}%
+    {\fontsize{12pt}{14pt}\selectfont\sffamily\bfseries}%
+    }
+    
+\renewcommand{\subsubsection}{\@startsection {subsubsection}{2}{0pt}%
+    {-6pt}{0.1em}%
+    {\small\sffamily\bfseries\itshape}%
+    }
+
+\renewcommand{\paragraph}{\@startsection {paragraph}{2}{0pt}%
+    {-6pt}{-0.5em}%
+    {\small\sffamily\bfseries}%
+    }
+
+\makeatother
+
+\makeatother
+
+
+
+
+\def\fixFloatSize#1{}
+
+  \def\EqualAuthorMark{}
+  \def\EqualAuthorPrint{}
+  \let\citep\cite
+  \let\citet\cite
+
+  
+
+  \def\EqualFirstAuthors{}
+   
+	  
+\setcounter{secnumdepth}{0}
+
+\usepackage{float}
+
+\newcommand{\texttildeapprox}{{\fontfamily{pcr}\selectfont\texttildelow}}
+
+\begin{document}
+
+
+\title{Global Spatiotemporal Analysis of Interactions between Urban Heat Islands and Heat Waves}
+  \author[1]{Johnny Guo}
+        \author[2]{Keer Zhang}
+        \author[2,$\ast$]{Xuhui Lee}
+        
+\affil[1]{
+    Choate Rosemary Hall\unskip, Wallingford\unskip, 06492\unskip, CT}
+\affil[2]{
+    School of the Environment\unskip, 
+    Yale University\unskip, New Haven\unskip, 06511\unskip, CT}
+\affil[$\ast$]{xuhui.lee@yale.edu}
+\maketitle\vskip6pt\thispagestyle{empty} 
+
+\abstract{\sffamily 
+Heat waves (HWs) pose a significant threat to public health. The extreme heat risk is particularly relevant to urban residents due to the urban heat island (UHI) effect and its synergistic interactions with HWs in some cities. Previous research on the interactions between UHI and HWs has focused on a single city or region, and both positive and negative interactions have been reported. The global patterns of interactions between UHI and HWs across various climate backgrounds, as well as their underlying mechanisms, remain unclear. Here, we simulate the global urban heat island intensity (UHII, defined as the urban-rural difference in 2m-height air temperature) from 1985 to 2013 using the Community Land Model (CLM). By conducting a global-scale analysis of interactions between UHII and HWs, we reveal their spatial and diurnal patterns across different regions and climate zones. To identify and explain the drivers of the UHI-HW interactions, we employ machine learning models (CatBoost) and the SHapley Additive exPlanations (SHAP) framework to quantify the contributions of local energy flux, climate background, and land surface characteristics. UHI-HW interaction is quantified as the difference between UHII during heatwave(HW) days and non-heatwave(NHW) periods. We found that the UHI-HW interaction, which peaks at 6 AM local time, is more positive at night than during the day. We also identified net longwave radiation, sensible heat flux, wind speed, and humidity as the significant drivers of the interaction. However, some drivers behave differently in different K{\"{o}}ppen{\textendash}Geiger climate zones. Our study provides new insights into the complex interaction between UHIs and heat waves, with implications for urban climate adaptation strategies in a warming world. The machine learning-based approach offers a novel method for attributing the spatial variability in UHI-heat wave interactions to specific biophysical drivers.}\def\keywordstitle{Keywords}
+
+% Keywords:
+    \noindent\textbf{\keywordstitle:} heat wave, urban heat island, surface evaporation, surface energy balance, surface biophysical driver
+%\end of Keywords
+    
+    
+\section*{Introduction}
+The urban heat island (UHI) effect, a phenomenon characterized by elevated temperatures in urban areas compared to their surrounding rural areas, is a concern exacerbated by the escalating effects of global warming and rapid urbanization. When compounded by heat waves (HWs), this effect is particularly worrisome, creating a synergistic impact that can strain urban infrastructure, public health, and energy resources\unskip~\cite{2755510:33598912,2755510:33598911} . A better understanding of the interaction between UHI and HW will lead to the development of effective mitigation and adaptation strategies.
+
+A considerable body of research exists on UHI-HW interactions\unskip~\cite{2755510:33598930}. Heatwaves can modulate the spatial and temporal dynamics of the UHI through surface energy balance modifications, altered atmospheric processes, and changes in anthropogenic heat emissions. While several studies document synergistic relationships between UHI and HW events, others have not found such reinforcing effects. Most studies are limited to single cities or specific geographical regions\unskip~\cite{2755510:33598950,2755510:33598949,2755510:33598945,2755510:33598943,2755510:33598941,2755510:33598938,2755510:33598937,2755510:33598935}. With varying turbulent flux patterns, diverse climatological variables, land surface characteristics, and anthropogenic drivers contributing to the UHI-HW interaction, a global study will provide a more comprehensive understanding of the impacts of those underlying factors. Moreover, many studies rely on satellite-derived land surface temperatures (LST) to examine UHIs, which, while offering wide coverage and temporal consistency, do not directly reflect the thermal conditions experienced by people within urban areas\unskip~\cite{2755510:33598945,2755510:33598947} . The Canopy Urban Heat Island, measured using air temperature, is more consistent with the thermal environment experienced by urban populations, making it a more pertinent indicator of heat stress and its direct impact on public health and thermal comfort\unskip~\cite{2755510:33598934} .
+
+This study addresses these research gaps by conducting a global-scale analysis of UHI-HW interactions using 2-m air temperature. It will characterize global spatial and temporal patterns of UHI-HW interactions, identifying their variability across climate zones and throughout the day. It will also analyze the relative importance of drivers such as humidity, wind, and energy budget factors across different regions.
+
+
+    
+\section*{Methods}
+
+
+
+
+\subsection*{Simulation setup }We employ a simulation approach in this study to allow full global coverage. The Community Land Model (CLM), the land component of the Community Earth System Model (CESM)\unskip~\cite{2755510:33598890} , simulates land-atmosphere interactions. CLM employs a sub-grid approach to represent land surface heterogeneity, partitioning each grid cell into up to five distinct land units:   glacier, lake, urban, vegetated, and crop. All sub-grid units within a single grid cell are driven by the same atmospheric forcing. We use the CLM 5.0\unskip~\cite{2755510:33598910}  Satellite Phenology mode, which uses satellite-derived data to prescribe vegetation characteristics. With 0.9\ensuremath{^\circ} latitude x 1.2\ensuremath{^\circ} longitude resolution, we simulate the climate between 1985 and 2013.  The atmospheric forcing was driven by Global Soil Wetness Project Phase 3 Version 1, which is bias-corrected\unskip~\cite{2755510:33598910}  and suitable for land-only simulation. This "offline" approach enables analysis of variables not typically archived from fully-coupled runs while preserving realistic feedback effects\unskip~\cite{2755510:33598945} . The simulations were run after spin-up periods of 20 years to ensure the equilibrium of the soil variables.
+
+This study today focuses explicitly on heatwaves (HWs), and thus, our analysis is centered on the summer months, June to August for the Northern Hemisphere and December through February for the Southern Hemisphere. Tropospheric temperature seasonality is weaker in the tropics (18\ensuremath{^\circ}S{\textendash}20\ensuremath{^\circ}N) relative to mid- and high latitudes. While grid-cell specific peak warming can occur in March/April (0\ensuremath{^\circ}{\textendash}18\ensuremath{^\circ}S) or May/September (0\ensuremath{^\circ}{\textendash}20\ensuremath{^\circ}N), the climatological warmest periods for the tropics are June{\textendash}July{\textendash}August in the Northern Hemisphere and December{\textendash}January{\textendash}February in the Southern Hemisphere.\unskip~\cite{2755510:33598947}  We utilize hourly data, specifically from 8 AM to 6 PM local solar time, to represent daytime conditions, while the remaining hours are designated as nighttime. Among 55296 (288 \ensuremath{\times} 192) global grid cells, 3648 cells have the urban portion and are studied.
+
+
+
+
+
+\subsection*{Definition of Heat waves and UHI interaction}Definitions of heat waves (HW) vary across studies\unskip~\cite{2755510:33598930,2755510:33598927} . In this research, heat waves are defined for each grid cell individually, based on its corresponding rural 2-meter air temperature data, as the rural sub-grid represents the local background environment. Specifically, a heat wave (HW) for a given location is identified as:
+\let\saveeqnno\theequation
+\let\savefrac\frac
+\def\dispfrac{\displaystyle\savefrac}
+\begin{eqnarray}
+\let\frac\dispfrac
+\gdef\theequation{1}
+\let\theHequation\theequation
+\label{dfg-2755510:33598937}
+\begin{array}{@{}l}\style{font-family:'Times New Roman'}{\mathrm{HW}=\{day\vert T_{r,m}>T_{98}\}\;\mathrm{for}\;3\;\mathrm{or}\;\mathrm{more}\;\mathrm{consecutive}\;\mathrm{days}}\end{array}
+\end{eqnarray}
+\global\let\theequation\saveeqnno
+\addtocounter{equation}{-1}\ignorespaces 
+where maximum daily rural temperature  T\ensuremath{_{r,m\ }}is the area-weighted mean of daily maximum 2-meter air temperature of vegetated and cropland units in a grid cell, and T\ensuremath{_{98}} is the 98th percentile. This percentile value is based on the daily maximum in the summer, as defined previously, between 1985 and 2013 (a total of 2668 days for grids in the Northern Hemisphere and 2610 days for grids in the Southern Hemisphere). This approach was applied to 29 years of data, categorizing days into HW days and non-heatwave (NHW) days for each studied grid. Globally, the average length of HW is 4.24\ensuremath{\pm} 2.11 days (mean \ensuremath{\pm} 1 s.d.). The average lengths of HW in different climate zones range from 3.82 to 4.26 days, as detailed in Supplementary Table 1. 
+
+For simplicity, we use UHI to represent urban heat island intensity, which is defined as:
+\let\saveeqnno\theequation
+\let\savefrac\frac
+\def\dispfrac{\displaystyle\savefrac}
+\begin{eqnarray}
+\let\frac\dispfrac
+\gdef\theequation{2}
+\let\theHequation\theequation
+\label{dfg-a0dd176e2b84}
+\begin{array}{@{}l}\mathrm{UHI}\;=\;T_u-T_r\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\end{array}
+\end{eqnarray}
+\global\let\theequation\saveeqnno
+\addtocounter{equation}{-1}\ignorespaces 
+where \textit{T\ensuremath{_{u}}} and \textit{T\ensuremath{_{r}}}are the area-weighted mean of hourly 2-meter air temperature for urban and rural subgrids, respectively. To quantify the impact of heat waves' interaction with the UHI effect, we calculate the UHI difference (\ensuremath{\Delta }UHI) between heat wave and non-heat wave days, matching by the hour. The \ensuremath{\Delta }UHI at a specific hour (h) and a given year (y) is defined as:
+\let\saveeqnno\theequation
+\let\savefrac\frac
+\def\dispfrac{\displaystyle\savefrac}
+\begin{eqnarray}
+\let\frac\dispfrac
+\gdef\theequation{3}
+\let\theHequation\theequation
+\label{dfg-62c1426c5b48}
+\begin{array}{@{}l}\Delta{\mathrm{UHI}}_{\mathrm d,\mathrm h}={\mathrm{UHI}}_{\mathrm{hw},\mathrm d,\mathrm h}-{\mathrm{UHI}}_{\mathrm{nhw},\mathrm h,\mathrm y}\end{array}
+\end{eqnarray}
+\global\let\theequation\saveeqnno
+\addtocounter{equation}{-1}\ignorespaces 
+where UHI\ensuremath{_{hw,d,h}} is the UHI of date d at hour h. Hence, there is one interaction value for every hour in HW periods. Outside HW days, there is no interaction value. UHI\ensuremath{_{nhw,h,y}} is the average of all NHW UHI at hour h for year y. Hence, for a given year y, UHI\ensuremath{_{nhw}} consists of 24 data points, each representing the average UHI at a specific hour of the day.  We allow these 24 points to vary across different years to control year-over-year climate shifts.
+
+
+
+
+
+\subsection*{Machine Learning Model}This analysis utilizes an hourly frequency panel dataset where each observation is uniquely identified by location, a specific heatwave event ID, the corresponding day within the event, and the hour of the day. To ensure the model generalizes the underlying biophysical drivers rather than site- or time-specific conditions, explicit identifiers such as date and location are not used as model features. The rationale is that variations across different locations and times are treated not as unique contexts but as different realizations of the states of these core biophysical variables. To further isolate these drivers from interannual climate drift, any variable defined as a difference from the background is calculated using an NHW baseline drawn exclusively from the same year as the heatwave observation. While temporal dependence is not explicitly modeled with lagged variables, its potential contribution is considered in the Discussion. Although data are pooled across space and time for model estimation, each observation retains its temporal (e.g., hour of the day) and spatial (e.g., climate zone) attributes, which allow for subsequent analysis of diurnal and spatial patterns in UHI-HW interactions.
+
+The CatBoost model is employed to identify the key drivers of UHI-HW interactions. This gradient-boosting algorithm combines multiple weak learners to create a strong learner that predicts and, more importantly, attributes the UHI-HW interaction of cities across the globe. CatBoost is chosen for its robustness to outliers, collinearity, and efficiency in handling large datasets. To improve the interpretability of ML models and understand each feature's contribution, we integrate SHapley Additive exPlanations (SHAP). SHAP, an explainable AI technique, quantifies individual feature contributions to model predictions. It allows us to investigate the impact of land characteristics and meteorological conditions on UHI-HW dynamics. SHAP reveals feature importance, directional effects, and interaction effects.
+
+The initial feature universe included a comprehensive list of 38 biophysical variables, including local energy fluxes (sensible heat flux, latent heat flux, net radiation), background climate variables (humidity, wind speed, precipitation), and land surface characteristics.
+\let\saveeqnno\theequation
+\let\savefrac\frac
+\def\dispfrac{\displaystyle\savefrac}
+\begin{eqnarray}
+\let\frac\dispfrac
+\gdef\theequation{4}
+\let\theHequation\theequation
+\label{dfg-4c4021a68f1e}
+\begin{array}{@{}l}R_n\;+\;Q_A=H\;+\;\lambda E\;+\;G\;+\;Q_s\;\end{array}
+\end{eqnarray}
+\global\let\theequation\saveeqnno
+\addtocounter{equation}{-1}\ignorespaces 
+The surface layer energy balance is expressed in Equation~(\ref{dfg-4c4021a68f1e})  above\unskip~\cite{2755510:33600999} , where R\ensuremath{_{n}} represents the net all-wave radiation, containing both net short-wave radiation (K\ensuremath{_{n}}) and net long-wave radiation (L\ensuremath{_{n}}). Q\ensuremath{_{A}} denotes anthropogenic heat, H the sensible heat flux, \ensuremath{\lambda }E the latent heat flux, G the heat flux conducted into the soil, and Q\ensuremath{_{S}} the heat storage. These six terms exhibit perfect collinearity. Additionally, the turbulent fluxes H and \ensuremath{\lambda }E are highly correlated. Although the CatBoost algorithm can effectively manage redundancy, retaining \ensuremath{\lambda }E would disperse SHAP importance across interchangeable predictors and obscure the physical interpretability. Therefore, \ensuremath{\lambda }E was excluded from the feature list, and H was maintained as the sole turbulent flux term.
+
+A two-tiered differentiation structure inherently characterizes the interaction between the UHI and HW. Specifically, this includes the differences between urban and rural environments, which we use \ensuremath{\delta } to represent throughout this study,  and the contrasts between HW and NHW conditions, which we denote in \ensuremath{\Delta }. In the feature selection process, we derived up to four variables for each metric type (e.g., specific humidity) when data is available. These derived variables included: (1) the average value of the variable for a given grid cell; (2) the urban-rural difference in the variable during NHW conditions; (3) the HW NHW difference in the variable for a given grid cell; and (4) the HW NHW difference of the urban-rural difference in the variable. To manage the feature selection process and mitigate potential multicollinearity-related issues, we implemented a penalty to discourage the over-representation of variables derived from the same metric type.
+
+In the next step, the model underwent a feature selection process that was validated through training on a randomly selected subset of the data and validated on an independent hold-out set to ensure generalizability. The importance of features for the parameters was further analyzed for each feature variable to understand their relative contributions.  The method considers all possible combinations of features. Features with higher average absolute SHAP values are considered more impactful. Features with SHAP contribution not significant from zero will be removed. As a final step, highly correlated variables that describe the same metrics are removed for a more parsimonious and explainable model.  
+
+As mentioned earlier, using \ensuremath{\Delta } to represent HW-NHW differences and \ensuremath{\delta } to represent urban-rural differences, the final features selected are net longwave radiation (\ensuremath{\Delta }\ensuremath{\delta }L\ensuremath{_{n}}), specific humidity (\ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}}), 10-m wind speed (\ensuremath{\Delta }U10), ground heat flux (\ensuremath{\Delta }\ensuremath{\delta }G), sensible heat flux (\ensuremath{\Delta }SH), soil liquid water in the top 10cm of soil (\ensuremath{\Delta }\ensuremath{\Theta}\ensuremath{_{10cm}}), absorbed solar radiation (\ensuremath{\delta }K\ensuremath{_{n}}), and anthropogenic heat from AC (\ensuremath{\Delta }AHac). Since anthropogenic heat from AC represents a separate category of the variable, it was retained in the model even though its contribution is limited.
+
+To evaluate the model's performance and ensure its generalizability, a 10-fold cross-validation technique was employed. This method involves partitioning the dataset into ten equal-sized subsets, also known as "folds." The model is then trained on nine of these folds and validated on the remaining one. This process is repeated ten times, with each fold serving as the validation set exactly once. This approach minimizes the risk of overfitting and provides a reliable estimate of the model's predictive accuracy on unseen data. The performance was assessed using the Root Mean Square Error (RMSE), which measures the model's average prediction error. The average of the ten RMSEs is 0.0987 (\ensuremath{^{\ensuremath{\circ }}}C) with a 0.0007 (\ensuremath{^{\ensuremath{\circ }}}C) standard deviation. The stable RMSE values across the folds demonstrate that the model is robust, which gives us confidence that the subsequent climate zone specific attribution results are driven by physical relationships rather than artifacts of the sample used for model fitting. 
+    
+\section*{Results}
+
+\bgroup
+\fixFloatSize{images/250138a4-7f30-44cb-bdb6-c2c5f8875d39-ufigure_1_global_mean_uhi_by_hour.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/250138a4-7f30-44cb-bdb6-c2c5f8875d39-ufigure_1_global_mean_uhi_by_hour.png}{\includegraphics{images/250138a4-7f30-44cb-bdb6-c2c5f8875d39-ufigure_1_global_mean_uhi_by_hour.png}}{\includegraphics{250138a4-7f30-44cb-bdb6-c2c5f8875d39-ufigure_1_global_mean_uhi_by_hour.png}}
+\makeatother 
+\caption{{\textbf{Diurnal composite of UHI and HW interaction for all global cities.} The solid line represents the mean, and the shaded area represents +- one standard deviation.}}
+\label{f-8a2868bfb5fe}
+\end{figure*}
+\egroup
+
+
+
+
+\subsection*{Global and regional patterns of UHI-HW interactions }The global simulation results show a clear hourly temporal pattern for the synergy of UHI and HWs. The NW-NHW UHI exhibits a peak at around 05 to 06 and a trough at 09 to 10 local solar time. It also shows a local peak at around 19 local solar time (Figure~\ref{f-8a2868bfb5fe}). Aggregating to the diurnal level, we found the nighttime average  \ensuremath{\Delta }UHI 0.27 \ensuremath{\pm} 0.23 \ensuremath{^\circ}C (mean \ensuremath{\pm} 1 s.d.) is higher than its daytime counterpart 0.02\ensuremath{\pm} 0.22\ensuremath{^\circ}C, even though neither result is statistically significant from zero (P {\textgreater} 0.05 for both cases). The results are consistent with previous findings, where positive \unskip~\cite{2755510:33598935,2755510:33598909,2755510:33598908,2755510:33598952} , insignificant\unskip~\cite{2755510:33598915} , and negative \unskip~\cite{2755510:33598943,2755510:33598907,2755510:33598905,2755510:33598896}  \ensuremath{\Delta }UHI were reported, depending on the regions studied.
+
+Figure~\ref{f-286d9308a08c} reveals spatial patterns in \ensuremath{\Delta }UHI globally. During the day, notable spatial heterogeneity is observed. Negative or near-neutral interactions are widespread across global coastal areas, major humid mid-latitude agricultural zones, such as the US Corn Belt and Western and Central Europe, and low-latitude tropical regions, including the Congo Basin, Southeast Asia, and southern Mexico. In contrast, distinct positive synergies are clustered within the Indo-Gangetic and North China Plains. At night, the interaction is much stronger and the spatial pattern is more uniform, with the most pronounced hotspot (0.8 \ensuremath{^\circ}C) over northern India. Neutral or slightly negative signals are limited to isolated equatorial grids.
+
+
+\bgroup
+\fixFloatSize{images/9866ade5-4042-4d5f-9574-e00715ca7d29-ufigure_2_ab_all_uhi_day_night_comparison_figure3_style.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/9866ade5-4042-4d5f-9574-e00715ca7d29-ufigure_2_ab_all_uhi_day_night_comparison_figure3_style.png}{\includegraphics{images/9866ade5-4042-4d5f-9574-e00715ca7d29-ufigure_2_ab_all_uhi_day_night_comparison_figure3_style.png}}{\includegraphics{9866ade5-4042-4d5f-9574-e00715ca7d29-ufigure_2_ab_all_uhi_day_night_comparison_figure3_style.png}}
+\makeatother 
+\caption{{\textbf{Nighttime \ensuremath{\Delta }UHI is stronger than that of Daytime.} Geographical distributions of \ensuremath{\Delta }UHI during daytime (a) and nighttime (b). }}
+\label{f-286d9308a08c}
+\end{figure*}
+\egroup
+
+\bgroup
+\fixFloatSize{images/306ab391-c84b-42e2-af81-6ce3f4ac52e0-ukoppengeiger.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/306ab391-c84b-42e2-af81-6ce3f4ac52e0-ukoppengeiger.png}{\includegraphics{images/306ab391-c84b-42e2-af81-6ce3f4ac52e0-ukoppengeiger.png}}{\includegraphics{306ab391-c84b-42e2-af81-6ce3f4ac52e0-ukoppengeiger.png}}
+\makeatother 
+\caption{{K{\"{o}}ppen{\textendash}Geiger climate map 1991{\textendash}2020\unskip~\protect\cite{2755510:33598889}}}
+\label{f-3967a5eb5d38}
+\end{figure*}
+\egroup
+The geographically-bound patterns observed in Figure~\ref{f-286d9308a08c}  show notable alignment with the K{\"{o}}ppen-Geiger climate classification map\unskip~\cite{2755510:33598889}  (Supplementary Figure 1). For example, a distinct negative interaction over the Congo Basin matches the boundaries of the Af (Tropical Rainforest) climate zone. Similar correspondence is evident in regions such as Western Europe, Northeast China, Northern India, Southeast Asia, and the Southeastern United States. The observed agreement between UHI-HW interaction patterns and established climate zones indicates the importance and utility of conducting subsequent analyses stratified by climate classifications.
+
+In this study, we excluded locations belonging to the Polar K{\"{o}}ppen-Geiger climate zone\unskip~\cite{2755510:33598889} . Across the other four major K{\"{o}}ppen-Geiger climate zones, the \ensuremath{\Delta }UHI exhibits a similar hourly temporal pattern to the global one, with early morning peaks and late morning troughs (Figure~\ref{f-c9336d2f14ad} ). The continental climate zone has the most significant positive peak synergy, while tropical climates have the lowest. Notably, the tropical climate zone is characterized by a significantly higher variance in \ensuremath{\Delta }UHI for both daytime and nighttime, as shown in Figure~\ref{f-449d024f9ad2}.
+
+
+\bgroup
+\fixFloatSize{images/9124dfda-0a28-451c-b032-6b6a8a81a840-ufigure_4_hourly_plot_4kg.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/9124dfda-0a28-451c-b032-6b6a8a81a840-ufigure_4_hourly_plot_4kg.png}{\includegraphics{images/9124dfda-0a28-451c-b032-6b6a8a81a840-ufigure_4_hourly_plot_4kg.png}}{\includegraphics{9124dfda-0a28-451c-b032-6b6a8a81a840-ufigure_4_hourly_plot_4kg.png}}
+\makeatother 
+\caption{{\textbf{Diurnal Cycle of Heat Wave - Non-Heat Wave Urban Heat Island (\ensuremath{\Delta }UHI) across K{\"{o}}ppen-Geiger Climate Zones.} Line plots showing the mean hourly \ensuremath{\Delta }UHI (\ensuremath{^\circ}C) for Arid, Continental, Temperate, and Tropical climate zones. Shaded areas represent \ensuremath{\pm}1 standard deviation around the mean.}}
+\label{f-c9336d2f14ad}
+\end{figure*}
+\egroup
+
+\bgroup
+\fixFloatSize{images/9a56a9ee-cad0-4da6-848b-7acd23fc0483-ufigure_5_box_kde_4kg_side_by_side.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/9a56a9ee-cad0-4da6-848b-7acd23fc0483-ufigure_5_box_kde_4kg_side_by_side.png}{\includegraphics{images/9a56a9ee-cad0-4da6-848b-7acd23fc0483-ufigure_5_box_kde_4kg_side_by_side.png}}{\includegraphics{9a56a9ee-cad0-4da6-848b-7acd23fc0483-ufigure_5_box_kde_4kg_side_by_side.png}}
+\makeatother 
+\caption{{\textbf{Continental and temperate climate zones have higher UHI and heatwave interaction. Tropical regions exhibit higher variance. }Each dot represents the average \ensuremath{\Delta }UHI value for each location. The color indicates data density, with yellow indicating high density and navy blue indicating low density. Smooth curves are probability kernel density functions. Box and whiskers show means of \ensuremath{\pm}1 and \ensuremath{\pm} 3 standard deviations.}}
+\label{f-449d024f9ad2}
+\end{figure*}
+\egroup
+To explore why tropical climates exhibit more significant variability in \ensuremath{\Delta }UHI than arid climates, this study examined the relationship between \ensuremath{\Delta }UHI and moisture-related factors\ensuremath{^{}}. Because heatwave events are defined as lasting for three or more consecutive days\ensuremath{^{}}, it is possible to analyze the evolution of the UHI-HW interaction for each day throughout an event. This reveals the relationship between environmental conditions and \ensuremath{\Delta }UHI as heatwaves progress. As shown in Figure~\ref{f-08a0715ef637} , which plots these concurrent changes, Tropical regions begin with high humidity and soil moisture (normalized q\ensuremath{_{a}}\ensuremath{\approx } 0.8, \ensuremath{\theta }\ensuremath{_{10cm}}\noindent \ensuremath{\approx }1.0)\ensuremath{^{}}. These conditions promote rural evapotranspiration and cooling, resulting in an initial \ensuremath{\Delta }UHI of around 0.4\ensuremath{^\circ}C\ensuremath{^{}}. As heatwaves persist, moisture depletion reduces latent heat flux, shifting energy toward sensible heat and reducing rural cooling\unskip~\cite{2755510:33598930,2755510:33598950,2755510:33598927} . Accordingly, \ensuremath{\Delta }UHI increases to around  0.9\ensuremath{^\circ}C to 1.0\ensuremath{^\circ}C, indicating the rural cooling effect gradually diminishes as the heatwave prolongs. Conversely, arid climates begin with minimal moisture (normalized q\ensuremath{_{a}} = 0.05, \ensuremath{\theta }\ensuremath{_{10cm}} \ensuremath{\approx } 0.0), maintaining low latent heat flux. Thus, \ensuremath{\Delta }UHI initially is low ({\texttildeapprox}0.15\ensuremath{^\circ}C) and remains relatively stable (0.05\ensuremath{^\circ}C{\textendash}0.10\ensuremath{^\circ}C), with minimal variation throughout the heatwave due to the absence of significant moisture-driven cooling.  Abundant moisture and its change patterns lead to fluctuations of \ensuremath{\Delta }UHI in tropical areas, while limited moisture in arid regions results in stable, minimal variability.
+
+
+\bgroup
+\fixFloatSize{images/978303f5-3f40-483c-a048-931563c73a81-ufigure_6_anova_by_kg_duration.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/978303f5-3f40-483c-a048-931563c73a81-ufigure_6_anova_by_kg_duration.png}{\includegraphics{images/978303f5-3f40-483c-a048-931563c73a81-ufigure_6_anova_by_kg_duration.png}}{\includegraphics{978303f5-3f40-483c-a048-931563c73a81-ufigure_6_anova_by_kg_duration.png}}
+\makeatother 
+\caption{{\textbf{The daily evolution of the difference in urban heat island intensity between heatwave and non-heatwave periods} (\ensuremath{\Delta }UHI, blue line) for four K{\"{o}}ppen-Geiger climate classes{\textemdash}Arid, continental, Temperate, and Tropical. The x-axis indicates the day of the heatwave event (0 = onset), and the left y-axis gives the temperature difference in \ensuremath{^\circ}C. The orange and green lines show the globally normalized near-surface humidity (q\ensuremath{_{a}}) and 10 cm soil moisture (\ensuremath{\Theta}\ensuremath{_{10\ cm}}\noindent ), respectively, plotted against the right y-axis (linearly scale all observed q\ensuremath{_{a}} and \ensuremath{\Theta}\ensuremath{_{10\ cm}} values to the range from 0 to 1). These results illustrate how the additional UHI under heatwaves (blue) relates to concurrent changes in humidity (orange) and soil moisture (green) throughout the event.}}
+\label{f-08a0715ef637}
+\end{figure*}
+\egroup
+
+
+
+
+\subsection*{Global attribution of UHI-HW interactions}
+\bgroup
+\fixFloatSize{images/074c0709-7f7d-4ca0-a0b5-e99e401de998-ugroup_importance_day_night.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/074c0709-7f7d-4ca0-a0b5-e99e401de998-ugroup_importance_day_night.png}{\includegraphics{images/074c0709-7f7d-4ca0-a0b5-e99e401de998-ugroup_importance_day_night.png}}{\includegraphics{074c0709-7f7d-4ca0-a0b5-e99e401de998-ugroup_importance_day_night.png}}
+\makeatother 
+\caption{{\textbf{SHAP-based analysis of feature group contributions to the predicted \ensuremath{\Delta }UHI}, derived from the CatBoost model trained in this study. The waterfall plots depict each feature group's cumulative percentage contribution to the model's prediction for daytime (a) and nighttime (b) conditions.}}
+\label{f-834ff6445176}
+\end{figure*}
+\egroup
+
+\bgroup
+\fixFloatSize{images/0923132c-4c59-4c36-a92b-a97d1d808722-ugroup_summary_day_night.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/0923132c-4c59-4c36-a92b-a97d1d808722-ugroup_summary_day_night.png}{\includegraphics{images/0923132c-4c59-4c36-a92b-a97d1d808722-ugroup_summary_day_night.png}}{\includegraphics{0923132c-4c59-4c36-a92b-a97d1d808722-ugroup_summary_day_night.png}}
+\makeatother 
+\caption{{\textbf{SHAP summary plots showing the distribution and magnitude of feature group impacts}. (a (daytime), b (nighttime)) Each point represents a single instance; the horizontal position indicates the SHAP value (positive values denote an increase in predicted \ensuremath{\Delta }UHI, negative a decrease); the color represents the original feature values (blue: low, red: high).}}
+\label{f-b3df887c90e1}
+\end{figure*}
+\egroup
+The SHAP waterfall plots (Figure~\ref{f-834ff6445176}) and summary plots (Figure~\ref{f-b3df887c90e1}) provide complementary insights into feature group contributions. A feature group consists of all variables of the same metric. The only feature group with more than one feature is q\ensuremath{_{a}}, including both \ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}} and \ensuremath{\Delta }q\ensuremath{_{a}}. The individual feature's feature importance (Supplementary Figure 1) and summary plots(Supplementary Figure 2) are included in the supplementary material. The summary plots reveal the distribution and directionality of individual feature impacts (positive or negative influence on \ensuremath{\Delta }UHI). \mbox{}\protect\newline In contrast, the waterfall plots quantify the cumulative contribution of each feature to a specific model prediction. A detailed directional contribution analysis will be provided in the discussion section. Net longwave radiation is the most influential factor across daytime(28.20\%) and nighttime(36.47\%) conditions. Sensible heat flux also has consistently high contributions (day: 12.467\%; night: 21.00\%). Specific humidity significantly contributes (19.50\%) during the daytime, while the 10-meter wind is more prominent (16.16\%) at nighttime.
+
+
+
+\subsection*{Global attribution by the hour}
+\bgroup
+\fixFloatSize{images/237443e0-d4d9-432d-a044-28b1fa9a18c4-uhourly_stacked_bar_global.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/237443e0-d4d9-432d-a044-28b1fa9a18c4-uhourly_stacked_bar_global.png}{\includegraphics{images/237443e0-d4d9-432d-a044-28b1fa9a18c4-uhourly_stacked_bar_global.png}}{\includegraphics{237443e0-d4d9-432d-a044-28b1fa9a18c4-uhourly_stacked_bar_global.png}}
+\makeatother 
+\caption{{Global hourly cycle of mean SHAP value contributions. The y-axis represents the mean SHAP value contribution (\ensuremath{^\circ}C). Features' SHAP displayed as stacked bars. The solid black line indicates the total model prediction (sum of all mean SHAP contributions plus the base value), while the red dashed line shows the model's base value (0.186 \ensuremath{^\circ}C). Contributions from individual features (G, L\ensuremath{_{n}}, SH, K\ensuremath{_{n}}, q\ensuremath{_{a}}, AHac, \ensuremath{\Theta}\ensuremath{_{10cm}}, U10), as detailed in the legend, are plotted against local hour.}}
+\label{f-85092bb5ad6f}
+\end{figure*}
+\egroup
+A more granular temporal analysis, as presented in Figure~\ref{f-85092bb5ad6f}, is important for understanding their dynamics throughout the full diurnal cycle. It illustrates the global hourly cycle of mean SHAP value contributions for these drivers, revealing that their influence is not static. For instance, net longwave radiation (Ln\noindent ) exhibits a positive contribution to the UHI-HW interaction, peaking around 6-7 AM local time and again with a smaller peak around 7-8 PM local time. In contrast, its contribution becomes negative during midday. The influence of specific humidity (q\ensuremath{_{a}}) peaks in the late morning and midday. These detailed hourly patterns, which would be obscured if relying solely on the broader daytime and nighttime averages where the mean \ensuremath{\Delta }UHI was found to be 0.27\ensuremath{\pm}0.23\ensuremath{^\circ}C at night versus 0.02\ensuremath{\pm}0.22\ensuremath{^\circ}C during the day, are essential. Such granularity allows for linking driver influence to the observed overall \ensuremath{\Delta }UHI peaks, such as the one around 5 to 6 AM local time, and troughs, like the one at 9 to 10 AM local time Figure~\ref{f-8a2868bfb5fe}. Understanding these specific hourly contributions and transition periods is, therefore, essential for understanding how each variable contributes to the direction of \ensuremath{\Delta }UHI changes.
+
+Figure~\ref{f-1ba68c28a805} and the SHAP summaries in Figure~\ref{f-b3df887c90e1}  clarify two important aspects for each driver: whether it enhances or diminishes the \ensuremath{\Delta }UHI and whether changes in its feature values positively or negatively correlate with the SHAP contribution. For net infrared radiation (\ensuremath{\Delta }\ensuremath{\delta }L\ensuremath{_{n}}), larger values consistently correspond to increased positive SHAP contributions in Figure~\ref{f-1ba68c28a805}a, and this positive correlation during both daytime and nighttime is confirmed by the red-shaded bars located on the right-hand side of the X-axis (feature values) in Figure~\ref{f-b3df887c90e1}. Similarly, sensible heat flux (\ensuremath{\Delta }SH) provides a positive contribution during the day and a negative contribution during the night(Figure~\ref{f-1ba68c28a805}b). Its SHAP value contribution and feature values generally move in the same direction. Specific humidity (\ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}}) primarily contributes positively to the UHI from late morning to afternoon(Figure~\ref{f-1ba68c28a805}c). Notably, the SHAP values increase as \ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}} decreases, indicating a clear negative correlation, which is also confirmed in Figure~\ref{f-b3df887c90e1}. The 10 m wind speed (\ensuremath{\Delta }U10) exerts a negative contribution during the night, with SHAP contributions going opposite the change in wind speed values. \ensuremath{\Delta }U10 generally contributes positively during the daytime, though the correlation between feature values and SHAP contribution is less distinct, as observed in Figure~\ref{f-b3df887c90e1}  as well. 
+
+
+\bgroup
+\fixFloatSize{images/0be8d0fa-326f-4c43-b7ce-8546c01e3ee5-uglobal_composite_2x3_fira_fsh_q2m_u10_soilwater_10cm_fgr.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/0be8d0fa-326f-4c43-b7ce-8546c01e3ee5-uglobal_composite_2x3_fira_fsh_q2m_u10_soilwater_10cm_fgr.png}{\includegraphics{images/0be8d0fa-326f-4c43-b7ce-8546c01e3ee5-uglobal_composite_2x3_fira_fsh_q2m_u10_soilwater_10cm_fgr.png}}{\includegraphics{0be8d0fa-326f-4c43-b7ce-8546c01e3ee5-uglobal_composite_2x3_fira_fsh_q2m_u10_soilwater_10cm_fgr.png}}
+\makeatother 
+\caption{{\textbf{Global hourly key feature SHAP contributions to \ensuremath{\Delta }UHI and feature values. }Hourly SHAP contributions (bars, \ensuremath{^\circ}C, left y-axis) and mean feature values (lines, right y-axis) for the global climate zone. Panels show: (a) net infrared radiation (\ensuremath{\Delta }\ensuremath{\delta }L\ensuremath{_{n}} in W/m\ensuremath{^2}), (b) sensible heat (\ensuremath{\Delta }SH in W/m\ensuremath{^2}), (c) 2-m specific humidity (\ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}} in kg/kg ), (d) 10m wind speed (\ensuremath{\Delta }U10 in m/s), (e) 10 cm soil liquid water (\ensuremath{\Delta }\ensuremath{\Theta}10cm), and (f) ground heat flux (\ensuremath{\Delta }\ensuremath{\delta }G in W/m\ensuremath{^2}). Feature colors match Figure~\ref{f-85092bb5ad6f}.}}
+\label{f-1ba68c28a805}
+\end{figure*}
+\egroup
+
+
+
+
+\subsection*{Regional attribution by the hour}To investigate the regional influences of feature groups, we reutilized the trained CatBoost model. We partitioned the resulting SHAP value contributions into four K{\"{o}}ppen-Geiger climate zones: Arid, Continental, Temperate, and Tropical. Figure~\ref{f-46952309aae5}  illustrates the percentage contribution of each feature group to the predicted \ensuremath{\Delta }UHI within each climate zone.  It reveals several patterns. Net longwave radiation(L\ensuremath{_{n}}) consistently emerges as the most influential factor across all K{\"{o}}ppen{\textendash}Geiger climate zones. Its importance nearly doubles from daytime (around 25{\textendash}30\%) to nighttime (35{\textendash}44\%), highlighting the dominant role of radiative cooling during the nighttime.
+
+Across all studied climate zones during the day ( Figure~\ref{f-46952309aae5} Daytime), aside from L\ensuremath{_{n}}, Specific humidity (q\ensuremath{_{a}}) and 10-meter wind (U10) emerge as dominant contributors to the model's predictions, which is consistent with Figure~\ref{f-834ff6445176}a. The tropical climate is characterized by significant contributions from 2-m specific humidity (q\ensuremath{_{a}}). In this zone, qa contributes much more than any other climate zone. Again, compared to contributions in other climate zones, 10-meter wind (U10, 21\%) has the highest contribution in the arid zone.
+
+At night, the order of importance changes: sensible heat flux (SH) becomes much more impactful and pronounced in continental climates, where SH approaches 23\%. Humidity has smaller contribution after sunset across all climate zones.
+
+
+\bgroup
+\fixFloatSize{images/0dc5196d-0412-4027-8605-13b8c87bef3b-ufigure_7_feature_group_contribution_by_kg_combined.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/0dc5196d-0412-4027-8605-13b8c87bef3b-ufigure_7_feature_group_contribution_by_kg_combined.png}{\includegraphics{images/0dc5196d-0412-4027-8605-13b8c87bef3b-ufigure_7_feature_group_contribution_by_kg_combined.png}}{\includegraphics{0dc5196d-0412-4027-8605-13b8c87bef3b-ufigure_7_feature_group_contribution_by_kg_combined.png}}
+\makeatother 
+\caption{{\textbf{Percentage Contribution of Feature Groups to Predicted \ensuremath{\Delta }UHI, Stratified by K{\"{o}}ppen-Geiger Climate Zones.} Bar chart illustrating the percentage contribution of each feature group to the predicted \ensuremath{\Delta }UHI difference, categorized by K{\"{o}}ppen-Geiger climate zones (Arid, Continental, Temperate, and Tropical). Percentage contributions are derived from aggregated SHAP values, indicating the relative importance of each feature group in driving \ensuremath{\Delta }UHI within each climate region.}}
+\label{f-46952309aae5}
+\end{figure*}
+\egroup
+Figure~\ref{f-d950738e1145}   provides a detailed examination of the role of 2-m specific humidity (q\ensuremath{_{a}}) and illustrates its varying impact on \ensuremath{\Delta }UHI across different climate zones. This particular variable is selected because its interaction with \ensuremath{\Delta }UHI has been extensively documented\unskip~\cite{2755510:33598930,2755510:33598952,2755510:33598945,2755510:33598947} . This analysis can help validate previous findings by applying the current framework. 
+
+In Arid zones (Figure~\ref{f-d950738e1145} a), \ensuremath{\Delta }\ensuremath{\delta }qa is generally small and hovers near zero or is slightly positive during the late afternoon and night. It started to turn negative from morning to noon. Correspondingly, the SHAP contribution of q\ensuremath{_{a\ }}in Arid zones is predominantly negative from the morning to noon. However, its SHAP contribution impact is the smallest among the four climate zones studied. It is the only climate zone that shows a material negative contribution during the night. Continental (Figure~\ref{f-d950738e1145} b), Temperate (Figure~\ref{f-d950738e1145} c), and Tropical (Figure~\ref{f-d950738e1145} d) climate zones consistently show negative \ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}} values. These values indicate drier atmospheric conditions during heatwaves compared to non-heatwave periods in urban areas. A key observation in these four zones is a sharp drop in \ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}} around the sunrise period (approximately 5-7 AM local time). Concurrently, there is a sharp increase in the positive SHAP contribution of q\ensuremath{_{a}} during this same sunrise period across these zones, with the Tropical zone (Figure~\ref{f-d950738e1145} d) exhibiting the most significant positive SHAP contribution from q\ensuremath{_{a}}.
+
+
+\bgroup
+\fixFloatSize{images/7dcfb871-fb6f-4227-a2c3-01e18b678f80-uq2m_climate_zones_composite_2x2.png}
+\begin{figure*}[!htbp]
+\centering \makeatletter\IfFileExists{images/7dcfb871-fb6f-4227-a2c3-01e18b678f80-uq2m_climate_zones_composite_2x2.png}{\includegraphics{images/7dcfb871-fb6f-4227-a2c3-01e18b678f80-uq2m_climate_zones_composite_2x2.png}}{\includegraphics{7dcfb871-fb6f-4227-a2c3-01e18b678f80-uq2m_climate_zones_composite_2x2.png}}
+\makeatother 
+\caption{{\textbf{Diurnal cycle of 2-m specific humidity SHAP contributions and feature differences across distinct climate zones.} The hourly SHAP contributions of 2-m specific humidity (\ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a)\ }}to the \ensuremath{\Delta }UHI (bars, \ensuremath{^\circ}C, left y-axis) alongside the \ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}} (line with markers, kg/kg , right y-axis). These relationships are presented for four different climate zones: (a) Arid, (b) Continental, (c) Temperate, and (d) Tropical.}}
+\label{f-d950738e1145}
+\end{figure*}
+\egroup
+
+    
+\section*{Discussion}
+
+
+
+
+\subsection*{Detailed Analysis of Key Contributing Factors}
+
+
+
+\subsubsection*{Humidity, Soil Moisture}Atmospheric and soil humidity significantly modulate the UHI-HW interaction by influencing the partitioning between sensible and latent heat fluxes. Figure~\ref{f-1ba68c28a805}b (specific humidity) and Figure~\ref{f-1ba68c28a805}c (soil moisture) show atmospheric and soil moisture decrease during HW periods compared to the background periods. Drier air in cities is a well-known amplifier of the UHI and HW synergy\unskip~\cite{2755510:33598950,2755510:33598924,2755510:33598925,2755510:33598926,2755510:33598952} . Observational and modeling studies report a consistent negative correlation between UHI intensity and atmospheric humidity\unskip~\cite{2755510:33598949,2755510:33598952,2755510:33598937} . Similarly, reduced soil moisture increases UHI-HW interaction by limiting evaporative cooling\unskip~\cite{2755510:33598950,2755510:33598925,2755510:33598926,2755510:33598915}. Rural landscapes, with more vegetation and permeable surfaces, retain more soil water than impervious urban areas\unskip~\cite{2755510:33598915,2755510:33598938}. During HWs, this contrast becomes emphasized: moist rural soils release latent heat through evapotranspiration, cooling the surface, whereas water-limited urban surfaces shift more energy into sensible and stored heat, raising urban temperatures and reinforcing the UHI HW synergy\unskip~\cite{2755510:33598924,2755510:33598925,2755510:33598926,2755510:33598935}. In our study, the decreases in specific humidity and soil moisture observed in Figure~\ref{f-1ba68c28a805}c and Figure~\ref{f-1ba68c28a805}e coincide with positive SHAP contributions to \ensuremath{\Delta }UHI, which is consistent with previous research.
+
+Near sunrise, rural cooling can occur due to overnight dew that evaporates in the morning, thereby increasing the UHI intensity before rural areas warm rapidly\unskip~\cite{2755510:33598926}.  The big drop of \ensuremath{\Delta }\ensuremath{\delta }q\ensuremath{_{a}} and increase in positive SHAP contribution in Figure~\ref{f-1ba68c28a805}c and Figure~\ref{f-1ba68c28a805} e capture these diurnal shifts in humidity and soil moisture influence.
+
+Our study, through the simulation and analysis of SHAP values, generally aligns with the existing literature in highlighting atmospheric humidity and soil moisture as key drivers of UHI HW synergies. 
+
+
+
+
+
+\subsubsection*{Sensible and Latent Heat Flux}Sensible heat flux (SH) is the turbulent transfer of heat from the surface to the adjacent air, contributing to the warming of the atmosphere. Figure~\ref{f-1ba68c28a805} b illustrates a diurnal pattern of differences in sensible heat flux (\ensuremath{\Delta }SH) and its contribution to UHI HW interactions. \mbox{}\protect\newline During the daytime, \ensuremath{\Delta }SH are positive and thus positively contribute to the Urban Heat Island (UHI) intensity during HWs, as indicated by a positive SHAP contribution. This alignment with existing studies\unskip~\cite{2755510:33598941,2755510:33598935}  confirms reports that, during the daytime, HWs increase sensible heat flux in urban areas compared to rural areas and directly intensify the daytime urban heat island (UHI) effect\unskip~\cite{2755510:33598935} . Khan et al. (2020)\unskip~\cite{2755510:33598943}  further explain that higher surface temperatures during HWs increase ambient temperatures through convection, which subsequently elevates sensible heat flux. \mbox{}\protect\newline At nighttime, Figure~\ref{f-1ba68c28a805} b reveals negative differences in sensible heat flux between heatwave and non-heatwave conditions (\ensuremath{\Delta }SH). These negative differences result in negative SHAP contributions to UHI intensity. Li et al. (2015)\unskip~\cite{2755510:33598935}  corroborate this finding by similarly identifying negative nighttime sensible heat flux differences under heatwave conditions. Although nocturnal UHI intensity generally intensifies during heatwaves, studies frequently attribute this intensification primarily to the heat released from urban structures stored during the daytime and increased anthropogenic heat emissions, rather than changes in sensible heat flux\unskip~\cite{2755510:33598928} . The negative nighttime sensible heat flux differences can occur because rural temperatures cool down relatively more slowly than NHW periods at night, driven by diminished evapotranspiration and reduced soil moisture during HWs\unskip~\cite{2755510:33598893} . Yang and Zhao (2024)\unskip~\cite{2755510:33598892}  reinforce these observations and highlight that nocturnal UHI intensity responses to heat extremes predominantly depend on changes in surface heat storage, including urban-rural variations in surface albedo and impervious surface proportions, rather than sensible heat flux. In our study, the SHAP method effectively distinguishes these influences and demonstrates that overall UHI intensity may indeed increase at night. At the same time, individual components, such as sensible heat flux, exhibit negative differences and  \ensuremath{\Delta }UHI contributions.
+
+
+
+\subsubsection*{Wind}Wind speed is one of the primary drivers of urban heat island intensity. Generally, low wind speeds intensify the UHII by reducing advective cooling from rural areas\unskip~\cite{2755510:33598893,2755510:33598924,2755510:33598926,2755510:33598952,2755510:33598927,2755510:33598930} . During HWs, these dynamics are amplified. HWs are often associated with stagnant, high-pressure systems that reduce regional wind speeds\unskip~\cite{2755510:33598926} . This reduction hinders the dispersion of urban heat, particularly at night, and increases atmospheric stability, creating synergistic HW UHI interactions\unskip~\cite{2755510:33598950,2755510:33598926,2755510:33598891,2755510:33598941,2755510:33598930} . 
+
+However, these interactions exhibit regional variability. For instance, a study in Singapore found no significant reduction in wind speed or UHI-HW synergy during a heatwave\unskip~\cite{2755510:33598915} . In Portland, nighttime wind speeds actually increased during HWs, which was associated with a lower UHI intensity\unskip~\cite{2755510:33598921} . In Seoul, nighttime wind speed was a complex yet significant predictor of UHI intensity during HWs, even when non-HW correlations were weak\unskip~\cite{2755510:33598952} .
+
+Our model's analysis of the 10 m wind (U10)  feature aligns with established research, particularly in the context of nocturnal \ensuremath{\Delta }UHI contributions. During the nighttime, the SHAP beeswarm plot (Figure~\ref{f-b3df887c90e1}) shows a strong inverse relationship where low wind speeds increase predicted \ensuremath{\Delta }UHI while high speeds mitigate it. From Figure~\ref{f-1ba68c28a805} d, we can also observe the negative co-movement between the U10 value and its SHAP contribution.  During the daytime,  both Figure~\ref{f-b3df887c90e1}a and Figure~\ref{f-1ba68c28a805}d exhibit a weak negative co-movement. It is fair to say our model does not show a consistent directional contribution during the daytime.
+
+
+
+
+
+\subsection*{K{\"{o}}ppen{\textendash}Geiger climate zones discussion}UHI-HW interactions vary significantly across K{\"{o}}ppen-Geiger climate zones (Figures~\ref{f-c9336d2f14ad} and~\ref{f-449d024f9ad2}), highlighting the influence of the background climate. Our analysis identifies a key distinction between two dominant mechanisms that govern these interactions: moisture dynamics in Tropical zones and radiative and aerodynamic processes in Arid and Continental zones. \mbox{}\protect\newline In Tropical climates, moisture serves as the primary driving force. These regions show the most variability in the UHI between heatwave (HW) and non-heatwave (NHW) conditions(Figure~\ref{f-449d024f9ad2}). This variability primarily arises from changes in rural moisture availability during HWs. Initially, tropical regions have abundant humidity and soil moisture, which enables substantial evaporative cooling in rural areas and thus keeps the UHI relatively subdued. However, as a heatwave continues, rural moisture stores become depleted(Figure~\ref{f-08a0715ef637}). This depletion weakens evaporative cooling, a process not significant in urban areas due to their impervious surfaces. The gradual loss of cooling amplifies the UHI, increasing the variance of \ensuremath{\Delta }UHI. At the intraday level, the SHAP analysis highlights specific humidity (q\ensuremath{_{a}}) and turbulent fluxes as the primary contributors in Tropical regions(Figure~\ref{f-46952309aae5}). The sharp positive SHAP value from specific humidity in the morning (Figure~\ref{f-d950738e1145}d) notably captures the moment when rural moisture decreases enough to intensify the UHI. \mbox{}\protect\newline Arid and Continental climates rely predominantly on radiative and aerodynamic mechanisms. In these zones, the UHI-HW interactions are more consistent (Figure~\ref{f-449d024f9ad2}). This stability occurs because these areas are already moisture-limited at the beginning of the heat waves, resulting in little change in rural evaporative cooling (Figure~\ref{f-08a0715ef637}). Without the material contribution from latent heat flux, other processes take precedence. Specifically, wind speed (U10) gains importance (Figure~\ref{f-46952309aae5}). In conditions where evaporative cooling cannot buffer temperatures, reduced wind speeds during stagnant heat waves amplify the UHI effect in these climate zones even more visibly.
+
+In summary, the background climate influences the dominant physical mechanisms underlying the interaction between UHII and HWs. In moisture-rich tropical regions, this interaction is significant and dynamic, characterized by the temporary depletion of moisture in rural areas, resulting in high variability. In contrast, in water-limited arid and continental climates, the interaction is mainly determined by the static properties inherent to urban environments, such as radiative trapping and sensitivity to changes in wind advection. This fundamental distinction underscores the necessity for climate-specific strategies to mitigate UHI, as measures effective in one climatic context may not be equally applicable or successful in another.
+
+
+
+\subsection*{ \mbox{}\protect\newline  Limitations and need for future research}CLM5 does not account for lateral heat and moisture transport between urban and rural land units. This limitation may result in an overestimation of urban-rural microclimate gradients, particularly for smaller cities.\unskip~\cite{2755510:33598947}  While the SHAP\unskip~\cite{2755510:33598933} method provides valuable insights into feature importance, its stability can be influenced by factors such as multicollinearity and the choice of background dataset; therefore, results should be interpreted with this in mind. Further research should investigate the use of coupled urban-atmosphere models to represent these lateral transport processes. Investigating the impact of different urban morphologies and land cover types within each climate zone would also provide valuable insights. Future work could also focus on developing downscaled climate projections to assess the evolution of UHI-HW interactions under different climate change scenarios. Finally, incorporating socioeconomic factors and human behavioral responses into the modeling framework would improve the realism and applicability of the results for urban heat adaptation planning.
+    
+\section*{Conclusions}
+This global analysis reveals diurnal and spatial patterns in the interaction between heat waves and urban heat island intensity. Across 3,648 urban grid cells, heatwave conditions amplify the UHI markedly more at night. The \ensuremath{\Delta }UHI averages +0.27 \ensuremath{\pm} 0.23 \ensuremath{^\circ}C nocturnally. In contrast, the daytime interaction is negligible at +0.02 \ensuremath{\pm} 0.22 \ensuremath{^\circ}C. Spatially, this daytime effect exhibits significant heterogeneity, with nighttime \ensuremath{\Delta }UHI values exceeding 0.8 \ensuremath{^\circ}C in hotspots over the Indo-Gangetic and North China Plains. At the same time, humid coastal and equatorial regions show near-neutral or slightly negative interactions. Attribution analysis using a CatBoost machine learning model with SHAP explains the contributions of these drivers, revealing that net longwave radiation is the single most significant contributor, accounting for 36.5\% of the nighttime signal and 28.2\% by day. At night, sensible heat flux is the second-ranked driver (21.0\%), whereas during the day, specific humidity (19.5\%) and 10-m wind speed (17.2\%) are among the most significant contributors. Importantly, the influence attributed to these key drivers is directionally consistent with established research, validating our approach.
+
+The dominant drivers vary by climate, with moisture dynamics causing high variability in tropical zones, while radiative and aerodynamic processes are more critical in arid and continental regions. These findings underscore the importance of tailoring effective adaptation strategies to local climate contexts and diurnal cycles, such as prioritizing green infrastructure in the tropics and cool roofs in arid regions. Furthermore, this study demonstrates a novel machine learning-based approach to attributing the spatial variability in UHI-heatwave interactions to specific biophysical drivers, offering a tool whose success opens avenues for future climate research. 
+    
+\section*{Acknowledgements }
+I need advice on writing this section.
+    
+
+\bibliographystyle{naturemag}
+
+\bibliography{\jobname}
+
+\end{document}

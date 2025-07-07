@@ -157,4 +157,26 @@ cython_debug/
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+**/.idea/
+
+
+# Ignore all .vscode directories
+**/.vscode/
+hw_global/.idea/hw_global.iml
+hw_global/sandbox/check_forcing_data.ipynb
+hw_global/sandbox/debug.ipynb
+hw_global/sandbox/explore_final_dataset.ipynb
+hw_global/sandbox/gputest.ipynb
+hw_global/sandbox/koppen.ipynb
+hw_global/sandbox/load_parquet.ipynb
+hw_global/sandbox/math.ipynb
+hw_global/sandbox/study_df.ipynb
+hw_global/sandbox/test_UHI_diff_feature_engineering_new.ipynb
+hw_global/sandbox/NeuralNetwork/nn_production_run.py
+hw_global/results/model_day_model_lr001.cbm
+hw_global/results/model_day_model_lr003_it3000_depth6.cbm
+hw_global/results/model_night_model_lr001.cbm
+hw_global/results/model_night_model_lr003_it3000_depth6.cbm
+hw_global/results/UHI_diff_feature_selection_all_summaries.txt
+hw_global/.idea/hw_global.iml
+hw_global/Data/.~lock.KoppenGeigerLegend.xlsx#
